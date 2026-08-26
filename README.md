@@ -1,2 +1,2 @@
 # SiKiBa
-PWA app for mother and child health screening
+PWA App for Maternal and Infant Health Screening
