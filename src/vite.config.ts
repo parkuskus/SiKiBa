@@ -12,13 +12,14 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'SiKiBa - Skrining Ibu & Bayi',
-        short_name: 'SiKiBa',
-        description: 'PWA skrining kesehatan ibu hamil, nifas & bayi baru lahir (PDUPT Poltekkes Bandung)',
-        theme_color: '#1D9E75',
-        background_color: '#ffffff',
+        name: 'SIAGA Bunda - Sistem Informasi Antisipasi & menjaGA Bunda',
+        short_name: 'SIAGA Bunda',
+        description: 'Siaga menjaga bunda dan buah hati — skrining ibu hamil, nifas & bayi baru lahir (PDUPT Poltekkes Bandung)',
+        theme_color: '#6B8E73',
+        background_color: '#FFFDEC',
         display: 'standalone',
         icons: [
+          { src: 'logo-siaga-bunda.png', sizes: 'any', type: 'image/png', purpose: 'any maskable' },
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
           { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
         ],

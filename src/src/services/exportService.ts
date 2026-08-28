@@ -18,12 +18,12 @@ export async function generateRingkasanPDF(userId: string): Promise<Blob> {
   // watermark
   doc.setTextColor(220, 220, 220)
   doc.setFontSize(48)
-  doc.text('SiKiBa — untuk keperluan medis', W / 2, H / 2, { align: 'center', angle: 30 })
+  doc.text('SIAGA Bunda — untuk keperluan medis', W / 2, H / 2, { align: 'center', angle: 30 })
 
   // header
-  doc.setTextColor(29, 158, 117) // #1D9E75
+  doc.setTextColor(107, 142, 115) // #6B8E73 Sage
   doc.setFontSize(18)
-  doc.text('SiKiBa — Ringkasan Skrining', 14, 16)
+  doc.text('SIAGA Bunda — Ringkasan Skrining', 14, 16)
   doc.setFontSize(9)
   doc.setTextColor(100)
   doc.text(`Tanggal: ${new Date().toLocaleDateString('id-ID')}  •  ${profile.nama}  •  G${profile.gravida}P${profile.para}A${profile.abortus}`, 14, 22)
@@ -53,17 +53,17 @@ export async function generateRingkasanPDF(userId: string): Promise<Blob> {
   doc.setFontSize(8)
   doc.text(`BB entries: ${weights.length}  |  ANC: ${anc.filter(a=>a.statusSelesai).length}/${anc.length} selesai`, 14, y)
   y += 10
-  doc.setFontSize(7); doc.setTextColor(120); doc.text('Dokumen ini untuk dibagikan ke bidan via WhatsApp (S-08b). Bukan diagnosis — rujuk klinis tetap perlu.', 14, H - 10)
+  doc.setFontSize(7); doc.setTextColor(120); doc.text('SIAGA Bunda — Siaga menjaga bunda dan buah hati. Dokumen ini untuk dibagikan ke bidan via WhatsApp (S-08b).', 14, H - 10)
 
   return doc.output('blob')
 }
 
 export async function shareViaWA(userId: string): Promise<void> {
   const blob = await generateRingkasanPDF(userId)
-  const file = new File([blob], `SiKiBa-${userId}.pdf`, { type: 'application/pdf' })
+  const file = new File([blob], `SIAGA-Bunda-${userId}.pdf`, { type: 'application/pdf' })
   // Web Share API dengan file (PWA) — fallback download
   if (navigator.canShare?.({ files: [file] })) {
-    await navigator.share({ files: [file], title: 'SiKiBa Ringkasan' })
+    await navigator.share({ files: [file], title: 'SIAGA Bunda Ringkasan' })
   } else {
     // fallback wa.me teks + download
     const url = URL.createObjectURL(blob)
