@@ -1,4 +1,5 @@
 import { db } from '@/data/db'
+import { syncScreening } from '@/data/sync'
 import { calcIMT, kategoriIMT, kategoriLILA, warnaGizi } from '@/clinical-rules/imtLila'
 
 // S-03b: GiziScreen — form-only — spec S-03b:188-194, SK03
@@ -38,15 +39,18 @@ export async function submitGizi(input: GiziInput) {
   const trajectory = kenaikanKurang ? 'kurang' : kenaikanAktual > targetProp + 2 ? 'lebih' : 'sesuai'
 
   const id = crypto.randomUUID()
-  await db.screeningResults.put({
+  const createdAt = new Date().toISOString()
+  const row = {
     id,
     userId: input.userId,
     tipe: 'imt_lila',
     skor: imt,
     kategori: warna,
     detail: { ...input, imt, imtKat, targetKg, lilaKat, kenaikanAktual, trajectory },
-    createdAt: new Date().toISOString(),
-  })
+    createdAt,
+  }
+  await db.screeningResults.put(row)
+  syncScreening(row as never)
 
   return { imt, imtKat, targetKg, lilaKat, kenaikanAktual, trajectory, warna }
 }

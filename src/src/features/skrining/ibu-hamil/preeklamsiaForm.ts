@@ -1,4 +1,5 @@
 import { db } from '@/data/db'
+import { syncScreening } from '@/data/sync'
 import { calcMAP, kategoriMAP, kategoriTD } from '@/clinical-rules/mapCalculator'
 
 // S-03d: PreeklamsiScreen — spec S-03d:216-222, SK02 (MAP <90 / 90-99 / >99)
@@ -40,6 +41,8 @@ export async function submitPreeklamsia(input: PreeklamsiaInput) {
   else if (tdKat === 'KUNING' || mapKat === 'KUNING' || risikoTinggi || input.proteinuria) kategori = 'KUNING'
   // proteinuria + HT = preeklamsia
   const detail: Record<string, unknown> = { ...input, map, mapKat, tdKat, risikoTinggi }
-  await db.screeningResults.put({ id: crypto.randomUUID(), userId: input.userId, tipe: 'preeklamsia', skor: map, kategori, detail, createdAt: new Date().toISOString() })
+  const row = { id: crypto.randomUUID(), userId: input.userId, tipe: 'preeklamsia', skor: map, kategori, detail, createdAt: new Date().toISOString() }
+  await db.screeningResults.put(row)
+  syncScreening(row as never)
   return { map, mapKat, tdKat, kategori }
 }

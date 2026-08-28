@@ -1,4 +1,5 @@
 import { db } from '@/data/db'
+import { syncNifas, syncScreening } from '@/data/sync'
 import { warnaMEOWS } from '@/clinical-rules/meows'
 
 // S-04: NifasSkrScreen — spec S-04:271, SK06
@@ -38,8 +39,12 @@ export async function submitNifas(input: NifasInput) {
   let kategori: 'HIJAU' | 'KUNING' | 'MERAH' = warna
   if (input.lukaBengkak && kategori === 'HIJAU') kategori = 'KUNING'
 
-  await db.nifasScreenings.put({ id: crypto.randomUUID(), userId: input.userId, hariKe: input.hariKe, parameterVital: { ...input }, status: kategori, createdAt: new Date().toISOString() })
+  const nifasRow = { id: crypto.randomUUID(), userId: input.userId, hariKe: input.hariKe, parameterVital: { ...input }, status: kategori, createdAt: new Date().toISOString() }
+  await db.nifasScreenings.put(nifasRow)
+  syncNifas(nifasRow)
   // juga simpan ringkas ke screeningResults untuk histori S-03g
-  await db.screeningResults.put({ id: crypto.randomUUID(), userId: input.userId, tipe: 'nifas', skor: input.hariKe, kategori, detail: { ...input, meows: warna }, createdAt: new Date().toISOString() })
+  const sRow = { id: crypto.randomUUID(), userId: input.userId, tipe: 'nifas', skor: input.hariKe, kategori, detail: { ...input, meows: warna }, createdAt: new Date().toISOString() }
+  await db.screeningResults.put(sRow)
+  syncScreening(sRow as never)
   return { kategori, meows: warna }
 }

@@ -34,7 +34,7 @@ export interface DiaryEntry { id: string; userId: string; tanggal: string; teks:
 export interface NifasScreening { id: string; userId: string; hariKe: number; parameterVital: Record<string, unknown>; status: string; createdAt: string }
 export interface BBLProfile { id: string; userId: string; dataLahir: string; apgar?: number; usiaGestasi?: number }
 
-export class SiKiBaDB extends Dexie {
+export class SIGAPDB extends Dexie {
   profiles!: Table<Profile, string>
   screeningResults!: Table<ScreeningResult, string>
   weightEntries!: Table<WeightEntry, string>
@@ -45,7 +45,7 @@ export class SiKiBaDB extends Dexie {
   bblProfiles!: Table<BBLProfile, string>
 
   constructor() {
-    super('SiKiBaDB')
+    super('SIGAPDB')
     this.version(1).stores({
       profiles: 'id, hpht',
       screeningResults: 'id, userId, tipe, kategori, createdAt',
@@ -59,4 +59,6 @@ export class SiKiBaDB extends Dexie {
   }
 }
 
-export const db = new SiKiBaDB()
+export const db = new SIGAPDB()
+// ponytail: alias backwards-compat kalau ada import lama SiKiBaDB
+export const SiKiBaDB = SIGAPDB

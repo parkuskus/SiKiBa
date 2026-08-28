@@ -1,4 +1,5 @@
 import { db } from '@/data/db'
+import { syncScreening } from '@/data/sync'
 import { kategoriKramer } from '@/clinical-rules/kramerZone'
 
 // S-05a: IkterusScreen — spec S-05a:328-333 — wrap kramerZone.ts
@@ -18,6 +19,8 @@ export async function submitIkterus(input: IkterusInput) {
   // zona 4-5 atau onset<24 sudah MERAH via kramerZone; prematur + zona3 → eskalasi
   let kategori: 'HIJAU' | 'KUNING' | 'MERAH' = warna
   if (input.prematur && input.zona >= 3 && kategori === 'KUNING') kategori = 'MERAH'
-  await db.screeningResults.put({ id: crypto.randomUUID(), userId: input.userId, tipe: 'ikterus', skor: input.zona, kategori, detail: { ...input, statusKramer: status }, createdAt: new Date().toISOString() })
+  const row = { id: crypto.randomUUID(), userId: input.userId, tipe: 'ikterus', skor: input.zona, kategori, detail: { ...input, statusKramer: status }, createdAt: new Date().toISOString() }
+  await db.screeningResults.put(row)
+  syncScreening(row as never)
   return { status, kategori }
 }

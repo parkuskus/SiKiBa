@@ -1,4 +1,5 @@
 import { db } from '@/data/db'
+import { syncScreening } from '@/data/sync'
 import { scorePoedji } from '@/clinical-rules/poedjiRochjati'
 
 // S-03a: RiskFactorScreen — form-only (FE menyusul) — spec S-03a:171, SK01
@@ -58,15 +59,18 @@ export async function submitRiskFactor(input: RiskFactorInput) {
   if (input.kelainanLetak) faktorRisiko.push('Kelainan letak')
 
   const id = crypto.randomUUID()
-  await db.screeningResults.put({
+  const createdAt = new Date().toISOString()
+  const row = {
     id,
     userId: input.userId,
     tipe: 'poedji_rochjati',
     skor,
     kategori: warna, // HIJAU=HRR KRR, KUNING=KRS, MERAH=KRT — mapping ke traffic light
     detail: { ...input, kategoriPoedji: kategori, faktorRisiko, trb: input.trb },
-    createdAt: new Date().toISOString(),
-  })
+    createdAt,
+  }
+  await db.screeningResults.put(row)
+  syncScreening(row as never)
 
   return { skor, kategori, warna, faktorRisiko }
 }

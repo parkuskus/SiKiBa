@@ -1,4 +1,5 @@
 import { db } from '@/data/db'
+import { syncAnc } from '@/data/sync'
 import { calcHPL } from '@/clinical-rules/ukHpl'
 
 // S-07b: ANC 6 kunjungan Kemenkes 2020 — spec S-07b:434-435
@@ -16,7 +17,9 @@ export function generateANCJadwal(hpht: string): string[] {
 export async function initANC(userId: string, hpht: string) {
   const jadwal = generateANCJadwal(hpht)
   for (const tgl of jadwal) {
-    await db.ancVisits.put({ id: crypto.randomUUID(), userId, tanggalTerjadwal: tgl, statusSelesai: false })
+    const row = { id: crypto.randomUUID(), userId, tanggalTerjadwal: tgl, statusSelesai: false }
+    await db.ancVisits.put(row)
+    syncAnc(row)
   }
   return { hpl: calcHPL(hpht), jadwal }
 }
@@ -26,4 +29,5 @@ export async function toggleANC(visitId: string, selesai: boolean, catatan?: str
   if (!v) throw new Error('kunjungan tidak ada')
   v.statusSelesai = selesai; if (catatan !== undefined) v.catatan = catatan
   await db.ancVisits.put(v)
+  syncAnc(v)
 }

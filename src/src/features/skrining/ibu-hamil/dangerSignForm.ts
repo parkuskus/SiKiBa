@@ -1,4 +1,5 @@
 import { db } from '@/data/db'
+import { syncScreening } from '@/data/sync'
 
 // S-03c: DangerSignScreen — spec S-03c:200-207, SK04
 export type DangerSignInput = {
@@ -30,6 +31,8 @@ export async function submitDangerSign(input: DangerSignInput) {
   if (!input.userId) throw new Error('userId wajib')
   const kategori = kategoriDanger(input)
   const flags = Object.entries(input).filter(([k, v]) => k !== 'userId' && v === true).map(([k]) => k)
-  await db.screeningResults.put({ id: crypto.randomUUID(), userId: input.userId, tipe: 'danger_sign', skor: flags.length, kategori, detail: { ...input, flags }, createdAt: new Date().toISOString() })
+  const row = { id: crypto.randomUUID(), userId: input.userId, tipe: 'danger_sign', skor: flags.length, kategori, detail: { ...input, flags }, createdAt: new Date().toISOString() }
+  await db.screeningResults.put(row)
+  syncScreening(row as never)
   return { kategori, flags }
 }

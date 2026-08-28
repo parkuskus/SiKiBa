@@ -1,4 +1,5 @@
 import { db } from '@/data/db'
+import { syncScreening } from '@/data/sync'
 
 // S-05b: HipotiroidScreen — spec S-05b:340-344
 export type HipotiroidInput = {
@@ -22,6 +23,8 @@ export function kategoriHipotiroid(v: HipotiroidInput): 'HIJAU' | 'KUNING' | 'ME
 export async function submitHipotiroid(input: HipotiroidInput) {
   if (!input.userId) throw new Error('userId wajib')
   const kategori = kategoriHipotiroid(input)
-  await db.screeningResults.put({ id: crypto.randomUUID(), userId: input.userId, tipe: 'hipotiroid', skor: input.sudahTSH ? 1 : 0, kategori, detail: { ...input }, createdAt: new Date().toISOString() })
+  const row = { id: crypto.randomUUID(), userId: input.userId, tipe: 'hipotiroid', skor: input.sudahTSH ? 1 : 0, kategori, detail: { ...input }, createdAt: new Date().toISOString() }
+  await db.screeningResults.put(row)
+  syncScreening(row as never)
   return { kategori }
 }

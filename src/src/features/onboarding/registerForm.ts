@@ -1,4 +1,5 @@
 import { db, type Profile } from '@/data/db'
+import { syncProfile } from '@/data/sync'
 import { calcHPL, weeksFromHpht, trimester, progressPercent } from '@/clinical-rules/ukHpl'
 
 // S-01: RegisterScreen — form-only logic (FE belum fix, UI menyusul)
@@ -60,5 +61,6 @@ export async function submitRegister(input: RegisterInput): Promise<{ profile: P
   }
 
   await db.profiles.put(profile)
+  syncProfile(profile)
   return { profile, uk, hpl, tri, progress }
 }

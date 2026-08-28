@@ -1,4 +1,5 @@
 import { db } from '@/data/db'
+import { syncScreening } from '@/data/sync'
 
 // S-04a: LaktasiScreen — spec S-04a:304-310
 export type LaktasiInput = {
@@ -24,6 +25,8 @@ export function kategoriLaktasi(v: LaktasiInput): { warna: 'HIJAU' | 'KUNING' | 
 export async function submitLaktasi(input: LaktasiInput) {
   if (!input.userId) throw new Error('userId wajib')
   const { warna, masalah } = kategoriLaktasi(input)
-  await db.screeningResults.put({ id: crypto.randomUUID(), userId: input.userId, tipe: 'laktasi', skor: input.bakPerHari, kategori: warna, detail: { ...input, masalah }, createdAt: new Date().toISOString() })
+  const row = { id: crypto.randomUUID(), userId: input.userId, tipe: 'laktasi', skor: input.bakPerHari, kategori: warna, detail: { ...input, masalah }, createdAt: new Date().toISOString() }
+  await db.screeningResults.put(row)
+  syncScreening(row as never)
   return { warna, masalah }
 }
