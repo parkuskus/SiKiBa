@@ -35,7 +35,7 @@ export interface NifasScreening { id: string; userId: string; hariKe: number; pa
 export interface BBLProfile { id: string; userId: string; dataLahir: string; apgar?: number; usiaGestasi?: number }
 export interface SyncQueueItem { id?: number; table: string; op: 'insert' | 'upsert'; payload: Record<string, unknown>; onConflict?: string; createdAt: string }
 
-export class SIGAPDB extends Dexie {
+export class SIAGADB extends Dexie {
   profiles!: Table<Profile, string>
   screeningResults!: Table<ScreeningResult, string>
   weightEntries!: Table<WeightEntry, string>
@@ -47,7 +47,7 @@ export class SIGAPDB extends Dexie {
   syncQueue!: Table<SyncQueueItem, number>
 
   constructor() {
-    super('SIGAPDB')
+    super('SIAGADB')
     this.version(1).stores({
       profiles: 'id, hpht',
       screeningResults: 'id, userId, tipe, kategori, createdAt',
@@ -64,6 +64,7 @@ export class SIGAPDB extends Dexie {
   }
 }
 
-export const db = new SIGAPDB()
-// ponytail: alias backwards-compat kalau ada import lama SiKiBaDB
-export const SiKiBaDB = SIGAPDB
+export const db = new SIAGADB()
+// ponytail: alias backwards-compat kalau ada import lama SiKiBaDB/SIGAPDB
+export const SiKiBaDB = SIAGADB
+export const SIGAPDB = SIAGADB

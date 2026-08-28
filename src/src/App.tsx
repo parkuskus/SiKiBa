@@ -82,9 +82,9 @@ export default function App() {
     <div className="min-h-svh flex flex-col bg-background max-w-[480px] mx-auto border-x border-border">
       {/* header */}
       <header className="sticky top-0 z-10 bg-primary text-primary-foreground px-4 py-3 flex items-center gap-3">
-        <img src="/logo-siaga-bunda.png" alt="SIGAP" className="w-9 h-9 rounded-xl bg-white p-1 object-contain" />
+        <img src="/logo-siaga-bunda.png" alt="SIAGA Bunda" className="w-9 h-9 rounded-xl bg-white p-1 object-contain" />
         <div className="leading-tight">
-          <div className="font-heading font-semibold text-[15px]">SIGAP</div>
+          <div className="font-heading font-semibold text-[15px]">SIAGA Bunda</div>
           <div className="text-[11px] opacity-90">Siaga menjaga bunda & buah hati</div>
         </div>
         <div className="ml-auto text-[10px] bg-white/20 px-2 py-1 rounded-full">PWA</div>
