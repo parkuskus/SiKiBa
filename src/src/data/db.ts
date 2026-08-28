@@ -33,6 +33,7 @@ export interface ANCVisit { id: string; userId: string; tanggalTerjadwal: string
 export interface DiaryEntry { id: string; userId: string; tanggal: string; teks: string; mood: number }
 export interface NifasScreening { id: string; userId: string; hariKe: number; parameterVital: Record<string, unknown>; status: string; createdAt: string }
 export interface BBLProfile { id: string; userId: string; dataLahir: string; apgar?: number; usiaGestasi?: number }
+export interface SyncQueueItem { id?: number; table: string; op: 'insert' | 'upsert'; payload: Record<string, unknown>; onConflict?: string; createdAt: string }
 
 export class SIGAPDB extends Dexie {
   profiles!: Table<Profile, string>
@@ -43,6 +44,7 @@ export class SIGAPDB extends Dexie {
   diaryEntries!: Table<DiaryEntry, string>
   nifasScreenings!: Table<NifasScreening, string>
   bblProfiles!: Table<BBLProfile, string>
+  syncQueue!: Table<SyncQueueItem, number>
 
   constructor() {
     super('SIGAPDB')
@@ -55,6 +57,9 @@ export class SIGAPDB extends Dexie {
       diaryEntries: 'id, userId, tanggal',
       nifasScreenings: 'id, userId, hariKe',
       bblProfiles: 'id, userId',
+    })
+    this.version(2).stores({
+      syncQueue: '++id, table, createdAt',
     })
   }
 }
