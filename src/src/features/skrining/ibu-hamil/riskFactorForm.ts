@@ -58,7 +58,7 @@ export async function submitRiskFactor(input: RiskFactorInput) {
   if (input.kehamilanGanda) faktorRisiko.push('Kehamilan ganda')
   if (input.kelainanLetak) faktorRisiko.push('Kelainan letak')
 
-  const id = crypto.randomUUID()
+  const id = globalThis.crypto?.randomUUID?.() ?? `rf-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
   const createdAt = new Date().toISOString()
   const row = {
     id,
