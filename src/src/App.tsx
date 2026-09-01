@@ -7,6 +7,7 @@ import SkriningPage from "@/features/skrining/SkriningPage"
 import EdukasiPage from "@/features/edukasi/EdukasiPage"
 import PengingatPage from "@/features/tracker/PengingatPage"
 import ProfilPage from "@/features/profil/ProfilPage"
+import SplashScreen from "@/features/onboarding/SplashScreen"
 
 type Tab = "beranda" | "skrining" | "edukasi" | "tracker" | "profil"
 
@@ -14,11 +15,22 @@ export default function App() {
   const [tab, setTab] = useState<Tab>("beranda")
   const [isPostpartum, setIsPostpartum] = useState(false)
   const [showBirth, setShowBirth] = useState(false)
+  const [showSplash, setShowSplash] = useState(true)
 
   const uk = 28
   const progress = 70
   const countdown = 82
   const hplLabel = "19 Nov 2026"
+
+  if (showSplash) {
+    return (
+      <SplashScreen
+        onAutoMasuk={() => setShowSplash(false)}
+        onDaftar={() => setShowSplash(false)}
+        onMasuk={() => setShowSplash(false)}
+      />
+    )
+  }
 
   return (
     <div className="min-h-[100dvh] bg-[#FFFCF6] text-[#2E3436]">
