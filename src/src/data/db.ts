@@ -61,6 +61,9 @@ export class SIAGADB extends Dexie {
     this.version(2).stores({
       syncQueue: '++id, table, createdAt',
     })
+    this.version(3).stores({
+      profiles: 'id, hpht, noHp',
+    })
   }
 }
 

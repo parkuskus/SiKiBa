@@ -67,7 +67,6 @@ export default function SplashScreen({ onDaftar, onMasuk, onAutoMasuk }: Props) 
               <button onClick={onMasuk} className="w-full rounded-full bg-white py-3.5 text-sm font-semibold text-[#7AAE9A] ring-1 ring-[#EAE6E0] active:scale-[0.99] transition-transform">
                 Sudah punya akun
               </button>
-              <p className="pt-2 text-[11px] leading-relaxed text-[#9AA3A6]">Dengan melanjutkan, Bunda menyetujui penyimpanan data secara aman di ponsel</p>
             </div>
           )}
         </div>
