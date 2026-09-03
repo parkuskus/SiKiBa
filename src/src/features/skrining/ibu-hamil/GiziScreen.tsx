@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -31,10 +30,7 @@ export default function GiziScreen({ onBack, onSuccess }: { onBack: () => void; 
   return (
     <Card className="rounded-[24px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm">
       <CardContent className="p-4 space-y-4">
-        <div className="flex items-center gap-2">
-          <button onClick={onBack} className="size-8 rounded-full bg-[#FFFCF6] ring-1 ring-[#EAE6E0] grid place-items-center text-[#7AAE9A]">
-            <ChevronRight className="size-4 rotate-180" />
-          </button>
+        <div>
           <div>
             <p className="text-sm font-semibold text-[#1E2326] leading-none">Skrining Status Gizi</p>
             <p className="text-xs text-[#8A8F93]">Skrining untuk memantau gizi Bunda dan janin</p>

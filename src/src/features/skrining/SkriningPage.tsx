@@ -10,9 +10,11 @@ import DmgScreen from "@/features/skrining/ibu-hamil/DmgScreen"
 import MentalScreen from "@/features/skrining/ibu-hamil/MentalScreen"
 import NifasScreen from "@/features/skrining/nifas/NifasScreen"
 import LaktasiScreen from "@/features/skrining/nifas/LaktasiScreen"
+import IkterusScreen from "@/features/skrining/bbl/IkterusScreen"
+import HipotiroidScreen from "@/features/skrining/bbl/HipotiroidScreen"
 
 type SkriningTab = "hamil" | "nifas" | "bbl"
-type ActiveForm = null | "risk" | "gizi" | "danger" | "preeklamsia" | "dmg" | "mental" | "nifas" | "laktasi"
+type ActiveForm = null | "risk" | "gizi" | "danger" | "preeklamsia" | "dmg" | "mental" | "nifas" | "laktasi" | "ikterus" | "hipotiroid"
 type AnyResult = { warna: string; kategori?: string; skor?: number; extra?: string }
 
 export default function SkriningPage({
@@ -101,6 +103,26 @@ export default function SkriningPage({
       </div>
     )
   }
+  if (activeForm === "ikterus") {
+    return (
+      <div className="space-y-4">
+        <IkterusScreen
+          onBack={() => setActiveForm(null)}
+          onSuccess={(r) => handleSuccess("ikterus", { warna: r.warna, kategori: r.kategori, extra: r.warna })}
+        />
+      </div>
+    )
+  }
+  if (activeForm === "hipotiroid") {
+    return (
+      <div className="space-y-4">
+        <HipotiroidScreen
+          onBack={() => setActiveForm(null)}
+          onSuccess={(r) => handleSuccess("hipotiroid", { warna: r.warna, kategori: r.kategori, extra: r.warna })}
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-4">
@@ -115,7 +137,6 @@ export default function SkriningPage({
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-[#1E2326] leading-tight">Progress Skrining</p>
-          <p className="text-xs text-[#8A8F93]">6 cek, 3 sampai 5 menit per cek</p>
           <div className="mt-1.5 h-1.5 w-full rounded-full bg-white overflow-hidden ring-1 ring-black/5">
             <div className="h-full rounded-full bg-[#7AAE9A] transition-all" style={{ width: `${progressPct}%` }} />
           </div>
@@ -218,16 +239,41 @@ export default function SkriningPage({
                 </div>
               ))}
 
-            {skriningTab === "bbl" && (
-              <div className="p-6 flex flex-col items-center text-center">
-                <img src="/illu/illu-07-bayi.png" alt="Bayi baru lahir" className="h-32 w-auto object-contain" />
-                <p className="mt-6 text-sm font-semibold text-[#1E2326] text-center max-w-[22ch]">Cek bayi akan terbuka setelah melahirkan</p>
-                <p className="text-xs text-[#8A8F93] mt-2 max-w-[30ch] mx-auto leading-relaxed text-center">Ketuk Sudah melahirkan di Beranda untuk membuka cek nifas dan bayi.</p>
-                <Button size="sm" className="mt-4 rounded-full bg-[#7AAE9A] hover:bg-[#6B9E8A] text-white shadow-sm px-6" onClick={() => { setTab("beranda"); setTimeout(() => setShowBirth(true), 200) }}>
-                  Buka cek
-                </Button>
-              </div>
-            )}
+            {skriningTab === "bbl" &&
+              (isPostpartum ? (
+                [
+                  { key: "ikterus", title: "Skrining Ikterus Neonatal", sub: "Cek kuning pada bayi dengan zona Kramer" },
+                  { key: "hipotiroid", title: "Skrining Hipotiroid Kongenital", sub: "Cek TSH dan gejala hipotiroid pada bayi" },
+                ].map((it) => {
+                  const r = results[it.key]
+                  const done = !!r
+                  return (
+                    <button
+                      key={it.key}
+                      onClick={() => setActiveForm(it.key as ActiveForm)}
+                      className="flex w-full items-center gap-3 px-4 py-3.5 text-left hover:bg-[#FFFCF6] transition-colors"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-[#1E2326] leading-tight">{it.title}</p>
+                        <p className="text-xs text-[#8A8F93] truncate">{it.sub} {r?.extra ? ` ${r.extra}` : ""}</p>
+                      </div>
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ring-1 shrink-0 ${done ? (r.warna === "MERAH" ? "bg-[#FDECEC] text-[#C62828] ring-[#E57373]/20" : r.warna === "KUNING" ? "bg-[#FFF8EC] text-[#8A6D00] ring-[#F5C16C]/20" : "bg-[#EDF6EF] text-[#2E7D32] ring-[#7ACB8A]/20") : "bg-[#F7F2EB] text-[#8A8F93] ring-[#EAE6E0]"}`}>
+                        {done ? (r.warna === "MERAH" ? "Perlu rujuk" : r.warna === "KUNING" ? "Waspada" : "Selesai") : "Belum"}
+                      </span>
+                      <ChevronRight className="size-4 text-[#C2C8CB] shrink-0" />
+                    </button>
+                  )
+                })
+              ) : (
+                <div className="p-6 flex flex-col items-center text-center">
+                  <img src="/illu/illu-07-bayi.png" alt="Bayi baru lahir" className="h-32 w-auto object-contain" />
+                  <p className="mt-6 text-sm font-semibold text-[#1E2326] text-center max-w-[22ch]">Cek bayi akan terbuka setelah melahirkan</p>
+                  <p className="text-xs text-[#8A8F93] mt-2 max-w-[30ch] mx-auto leading-relaxed text-center">Ketuk Sudah melahirkan di Beranda untuk membuka cek nifas dan bayi.</p>
+                  <Button size="sm" className="mt-4 rounded-full bg-[#7AAE9A] hover:bg-[#6B9E8A] text-white shadow-sm px-6" onClick={() => { setTab("beranda"); setTimeout(() => setShowBirth(true), 200) }}>
+                    Buka cek
+                  </Button>
+                </div>
+              ))}
           </div>
         </CardContent>
       </Card>
