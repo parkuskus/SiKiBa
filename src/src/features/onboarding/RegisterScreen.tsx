@@ -119,7 +119,50 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
       setOtpErr("Kode 6 digit wajib diisi")
       return
     }
-    // demo: kalau kode cocok dengan demoCode, anggap verifikasi berhasil tanpa hit Supabase
+    const isOnline = typeof navigator !== "undefined" && navigator.onLine
+    // online → pakai verifikasi Supabase beneran, jangan override dengan demo
+    if (isOnline) {
+      setOtpLoading(true)
+      try {
+        const isEmail = phoneForOtp.includes("@")
+        const { data, error } = await supabase.auth.verifyOtp({
+          phone: isEmail ? undefined : (phoneForOtp as string),
+          email: isEmail ? (phoneForOtp as string) : undefined,
+          token: otp.trim(),
+          type: isEmail ? "email" : "sms",
+        } as never)
+        if (error) throw error
+        const userId = data.user?.id ?? data.session?.user?.id
+        if (!userId) throw new Error("Verifikasi berhasil tapi sesi tidak ditemukan")
+        const tmp = await submitRegister({
+          nama: form.nama,
+          tanggalLahir: form.tanggalLahir,
+          noHp: form.noHp,
+          gravida: Number(form.gravida),
+          para: Number(form.para),
+          abortus: Number(form.abortus),
+          hpht: form.hpht,
+          fasyankes: form.fasyankes,
+          namaBidan: form.namaBidan,
+        })
+        const profile = { ...tmp.profile, id: userId }
+        await db.profiles.put(profile)
+        syncProfile(profile)
+        try {
+          await db.profiles.delete(tmp.profile.id)
+        } catch {}
+        console.log("[register] UK", tmp.uk, "HPL", tmp.hpl, "GPA", formatGPA(profile.gravida, profile.para, profile.abortus), "uid", userId)
+        onSuccess()
+        return
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : "Kode salah atau kadaluarsa"
+        setOtpErr(msg)
+        return
+      } finally {
+        setOtpLoading(false)
+      }
+    }
+    // offline/demo fallback — hanya saat offline
     if (demoCode && otp.trim() === demoCode) {
       const demoUserId = `demo-${form.noHp.replace(/[^0-9]/g, "")}`
       const tmp = await submitRegister({
@@ -137,52 +180,11 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
       await db.profiles.put(profile)
       syncProfile(profile)
       try { await db.profiles.delete(tmp.profile.id) } catch {}
-      console.log("[register demo]", tmp.uk, tmp.hpl, demoUserId)
+      console.log("[register demo offline]", tmp.uk, tmp.hpl, demoUserId)
       onSuccess()
       return
     }
-    setOtpLoading(true)
-    try {
-      const isEmail = phoneForOtp.includes("@")
-      const { data, error } = await supabase.auth.verifyOtp({
-        phone: isEmail ? undefined : (phoneForOtp as string),
-        email: isEmail ? (phoneForOtp as string) : undefined,
-        token: otp.trim(),
-        type: isEmail ? "email" : "sms",
-      } as never)
-      if (error) throw error
-      const userId = data.user?.id ?? data.session?.user?.id
-      if (!userId) throw new Error("Verifikasi berhasil tapi sesi tidak ditemukan")
-
-      // simpan profil dengan id = auth uid (bukan random) agar RLS auth.uid() cocok
-      // pakai logic submitRegister tapi override id
-      const tmp = await submitRegister({
-        nama: form.nama,
-        tanggalLahir: form.tanggalLahir,
-        noHp: form.noHp,
-        gravida: Number(form.gravida),
-        para: Number(form.para),
-        abortus: Number(form.abortus),
-        hpht: form.hpht,
-        fasyankes: form.fasyankes,
-        namaBidan: form.namaBidan,
-      })
-      // ganti id random dengan auth uid
-      const profile = { ...tmp.profile, id: userId }
-      await db.profiles.put(profile)
-      syncProfile(profile)
-      // hapus yang random jika ada
-      try {
-        await db.profiles.delete(tmp.profile.id)
-      } catch {}
-      console.log("[register] UK", tmp.uk, "HPL", tmp.hpl, "GPA", formatGPA(profile.gravida, profile.para, profile.abortus), "uid", userId)
-      onSuccess()
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Kode salah atau kadaluarsa"
-      setOtpErr(msg)
-    } finally {
-      setOtpLoading(false)
-    }
+    setOtpErr("Kode salah atau kadaluarsa. Saat online pakai kode SMS/email asli, kode demo hanya untuk offline.")
   }
 
   if (step === "otp") {
@@ -194,11 +196,11 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
           </button>
           <h1 className="mt-4 font-[Poppins] text-[20px] font-semibold text-[#1E2326] leading-tight">Masukkan kode OTP</h1>
           <p className="mt-1 text-sm text-[#8A8F93] leading-relaxed">Kode 6 digit dikirim ke {phoneForOtp.includes("@") ? "email" : "WhatsApp"} {phoneForOtp}. Masukkan untuk verifikasi.</p>
-          {demoCode && (
+          {typeof navigator !== "undefined" && !navigator.onLine && demoCode && (
             <div className="mt-3 rounded-2xl bg-[#FFF8EC] px-3 py-2.5 ring-1 ring-[#F5C16C]/20 text-center">
-              <p className="text-xs font-medium text-[#8A6D00]">Kode demo untuk percobaan</p>
+              <p className="text-xs font-medium text-[#8A6D00]">Kode demo offline</p>
               <p className="font-mono text-lg font-bold tracking-[0.3em] text-[#1E2326]">{demoCode}</p>
-              <p className="text-[11px] text-[#8A8F93]">Gunakan kode ini untuk verifikasi tanpa SMS</p>
+              <p className="text-[11px] text-[#8A8F93]">Gunakan saat offline tanpa SMS</p>
             </div>
           )}
           <Card className="mt-4 rounded-[24px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm">
