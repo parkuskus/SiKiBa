@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { getCurrentUserId } from "@/data/currentUser"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -14,7 +15,7 @@ export default function PreeklamsiaScreen({ onBack, onSuccess }: { onBack: () =>
     setErr(null)
     setLoading(true)
     try {
-      const res = await submitPreeklamsia({ userId: "demo-siti", sistolik: Number(form.sistolik), diastolik: Number(form.diastolik), ukMinggu: Number(form.ukMinggu), proteinuria: form.proteinuria })
+      const res = await submitPreeklamsia({ userId: await getCurrentUserId(), sistolik: Number(form.sistolik), diastolik: Number(form.diastolik), ukMinggu: Number(form.ukMinggu), proteinuria: form.proteinuria })
       onSuccess(res)
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Gagal"

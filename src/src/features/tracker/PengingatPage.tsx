@@ -5,13 +5,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { db } from "@/data/db"
+import { getCurrentUserId, getCurrentProfile } from "@/data/currentUser"
 import { submitWeight } from "@/features/tracker/weightForm"
 import { upsertSupplement } from "@/features/tracker/supplementForm"
 import { initANC, toggleANC } from "@/features/tracker/ancForm"
 import { submitDiary } from "@/features/tracker/diaryForm"
 import type { WeightEntry, ANCVisit, SupplementReminder } from "@/data/db"
 
-const DEMO_ID = "demo-siti"
 const DEMO_HPHT = "2026-02-12"
 const SUPLEMEN_DEFAULT = [
   { id: "Fe", nama: "Zat besi", jam: "19.00" },
@@ -23,6 +23,7 @@ export default function PengingatPage() {
   const [weights, setWeights] = useState<WeightEntry[]>([])
   const [anc, setAnc] = useState<ANCVisit[]>([])
   const [suplemen, setSuplemen] = useState<SupplementReminder[]>([])
+  const [uid, setUid] = useState<string>("demo-siti")
   const [weightInput, setWeightInput] = useState("")
   const [weightErr, setWeightErr] = useState<string | null>(null)
   const [weightLoading, setWeightLoading] = useState(false)
@@ -31,24 +32,26 @@ export default function PengingatPage() {
   const [diaryMsg, setDiaryMsg] = useState<string | null>(null)
 
   const load = async () => {
-    const p = await db.profiles.get(DEMO_ID)
+    const p = await getCurrentProfile()
     const h = p?.hpht ?? DEMO_HPHT
-    const w = await db.weightEntries.where("userId").equals(DEMO_ID).toArray()
+    const id = p?.id ?? (await getCurrentUserId())
+    setUid(id)
+    const w = await db.weightEntries.where("userId").equals(id).toArray()
     w.sort((a, b) => a.tanggal.localeCompare(b.tanggal))
     setWeights(w)
-    let a = await db.ancVisits.where("userId").equals(DEMO_ID).toArray()
+    let a = await db.ancVisits.where("userId").equals(id).toArray()
     if (!a.length) {
-      await initANC(DEMO_ID, h)
-      a = await db.ancVisits.where("userId").equals(DEMO_ID).toArray()
+      await initANC(id, h)
+      a = await db.ancVisits.where("userId").equals(id).toArray()
     }
     a.sort((x, y) => x.tanggalTerjadwal.localeCompare(y.tanggalTerjadwal))
     setAnc(a)
-    const s = await db.supplementReminders.where("userId").equals(DEMO_ID).toArray()
+    const s = await db.supplementReminders.where("userId").equals(id).toArray()
     if (!s.length) {
       for (const d of SUPLEMEN_DEFAULT) {
-        await upsertSupplement({ userId: DEMO_ID, namaSuplemen: d.id, waktu: d.jam, statusAktif: d.id !== "Ca" })
+        await upsertSupplement({ userId: id, namaSuplemen: d.id, waktu: d.jam, statusAktif: d.id !== "Ca" })
       }
-      const s2 = await db.supplementReminders.where("userId").equals(DEMO_ID).toArray()
+      const s2 = await db.supplementReminders.where("userId").equals(id).toArray()
       setSuplemen(s2)
     } else setSuplemen(s)
   }
@@ -58,7 +61,7 @@ export default function PengingatPage() {
   }, [])
 
   const handleToggleSuplemen = async (nama: string, waktu: string, current: boolean) => {
-    await upsertSupplement({ userId: DEMO_ID, namaSuplemen: nama, waktu, statusAktif: !current })
+    await upsertSupplement({ userId: uid, namaSuplemen: nama, waktu, statusAktif: !current })
     await load()
   }
 
@@ -72,7 +75,7 @@ export default function PengingatPage() {
     setWeightLoading(true)
     try {
       const today = new Date().toISOString().slice(0, 10)
-      await submitWeight({ userId: DEMO_ID, bbKg: v, tanggal: today, bbPreKg: 55, tbCm: 160, ukMinggu: 28 })
+      await submitWeight({ userId: uid, bbKg: v, tanggal: today, bbPreKg: 55, tbCm: 160, ukMinggu: 28 })
       setWeightInput("")
       await load()
     } catch (e: unknown) {
@@ -89,7 +92,7 @@ export default function PengingatPage() {
 
   const handleDiary = async () => {
     if (!diaryText.trim()) return
-    await submitDiary({ userId: DEMO_ID, teks: diaryText.trim(), mood: diaryMood })
+    await submitDiary({ userId: uid, teks: diaryText.trim(), mood: diaryMood })
     setDiaryText("")
     setDiaryMsg("Tersimpan")
     setTimeout(() => setDiaryMsg(null), 1500)

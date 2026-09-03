@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { getCurrentUserId } from "@/data/currentUser"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -16,7 +17,7 @@ export default function GiziScreen({ onBack, onSuccess }: { onBack: () => void; 
     setFieldErrs({})
     setLoading(true)
     try {
-      const res = await submitGizi({ userId: "demo-siti", bbPreKg: Number(form.bbPreKg), tbCm: Number(form.tbCm), lilaCm: Number(form.lilaCm), bbSekarangKg: Number(form.bbSekarangKg), ukMinggu: Number(form.ukMinggu) })
+      const res = await submitGizi({ userId: await getCurrentUserId(), bbPreKg: Number(form.bbPreKg), tbCm: Number(form.tbCm), lilaCm: Number(form.lilaCm), bbSekarangKg: Number(form.bbSekarangKg), ukMinggu: Number(form.ukMinggu) })
       onSuccess(res)
     } catch (e: unknown) {
       const err = e as { errs?: Record<string, string>; message?: string }

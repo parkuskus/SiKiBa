@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { getCurrentUserId } from "@/data/currentUser"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { submitDangerSign } from "@/features/skrining/ibu-hamil/dangerSignForm"
@@ -22,7 +23,7 @@ export default function DangerSignScreen({ onBack, onSuccess }: { onBack: () => 
   const handle = async () => {
     setLoading(true)
     try {
-      const res = await submitDangerSign({ userId: "demo-siti", ...form })
+      const res = await submitDangerSign({ userId: await getCurrentUserId(), ...form })
       onSuccess(res)
     } finally {
       setLoading(false)

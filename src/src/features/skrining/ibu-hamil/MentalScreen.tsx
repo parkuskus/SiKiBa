@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { getCurrentUserId } from "@/data/currentUser"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { submitMental } from "@/features/skrining/ibu-hamil/mentalForm"
@@ -23,7 +24,7 @@ export default function MentalScreen({ onBack, onSuccess }: { onBack: () => void
   const handle = async () => {
     setLoading(true)
     try {
-      const res = await submitMental({ userId: "demo-siti", answers })
+      const res = await submitMental({ userId: await getCurrentUserId(), answers })
       onSuccess(res)
     } finally {
       setLoading(false)

@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { getCurrentUserId } from "@/data/currentUser"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -34,7 +35,7 @@ export default function HipotiroidScreen({
     setLoading(true)
     try {
       const res = await submitHipotiroid({
-        userId: "demo-siti",
+        userId: await getCurrentUserId(),
         sudahTSH: form.sudahTSH,
         usiaBayiHari: form.sudahTSH ? undefined : Number(form.usiaBayiHari),
         gejala: form.gejala,

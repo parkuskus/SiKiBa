@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { getCurrentUserId } from "@/data/currentUser"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -23,7 +24,7 @@ export default function RiskFactorScreen({
     setSubmitting(true)
     try {
       const res = await submitRiskFactor({
-        userId: "demo-siti",
+        userId: await getCurrentUserId(),
         usia: input.usia,
         paritas: input.paritas,
         jarakTahun: input.jarakTahun || undefined,

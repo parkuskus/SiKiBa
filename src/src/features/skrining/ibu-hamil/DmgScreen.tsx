@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { getCurrentUserId } from "@/data/currentUser"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -12,7 +13,7 @@ export default function DmgScreen({ onBack, onSuccess }: { onBack: () => void; o
   const handle = async () => {
     setLoading(true)
     try {
-      const res = await submitDMG({ userId: "demo-siti", usia: Number(form.usia), imtPre: Number(form.imtPre), ukMinggu: Number(form.ukMinggu), riwayatDMG: form.riwayatDMG, riwayatMakrosomia: form.riwayatMakrosomia, riwayatDMKeluarga: form.riwayatDMKeluarga })
+      const res = await submitDMG({ userId: await getCurrentUserId(), usia: Number(form.usia), imtPre: Number(form.imtPre), ukMinggu: Number(form.ukMinggu), riwayatDMG: form.riwayatDMG, riwayatMakrosomia: form.riwayatMakrosomia, riwayatDMKeluarga: form.riwayatDMKeluarga })
       onSuccess(res)
     } finally {
       setLoading(false)

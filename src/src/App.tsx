@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import AppHeader from "@/shared/components/layout/AppHeader"
 import BottomNav from "@/shared/components/layout/BottomNav"
 import BirthDialog from "@/shared/components/layout/BirthDialog"
@@ -10,6 +10,7 @@ import ProfilPage from "@/features/profil/ProfilPage"
 import SplashScreen from "@/features/onboarding/SplashScreen"
 import RegisterScreen from "@/features/onboarding/RegisterScreen"
 import LoginScreen from "@/features/onboarding/LoginScreen"
+import { supabase } from "@/data/supabase"
 
 type Tab = "beranda" | "skrining" | "edukasi" | "tracker" | "profil"
 type Onboarding = "splash" | "register" | "login" | "app"
@@ -19,6 +20,19 @@ export default function App() {
   const [isPostpartum, setIsPostpartum] = useState(false)
   const [showBirth, setShowBirth] = useState(false)
   const [onboarding, setOnboarding] = useState<Onboarding>("splash")
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session?.user) setOnboarding("app")
+    })
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) setOnboarding("app")
+      if (event === "SIGNED_OUT") setOnboarding("splash")
+    })
+    return () => subscription.unsubscribe()
+  }, [])
 
   const uk = 28
   const progress = 70

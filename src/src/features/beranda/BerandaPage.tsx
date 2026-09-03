@@ -3,6 +3,7 @@ import { Baby, CalendarDays, ShieldCheck, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { db } from "@/data/db"
+import { getCurrentProfile, getCurrentUserId } from "@/data/currentUser"
 import { weeksFromHpht, calcHPL, progressPercent } from "@/clinical-rules/ukHpl"
 import type { Profile, ScreeningResult } from "@/data/db"
 
@@ -16,7 +17,6 @@ type Props = {
   setTab: (t: "beranda" | "skrining" | "edukasi" | "tracker" | "profil") => void
 }
 
-const DEMO_ID = "demo-siti"
 const DEMO_HPHT = "2026-02-12"
 
 function formatHpl(hpht: string): string {
@@ -34,14 +34,15 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
 
   useEffect(() => {
     void (async () => {
-      const p = await db.profiles.get(DEMO_ID)
+      const p = await getCurrentProfile()
       if (p) setProfile(p)
-      const all = await db.screeningResults.where("userId").equals(DEMO_ID).toArray()
+      const uid = p?.id ?? (await getCurrentUserId())
+      const all = await db.screeningResults.where("userId").equals(uid).toArray()
       if (all.length) {
         all.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
         setLast(all[0])
       }
-      const sup = await db.supplementReminders.where("userId").equals(DEMO_ID).toArray()
+      const sup = await db.supplementReminders.where("userId").equals(uid).toArray()
       const aktif = sup.find((s) => s.statusAktif)
       if (aktif) setSupJam(aktif.waktu)
       else if (sup.length) setSupJam(sup[0].waktu)

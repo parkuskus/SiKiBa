@@ -3,6 +3,7 @@ import { ChevronRight, Heart, FileDown, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { db } from "@/data/db"
+import { getCurrentProfile, getCurrentUserId } from "@/data/currentUser"
 import { weeksFromHpht, calcHPL } from "@/clinical-rules/ukHpl"
 import { generateRingkasanPDF, shareViaWA } from "@/services/exportService"
 import SettingScreen from "@/features/profil/SettingScreen"
@@ -10,7 +11,6 @@ import type { Profile, ScreeningResult } from "@/data/db"
 
 type Props = { uk: number; hplLabel: string }
 
-const DEMO_ID = "demo-siti"
 const DEMO_HPHT = "2026-02-12"
 
 function hitungUsia(tglLahir?: string): number | null {
@@ -29,10 +29,14 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
   const [exporting, setExporting] = useState(false)
   const [showSetting, setShowSetting] = useState(false)
 
+  const [uid, setUid] = useState<string>("demo-siti")
+
   const load = async () => {
-    const p = await db.profiles.get(DEMO_ID)
+    const p = await getCurrentProfile()
     if (p) setProfile(p)
-    const h = await db.screeningResults.where("userId").equals(DEMO_ID).toArray()
+    const id = p?.id ?? (await getCurrentUserId())
+    setUid(id)
+    const h = await db.screeningResults.where("userId").equals(id).toArray()
     h.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     setHistory(h)
   }
@@ -52,13 +56,13 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
   const handleExport = async (viaWA: boolean) => {
     setExporting(true)
     try {
-      if (viaWA) await shareViaWA(DEMO_ID)
+      if (viaWA) await shareViaWA(uid)
       else {
-        const blob = await generateRingkasanPDF(DEMO_ID)
+        const blob = await generateRingkasanPDF(uid)
         const url = URL.createObjectURL(blob)
         const a = document.createElement("a")
         a.href = url
-        a.download = `SIAGA-Bunda-${DEMO_ID}.pdf`
+        a.download = `SIAGA-Bunda-${uid}.pdf`
         a.click()
         URL.revokeObjectURL(url)
       }
