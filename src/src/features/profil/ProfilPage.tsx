@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react"
-import { ChevronRight, Heart, FileDown } from "lucide-react"
+import { ChevronRight, Heart, FileDown, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { db } from "@/data/db"
 import { weeksFromHpht, calcHPL } from "@/clinical-rules/ukHpl"
 import { generateRingkasanPDF, shareViaWA } from "@/services/exportService"
+import SettingScreen from "@/features/profil/SettingScreen"
 import type { Profile, ScreeningResult } from "@/data/db"
 
 type Props = { uk: number; hplLabel: string }
@@ -26,6 +27,7 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
   const [history, setHistory] = useState<ScreeningResult[]>([])
   const [showAll, setShowAll] = useState(false)
   const [exporting, setExporting] = useState(false)
+  const [showSetting, setShowSetting] = useState(false)
 
   const load = async () => {
     const p = await db.profiles.get(DEMO_ID)
@@ -69,6 +71,8 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
 
   const items = showAll ? history : history.slice(0, 3)
 
+  if (showSetting) return <SettingScreen onBack={() => setShowSetting(false)} />
+
   return (
     <div className="space-y-4">
       <Card className="rounded-[24px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm">
@@ -79,7 +83,7 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
               {nama} {usia ? `${usia} tahun` : "26 tahun"}
             </p>
             <p className="text-xs text-[#8A8F93]">Hamil minggu ke {uk}, perkiraan lahir {hplLabel} {gpa}</p>
-            {profile?.fasyankes && <p className="text-[11px] text-[#8A8F93] truncate">{profile.fasyankes} {profile.nama_bidan ? `• ${profile.nama_bidan}` : ""}</p>}
+            {profile?.fasyankes && <p className="text-[11px] text-[#8A8F93] truncate">{profile.fasyankes} {profile.nama_bidan ? `${profile.nama_bidan}` : ""}</p>}
           </div>
           <Button variant="outline" size="sm" className="rounded-full text-xs">
             Ubah
@@ -137,6 +141,21 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
               Bagikan WA
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="rounded-[24px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm">
+        <CardContent className="p-0">
+          <button onClick={() => setShowSetting(true)} className="flex w-full items-center gap-3 px-4 py-3.5 text-left hover:bg-[#FFFCF6] transition-colors">
+            <div className="size-10 rounded-xl bg-[#F0F5F1] grid place-items-center text-[#7AAE9A] ring-1 ring-[#EAE6E0]">
+              <Settings className="size-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-[#1E2326] leading-none">Pengaturan</p>
+              <p className="text-xs text-[#8A8F93]">Notifikasi dan privasi</p>
+            </div>
+            <ChevronRight className="size-4 text-[#C2C8CB]" />
+          </button>
         </CardContent>
       </Card>
 
