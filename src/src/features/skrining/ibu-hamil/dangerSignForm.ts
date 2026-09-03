@@ -31,7 +31,7 @@ export async function submitDangerSign(input: DangerSignInput) {
   if (!input.userId) throw new Error('userId wajib')
   const kategori = kategoriDanger(input)
   const flags = Object.entries(input).filter(([k, v]) => k !== 'userId' && v === true).map(([k]) => k)
-  const row = { id: crypto.randomUUID(), userId: input.userId, tipe: 'danger_sign', skor: flags.length, kategori, detail: { ...input, flags }, createdAt: new Date().toISOString() }
+  const row = { id: globalThis.crypto?.randomUUID?.() ?? ("demo-" + Date.now() + "-" + Math.random().toString(36).slice(2,8)), userId: input.userId, tipe: 'danger_sign', skor: flags.length, kategori, detail: { ...input, flags }, createdAt: new Date().toISOString() }
   await db.screeningResults.put(row)
   syncScreening(row as never)
   return { kategori, flags }

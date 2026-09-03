@@ -38,7 +38,7 @@ export async function submitGizi(input: GiziInput) {
   const warna = warnaGizi(imtKat, lilaKat, kenaikanKurang)
   const trajectory = kenaikanKurang ? 'kurang' : kenaikanAktual > targetProp + 2 ? 'lebih' : 'sesuai'
 
-  const id = crypto.randomUUID()
+  const id = globalThis.crypto?.randomUUID?.() ?? ("demo-" + Date.now() + "-" + Math.random().toString(36).slice(2,8))
   const createdAt = new Date().toISOString()
   const row = {
     id,

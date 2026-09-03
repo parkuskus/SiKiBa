@@ -5,8 +5,19 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { submitRegister, formatGPA } from "@/features/onboarding/registerForm"
+import { supabase } from "@/data/supabase"
+import { db } from "@/data/db"
+import { syncProfile } from "@/data/sync"
 
 type Props = { onBack: () => void; onSuccess: () => void; onToLogin: () => void }
+
+function toE164(noHp: string): string {
+  const clean = noHp.replace(/[^0-9]/g, "")
+  if (clean.startsWith("0")) return `+62${clean.slice(1)}`
+  if (clean.startsWith("62")) return `+${clean}`
+  if (clean.startsWith("+62")) return clean
+  return `+62${clean}`
+}
 
 export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) {
   const [form, setForm] = useState({
@@ -23,14 +34,95 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
   const [errs, setErrs] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
   const [globalErr, setGlobalErr] = useState<string | null>(null)
+  const [step, setStep] = useState<"form" | "otp">("form")
+  const [otp, setOtp] = useState("")
+  const [otpErr, setOtpErr] = useState<string | null>(null)
+  const [otpLoading, setOtpLoading] = useState(false)
+  const [phoneForOtp, setPhoneForOtp] = useState("")
+  const [demoCode, setDemoCode] = useState<string | null>(null)
 
   const set = (k: string, v: string | number) => setForm((s) => ({ ...s, [k]: v }))
 
-  const handleSubmit = async () => {
+  const handleRequestOtp = async () => {
     setGlobalErr(null)
+    setErrs({})
+    // validasi dulu via submitRegister logic tanpa simpan
+    const tempErrs: Record<string, string> = {}
+    if (!form.nama.trim()) tempErrs.nama = "Nama wajib"
+    if (!form.tanggalLahir) tempErrs.tanggalLahir = "Tanggal lahir wajib"
+    if (!/^08\d{8,11}$/.test(form.noHp.replace(/[^0-9]/g, ""))) tempErrs.noHp = "No HP tidak valid (08...)"
+    if (!form.hpht) tempErrs.hpht = "HPHT wajib"
+    if (!form.fasyankes.trim()) tempErrs.fasyankes = "Fasyankes wajib"
+    if (!form.namaBidan.trim()) tempErrs.namaBidan = "Nama bidan wajib"
+    if (Object.keys(tempErrs).length) {
+      setErrs(tempErrs)
+      return
+    }
+    if (!navigator.onLine) {
+      // offline fallback langsung simpan lokal
+      setLoading(true)
+      try {
+        const res = await submitRegister({
+          nama: form.nama,
+          tanggalLahir: form.tanggalLahir,
+          noHp: form.noHp,
+          gravida: Number(form.gravida),
+          para: Number(form.para),
+          abortus: Number(form.abortus),
+          hpht: form.hpht,
+          fasyankes: form.fasyankes,
+          namaBidan: form.namaBidan,
+        })
+        console.log("[register offline] UK", res.uk, "HPL", res.hpl)
+        onSuccess()
+      } catch (e: unknown) {
+        const err = e as { errs?: Record<string, string>; message?: string }
+        if (err.errs) setErrs(err.errs)
+        else setGlobalErr(err.message ?? "Gagal menyimpan")
+      } finally {
+        setLoading(false)
+      }
+      return
+    }
+
     setLoading(true)
     try {
-      const res = await submitRegister({
+      const e164 = toE164(form.noHp)
+      setPhoneForOtp(e164)
+      // demo: generate kode sintetis agar bisa dicoba tanpa SMS/email beneran
+      const code = Math.floor(100000 + Math.random() * 900000).toString()
+      setDemoCode(code)
+      console.log("[demo OTP]", code, "untuk", e164)
+      // coba phone OTP, kalau gagal fallback ke email sintetis — tapi demo tetap jalan
+      try {
+        const { error } = await supabase.auth.signInWithOtp({ phone: e164 })
+        if (error) {
+          const email = `${form.noHp.replace(/[^0-9]/g, "")}@siagabunda.test`
+          setPhoneForOtp(email)
+          await supabase.auth.signInWithOtp({ email })
+        }
+      } catch {
+        // abaikan, demo code tetap bisa dipakai
+      }
+      setStep("otp")
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Gagal mengirim kode OTP"
+      setGlobalErr(msg.includes("rate limit") ? "Terlalu sering minta kode. Coba lagi beberapa saat." : msg)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleVerifyOtp = async () => {
+    setOtpErr(null)
+    if (otp.trim().length < 6) {
+      setOtpErr("Kode 6 digit wajib diisi")
+      return
+    }
+    // demo: kalau kode cocok dengan demoCode, anggap verifikasi berhasil tanpa hit Supabase
+    if (demoCode && otp.trim() === demoCode) {
+      const demoUserId = `demo-${form.noHp.replace(/[^0-9]/g, "")}`
+      const tmp = await submitRegister({
         nama: form.nama,
         tanggalLahir: form.tanggalLahir,
         noHp: form.noHp,
@@ -41,16 +133,92 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
         fasyankes: form.fasyankes,
         namaBidan: form.namaBidan,
       })
-      // simpan info ringkas untuk debug, tidak ditampilkan berlebihan
-      console.log("[register] UK", res.uk, "HPL", res.hpl, "GPA", formatGPA(res.profile.gravida, res.profile.para, res.profile.abortus))
+      const profile = { ...tmp.profile, id: demoUserId }
+      await db.profiles.put(profile)
+      syncProfile(profile)
+      try { await db.profiles.delete(tmp.profile.id) } catch {}
+      console.log("[register demo]", tmp.uk, tmp.hpl, demoUserId)
+      onSuccess()
+      return
+    }
+    setOtpLoading(true)
+    try {
+      const isEmail = phoneForOtp.includes("@")
+      const { data, error } = await supabase.auth.verifyOtp({
+        phone: isEmail ? undefined : (phoneForOtp as string),
+        email: isEmail ? (phoneForOtp as string) : undefined,
+        token: otp.trim(),
+        type: isEmail ? "email" : "sms",
+      } as never)
+      if (error) throw error
+      const userId = data.user?.id ?? data.session?.user?.id
+      if (!userId) throw new Error("Verifikasi berhasil tapi sesi tidak ditemukan")
+
+      // simpan profil dengan id = auth uid (bukan random) agar RLS auth.uid() cocok
+      // pakai logic submitRegister tapi override id
+      const tmp = await submitRegister({
+        nama: form.nama,
+        tanggalLahir: form.tanggalLahir,
+        noHp: form.noHp,
+        gravida: Number(form.gravida),
+        para: Number(form.para),
+        abortus: Number(form.abortus),
+        hpht: form.hpht,
+        fasyankes: form.fasyankes,
+        namaBidan: form.namaBidan,
+      })
+      // ganti id random dengan auth uid
+      const profile = { ...tmp.profile, id: userId }
+      await db.profiles.put(profile)
+      syncProfile(profile)
+      // hapus yang random jika ada
+      try {
+        await db.profiles.delete(tmp.profile.id)
+      } catch {}
+      console.log("[register] UK", tmp.uk, "HPL", tmp.hpl, "GPA", formatGPA(profile.gravida, profile.para, profile.abortus), "uid", userId)
       onSuccess()
     } catch (e: unknown) {
-      const err = e as { errs?: Record<string, string>; message?: string }
-      if (err.errs) setErrs(err.errs)
-      else setGlobalErr(err.message ?? "Gagal menyimpan")
+      const msg = e instanceof Error ? e.message : "Kode salah atau kadaluarsa"
+      setOtpErr(msg)
     } finally {
-      setLoading(false)
+      setOtpLoading(false)
     }
+  }
+
+  if (step === "otp") {
+    return (
+      <div className="min-h-[100dvh] bg-[#FFFCF6] flex flex-col">
+        <div className="mx-auto w-full max-w-[480px] flex-1 px-4 pb-6 pt-4">
+          <button onClick={() => setStep("form")} className="size-9 rounded-full bg-white ring-1 ring-[#EAE6E0] grid place-items-center text-[#7AAE9A]">
+            <ChevronRight className="size-4 rotate-180" />
+          </button>
+          <h1 className="mt-4 font-[Poppins] text-[20px] font-semibold text-[#1E2326] leading-tight">Masukkan kode OTP</h1>
+          <p className="mt-1 text-sm text-[#8A8F93] leading-relaxed">Kode 6 digit dikirim ke {phoneForOtp.includes("@") ? "email" : "WhatsApp"} {phoneForOtp}. Masukkan untuk verifikasi.</p>
+          {demoCode && (
+            <div className="mt-3 rounded-2xl bg-[#FFF8EC] px-3 py-2.5 ring-1 ring-[#F5C16C]/20 text-center">
+              <p className="text-xs font-medium text-[#8A6D00]">Kode demo untuk percobaan</p>
+              <p className="font-mono text-lg font-bold tracking-[0.3em] text-[#1E2326]">{demoCode}</p>
+              <p className="text-[11px] text-[#8A8F93]">Gunakan kode ini untuk verifikasi tanpa SMS</p>
+            </div>
+          )}
+          <Card className="mt-4 rounded-[24px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm">
+            <CardContent className="p-4 space-y-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Kode OTP</Label>
+                <Input value={otp} onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))} placeholder="123456" className="rounded-xl bg-[#FFFCF6] tracking-[0.3em] text-center text-lg" inputMode="numeric" />
+                {otpErr && <p className="text-xs text-[#E57373] text-center">{otpErr}</p>}
+              </div>
+              <Button onClick={handleVerifyOtp} disabled={otpLoading} className="w-full rounded-full bg-[#7AAE9A] hover:bg-[#6B9E8A] py-3.5 text-sm font-semibold">
+                {otpLoading ? "Memeriksa" : "Verifikasi"}
+              </Button>
+              <button onClick={handleRequestOtp} className="w-full text-center text-sm font-medium text-[#7AAE9A] underline underline-offset-4 decoration-[#7AAE9A]/30">
+                Kirim ulang kode
+              </button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -123,8 +291,8 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
 
             {globalErr && <p className="text-xs text-[#E57373] text-center">{globalErr}</p>}
 
-            <Button onClick={handleSubmit} disabled={loading} className="w-full rounded-full bg-[#7AAE9A] hover:bg-[#6B9E8A] py-3.5 text-sm font-semibold">
-              {loading ? "Menyimpan" : "Daftar"}
+            <Button onClick={handleRequestOtp} disabled={loading} className="w-full rounded-full bg-[#7AAE9A] hover:bg-[#6B9E8A] py-3.5 text-sm font-semibold">
+              {loading ? "Mengirim kode" : "Daftar"}
             </Button>
 
             <button onClick={onToLogin} className="w-full text-center text-sm font-medium text-[#7AAE9A] underline underline-offset-4 decoration-[#7AAE9A]/30">

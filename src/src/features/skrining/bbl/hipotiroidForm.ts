@@ -23,7 +23,7 @@ export function kategoriHipotiroid(v: HipotiroidInput): 'HIJAU' | 'KUNING' | 'ME
 export async function submitHipotiroid(input: HipotiroidInput) {
   if (!input.userId) throw new Error('userId wajib')
   const kategori = kategoriHipotiroid(input)
-  const row = { id: crypto.randomUUID(), userId: input.userId, tipe: 'hipotiroid', skor: input.sudahTSH ? 1 : 0, kategori, detail: { ...input }, createdAt: new Date().toISOString() }
+  const row = { id: globalThis.crypto?.randomUUID?.() ?? ("demo-" + Date.now() + "-" + Math.random().toString(36).slice(2,8)), userId: input.userId, tipe: 'hipotiroid', skor: input.sudahTSH ? 1 : 0, kategori, detail: { ...input }, createdAt: new Date().toISOString() }
   await db.screeningResults.put(row)
   syncScreening(row as never)
   return { kategori }

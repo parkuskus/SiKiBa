@@ -17,7 +17,7 @@ export function generateANCJadwal(hpht: string): string[] {
 export async function initANC(userId: string, hpht: string) {
   const jadwal = generateANCJadwal(hpht)
   for (const tgl of jadwal) {
-    const row = { id: crypto.randomUUID(), userId, tanggalTerjadwal: tgl, statusSelesai: false }
+    const row = { id: globalThis.crypto?.randomUUID?.() ?? ("demo-" + Date.now() + "-" + Math.random().toString(36).slice(2,8)), userId, tanggalTerjadwal: tgl, statusSelesai: false }
     await db.ancVisits.put(row)
     syncAnc(row)
   }

@@ -43,7 +43,7 @@ export async function submitRegister(input: RegisterInput): Promise<{ profile: P
   const hpl = calcHPL(input.hpht)
   const tri = trimester(uk)
   const progress = progressPercent(uk)
-  const id = crypto.randomUUID()
+  const id = globalThis.crypto?.randomUUID?.() ?? ("demo-" + Date.now() + "-" + Math.random().toString(36).slice(2,8))
 
   const profile: Profile = {
     id,

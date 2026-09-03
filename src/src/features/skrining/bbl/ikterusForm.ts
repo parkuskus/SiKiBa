@@ -19,7 +19,7 @@ export async function submitIkterus(input: IkterusInput) {
   // zona 4-5 atau onset<24 sudah MERAH via kramerZone; prematur + zona3 → eskalasi
   let kategori: 'HIJAU' | 'KUNING' | 'MERAH' = warna
   if (input.prematur && input.zona >= 3 && kategori === 'KUNING') kategori = 'MERAH'
-  const row = { id: crypto.randomUUID(), userId: input.userId, tipe: 'ikterus', skor: input.zona, kategori, detail: { ...input, statusKramer: status }, createdAt: new Date().toISOString() }
+  const row = { id: globalThis.crypto?.randomUUID?.() ?? ("demo-" + Date.now() + "-" + Math.random().toString(36).slice(2,8)), userId: input.userId, tipe: 'ikterus', skor: input.zona, kategori, detail: { ...input, statusKramer: status }, createdAt: new Date().toISOString() }
   await db.screeningResults.put(row)
   syncScreening(row as never)
   return { status, kategori }

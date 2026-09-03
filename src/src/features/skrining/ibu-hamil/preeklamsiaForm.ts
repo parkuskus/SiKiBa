@@ -41,7 +41,7 @@ export async function submitPreeklamsia(input: PreeklamsiaInput) {
   else if (tdKat === 'KUNING' || mapKat === 'KUNING' || risikoTinggi || input.proteinuria) kategori = 'KUNING'
   // proteinuria + HT = preeklamsia
   const detail: Record<string, unknown> = { ...input, map, mapKat, tdKat, risikoTinggi }
-  const row = { id: crypto.randomUUID(), userId: input.userId, tipe: 'preeklamsia', skor: map, kategori, detail, createdAt: new Date().toISOString() }
+  const row = { id: globalThis.crypto?.randomUUID?.() ?? ("demo-" + Date.now() + "-" + Math.random().toString(36).slice(2,8)), userId: input.userId, tipe: 'preeklamsia', skor: map, kategori, detail, createdAt: new Date().toISOString() }
   await db.screeningResults.put(row)
   syncScreening(row as never)
   return { map, mapKat, tdKat, kategori }

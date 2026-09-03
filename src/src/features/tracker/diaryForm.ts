@@ -9,7 +9,7 @@ export async function submitDiary(input: DiaryInput) {
   if (!input.teks.trim()) throw new Error('teks wajib')
   if (input.mood < 1 || input.mood > 5) throw new Error('mood 1-5')
   const tanggal = input.tanggal ?? new Date().toISOString().slice(0, 10)
-  const row = { id: crypto.randomUUID(), userId: input.userId, tanggal, teks: input.teks.trim(), mood: input.mood }
+  const row = { id: globalThis.crypto?.randomUUID?.() ?? ("demo-" + Date.now() + "-" + Math.random().toString(36).slice(2,8)), userId: input.userId, tanggal, teks: input.teks.trim(), mood: input.mood }
   await db.diaryEntries.put(row)
   syncDiary(row)
   return { tanggal }
