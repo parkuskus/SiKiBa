@@ -1,6 +1,10 @@
+import { useEffect, useState } from "react"
 import { Baby, CalendarDays, ShieldCheck, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { db } from "@/data/db"
+import { weeksFromHpht, calcHPL, progressPercent } from "@/clinical-rules/ukHpl"
+import type { Profile, ScreeningResult } from "@/data/db"
 
 type Props = {
   uk: number
@@ -12,12 +16,54 @@ type Props = {
   setTab: (t: "beranda" | "skrining" | "edukasi" | "tracker" | "profil") => void
 }
 
-export default function BerandaPage({ uk, progress, countdown, isPostpartum, setIsPostpartum, setShowBirth, setTab }: Props) {
+const DEMO_ID = "demo-siti"
+const DEMO_HPHT = "2026-02-12"
+
+function formatHpl(hpht: string): string {
+  const hpl = calcHPL(hpht)
+  return new Date(hpl).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })
+}
+function hariIniLabel(): string {
+  return new Date().toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+}
+
+export default function BerandaPage({ uk: ukProp, progress: progressProp, countdown: countdownProp, isPostpartum, setIsPostpartum, setShowBirth, setTab }: Props) {
+  const [profile, setProfile] = useState<Profile | null>(null)
+  const [last, setLast] = useState<ScreeningResult | null>(null)
+  const [supJam, setSupJam] = useState<string | null>(null)
+
+  useEffect(() => {
+    void (async () => {
+      const p = await db.profiles.get(DEMO_ID)
+      if (p) setProfile(p)
+      const all = await db.screeningResults.where("userId").equals(DEMO_ID).toArray()
+      if (all.length) {
+        all.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+        setLast(all[0])
+      }
+      const sup = await db.supplementReminders.where("userId").equals(DEMO_ID).toArray()
+      const aktif = sup.find((s) => s.statusAktif)
+      if (aktif) setSupJam(aktif.waktu)
+      else if (sup.length) setSupJam(sup[0].waktu)
+    })()
+  }, [])
+
+  const hpht = profile?.hpht ?? DEMO_HPHT
+  const uk = profile ? weeksFromHpht(hpht) : ukProp
+  const progress = profile ? progressPercent(uk) : progressProp
+  const hpl = calcHPL(hpht)
+  const hplLabel = profile ? formatHpl(hpht) : "19 Nov 2026"
+  const countdown = profile ? Math.max(0, Math.ceil((new Date(hpl).getTime() - new Date().getTime()) / 86400000)) : countdownProp
+  const gpa = profile ? `G${profile.gravida}P${profile.para}A${profile.abortus}` : "G2P1A0"
+  const nama = profile?.nama ? profile.nama.split(" ")[0] : "Siti"
+  const lastLabel = last ? `${last.kategori === "HIJAU" ? "Kondisi aman" : last.kategori === "KUNING" ? "Perlu perhatian" : "Perlu rujukan"} ` : "Kondisi aman"
+  const lastDate = last ? new Date(last.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "long" }) : "28 Agustus"
+
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-xs text-[#8A8F93]">Senin, 31 Agustus 2026</p>
-        <h1 className="font-[Poppins] text-[22px] font-semibold leading-tight text-[#1E2326]">Halo, Siti</h1>
+        <p className="text-xs text-[#8A8F93]">{hariIniLabel()}</p>
+        <h1 className="font-[Poppins] text-[22px] font-semibold leading-tight text-[#1E2326]">Halo, {nama}</h1>
       </div>
 
       <Card className="rounded-[24px] border-0 bg-[#F0F5F1] ring-1 ring-[#EAE6E0] overflow-hidden">
@@ -43,11 +89,11 @@ export default function BerandaPage({ uk, progress, countdown, isPostpartum, set
               <div className="mt-3 grid grid-cols-2 gap-3">
                 <div className="rounded-2xl bg-white px-3 py-2.5 ring-1 ring-[#EAE6E0]">
                   <p className="text-[11px] font-medium text-[#8A8F93]">GPA</p>
-                  <p className="text-sm font-semibold text-[#1E2326]">G2P1A0</p>
+                  <p className="text-sm font-semibold text-[#1E2326]">{gpa}</p>
                 </div>
                 <div className="rounded-2xl bg-white px-3 py-2.5 ring-1 ring-[#EAE6E0]">
                   <p className="text-[11px] font-medium text-[#8A8F93]">Perkiraan Lahir</p>
-                  <p className="text-sm font-semibold text-[#1E2326]">19 Nov 2026</p>
+                  <p className="text-sm font-semibold text-[#1E2326]">{hplLabel}</p>
                 </div>
               </div>
               <button onClick={() => setShowBirth(true)} className="mt-3 w-full text-center text-sm font-medium text-[#7AAE9A] underline decoration-[#7AAE9A]/25 underline-offset-4">
@@ -75,7 +121,7 @@ export default function BerandaPage({ uk, progress, countdown, isPostpartum, set
               <div className="mt-3 grid grid-cols-2 gap-3">
                 <div className="rounded-2xl bg-white px-3 py-2.5 ring-1 ring-[#EAE6E0]">
                   <p className="text-[11px] font-medium text-[#8A8F93]">GPA</p>
-                  <p className="text-sm font-semibold text-[#1E2326]">G2P1A0</p>
+                  <p className="text-sm font-semibold text-[#1E2326]">{gpa}</p>
                 </div>
                 <div className="rounded-2xl bg-white px-3 py-2.5 ring-1 ring-[#EAE6E0]">
                   <p className="text-[11px] font-medium text-[#8A8F93]">Bayi</p>
@@ -96,8 +142,8 @@ export default function BerandaPage({ uk, progress, countdown, isPostpartum, set
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-[11px] font-bold tracking-[0.08em] text-[#9AA3A6]">CEK TERAKHIR</p>
-            <p className="text-sm font-semibold text-[#1E2326] leading-tight truncate">Kondisi aman</p>
-            <p className="text-xs text-[#8A8F93]">28 Agustus</p>
+            <p className="text-sm font-semibold text-[#1E2326] leading-tight truncate">{lastLabel}</p>
+            <p className="text-xs text-[#8A8F93]">{lastDate}</p>
           </div>
           <Button variant="outline" size="sm" className="rounded-full shrink-0 gap-1 text-xs" onClick={() => setTab("skrining")}>
             Lihat <ChevronRight className="size-3.5" />
@@ -112,7 +158,7 @@ export default function BerandaPage({ uk, progress, countdown, isPostpartum, set
             <div className="flex items-center gap-3 bg-white px-3 py-3">
               <span className="size-2 rounded-full bg-[#7AAE9A] shadow-[0_0_0_4px_rgba(122,174,154,0.15)]" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[#1E2326] leading-none">Vitamin jam 19.00</p>
+                <p className="text-sm font-medium text-[#1E2326] leading-none">Vitamin jam {supJam ?? "19.00"}</p>
                 <p className="text-xs text-[#8A8F93]">Jangan lupa, Bunda</p>
               </div>
               <span className="rounded-full bg-[#EAF2EC] px-2.5 py-1 text-xs font-semibold text-[#5A8A7A]">Aktif</span>
