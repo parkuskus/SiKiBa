@@ -62,9 +62,9 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
 
   return (
     <div className="space-y-4">
-      <div>
-        <p className="text-xs text-[#8A8F93]">{hariIniLabel()}</p>
-        <h1 className="font-[Poppins] text-[22px] font-semibold leading-tight text-[#1E2326]">Halo, {nama}</h1>
+      <div className="flex flex-col gap-2">
+        <p className="!m-0 text-xs leading-none text-[#8A8F93]">{hariIniLabel()}</p>
+        <h1 className="!m-0 text-[22px] font-extrabold tracking-tight leading-none text-[#1E2326]">Halo, {nama}</h1>
       </div>
 
       <Card className="rounded-[24px] border-0 bg-[#F0F5F1] ring-1 ring-[#EAE6E0] overflow-hidden">
@@ -77,14 +77,14 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
                 </div>
                 <div>
                   <p className="text-[11px] font-bold tracking-[0.08em] text-[#7AAE9A]">PERJALANAN KEHAMILAN</p>
-                  <p className="font-[Poppins] text-[15px] font-semibold text-[#1E2326] leading-tight">Trimester {uk < 14 ? 1 : uk < 28 ? 2 : 3}, {uk} minggu</p>
+                  <p className="text-[15px] font-bold tracking-tight text-[#1E2326] leading-tight">Trimester {uk < 14 ? 1 : uk < 28 ? 2 : 3}, Minggu ke-{uk}</p>
                 </div>
               </div>
               <div className="mt-3 h-2 w-full rounded-full bg-white overflow-hidden ring-1 ring-black/5">
                 <div className="h-full rounded-full bg-[#7AAE9A]" style={{ width: `${progress}%` }} />
               </div>
               <div className="mt-1.5 flex justify-between text-[11px] text-[#6C757D]">
-                <span>{uk} dari 40 minggu, {progress} persen</span>
+                <span>{uk} / 40 minggu ({progress}%)</span>
                 <span>{countdown} hari menuju perkiraan lahir</span>
               </div>
               <div className="mt-3 grid grid-cols-2 gap-3">
@@ -98,7 +98,7 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
                 </div>
               </div>
               <button onClick={() => setShowBirth(true)} className="mt-3 w-full text-center text-sm font-medium text-[#7AAE9A] underline decoration-[#7AAE9A]/25 underline-offset-4">
-                Sudah melahirkan Ketuk di sini
+                Sudah melahirkan? Ketuk di sini
               </button>
             </>
           ) : (
@@ -109,7 +109,7 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
                 </div>
                 <div>
                   <p className="text-[11px] font-bold tracking-[0.08em] text-[#7AAE9A]">MASA NIFAS</p>
-                  <p className="font-[Poppins] text-[15px] font-semibold text-[#1E2326] leading-tight">Hari ke 2, 40 hari lagi</p>
+                  <p className="text-[15px] font-bold tracking-tight text-[#1E2326] leading-tight">Hari ke 2, 40 hari lagi</p>
                 </div>
               </div>
               <div className="mt-3 h-2 w-full rounded-full bg-white overflow-hidden ring-1 ring-black/5">

@@ -17,7 +17,7 @@ export default function BirthDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="rounded-[24px] bg-white p-0 gap-0 overflow-hidden border-0 ring-1 ring-black/10 max-w-[360px] w-[calc(100%-24px)]">
         <DialogHeader className="p-5 pb-3 text-left">
-          <DialogTitle className="font-[Poppins] text-[16px] font-semibold text-[#1E2326] flex items-center gap-2">
+          <DialogTitle className="text-[16px] font-semibold text-[#1E2326] flex items-center gap-2">
             <Baby className="size-4 text-[#7AAE9A]" /> Sudah melahirkan
           </DialogTitle>
           <DialogDescription className="text-sm leading-relaxed text-[#8A8F93]">Isi tanggal dan data bayi agar kami dapat membuka cek nifas dan bayi.</DialogDescription>

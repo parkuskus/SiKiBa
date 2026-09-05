@@ -194,7 +194,7 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
           <button onClick={() => setStep("form")} className="size-9 rounded-full bg-white ring-1 ring-[#EAE6E0] grid place-items-center text-[#7AAE9A]">
             <ChevronRight className="size-4 rotate-180" />
           </button>
-          <h1 className="mt-4 font-[Poppins] text-[20px] font-semibold text-[#1E2326] leading-tight">Masukkan kode OTP</h1>
+          <h1 className="mt-4 text-[20px] font-semibold text-[#1E2326] leading-tight">Masukkan kode OTP</h1>
           <p className="mt-1 text-sm text-[#8A8F93] leading-relaxed">Kode 6 digit dikirim ke {phoneForOtp.includes("@") ? "email" : "WhatsApp"} {phoneForOtp}. Masukkan untuk verifikasi.</p>
           {typeof navigator !== "undefined" && !navigator.onLine && demoCode && (
             <div className="mt-3 rounded-2xl bg-[#FFF8EC] px-3 py-2.5 ring-1 ring-[#F5C16C]/20 text-center">
@@ -230,7 +230,7 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
           <ChevronRight className="size-4 rotate-180" />
         </button>
 
-        <h1 className="mt-4 font-[Poppins] text-[20px] font-semibold text-[#1E2326] leading-tight">Daftar Akun Bunda</h1>
+        <h1 className="mt-4 text-[20px] font-semibold text-[#1E2326] leading-tight">Daftar Akun Bunda</h1>
         <p className="mt-1 text-sm text-[#8A8F93] leading-relaxed">Isi data dengan benar. Usia kehamilan dan perkiraan lahir akan dihitung otomatis.</p>
 
         <Card className="mt-4 rounded-[24px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm">

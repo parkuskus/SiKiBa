@@ -62,7 +62,7 @@ export default function SettingScreen({ onBack }: { onBack: () => void }) {
         <button onClick={onBack} className="inline-flex items-center gap-1.5 text-sm font-medium text-[#7AAE9A]">
           <ChevronRight className="size-4 rotate-180" /> Kembali ke profil
         </button>
-        <h2 className="font-[Poppins] text-[18px] font-semibold text-[#1E2326] mt-2 leading-tight">Pengaturan</h2>
+        <h2 className="text-[18px] font-semibold text-[#1E2326] mt-2 leading-tight">Pengaturan</h2>
         <p className="text-sm text-[#8A8F93]">Notifikasi dan privasi data</p>
       </div>
 

@@ -6,7 +6,7 @@ export default function EdukasiPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="font-[Poppins] text-[18px] font-semibold text-[#1E2326]">Belajar</h2>
+        <h2 className="text-[18px] font-bold tracking-tight text-[#1E2326]">Belajar</h2>
         <p className="text-sm text-[#8A8F93]">Penjelasan singkat tanpa istilah sulit.</p>
       </div>
 
@@ -16,7 +16,7 @@ export default function EdukasiPage() {
         </div>
         <CardContent className="px-4 pb-4 pt-0 flex flex-col justify-center">
           <span className="inline-flex w-fit rounded-full bg-[#EAF2EC] px-2.5 py-1 text-[11px] font-bold tracking-wide text-[#5A8A7A] ring-1 ring-[#7AAE9A]/15">Untuk minggu ini 28</span>
-          <h3 className="mt-2 font-[Poppins] text-[15px] font-semibold text-[#1E2326] leading-tight">Si Kecil sebesar terong</h3>
+          <h3 className="mt-2 text-[15px] font-bold tracking-tight text-[#1E2326] leading-tight">Si Kecil sebesar terong</h3>
           <p className="text-sm text-[#6C757D] leading-relaxed">Sekitar 1,2 kilogram, panjang 37 sentimeter. Kelopak mata sudah dapat membuka.</p>
           <Button size="sm" className="mt-3 w-fit rounded-full bg-[#7AAE9A] hover:bg-[#6B9E8A] gap-1.5">
             Baca <ArrowRight className="size-3.5" />

@@ -7,7 +7,7 @@ export default function AppHeader() {
         <div className="flex items-center gap-2.5 min-w-0">
           <img src="/logo-siaga-bunda.png" alt="SIAGA Bunda" className="size-8 rounded-xl bg-white p-1 ring-1 ring-black/5 object-contain" />
           <div className="min-w-0">
-            <p className="font-[Poppins] text-[14px] font-semibold leading-none tracking-tight text-[#1E2326]">SIAGA Bunda</p>
+            <p className="text-[14px] font-bold leading-none tracking-tight text-[#1E2326]">SIAGA Bunda</p>
             <p className="text-[11px] leading-none text-[#8A8F93] hidden sm:block">Siaga menjaga Bunda</p>
           </div>
         </div>

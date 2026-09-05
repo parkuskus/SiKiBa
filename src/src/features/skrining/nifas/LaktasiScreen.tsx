@@ -75,7 +75,7 @@ export default function LaktasiScreen({
             <span className={`rounded-full px-3 py-1 text-xs font-bold ring-1 bg-white ${text} ${ring}`}>{result.warna}</span>
             <span className="text-xs text-[#8A8F93]">Hari ke {form.usiaBayiHari} BAK {form.bakPerHari} kali</span>
           </div>
-          <h3 className={`font-[Poppins] text-[16px] font-semibold leading-tight ${text}`}>
+          <h3 className={`text-[16px] font-semibold leading-tight ${text}`}>
             {result.warna === "MERAH" ? "Perlu rujukan segera" : result.warna === "KUNING" ? "Perlu perhatian" : "Kondisi baik"}
           </h3>
           {result.masalah && <p className={`text-sm font-medium ${text}`}>{result.masalah}</p>}

@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SIAGA Bunda — Brandkit v2 (Revisi Ibu Hamil)</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0F1110;color:#1E2326;font-family:'Plus Jakarta Sans',system-ui,sans-serif}
+  .outer{max-width:1160px;margin:32px auto;padding:24px;background:#0F1110}
+  .topbar{display:flex;justify-content:space-between;align-items:center;color:#8A8F93;font-size:11px;letter-spacing:.08em;padding:8px 4px}
+  .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  .panel{background:#FFFCF6;border-radius:22px;overflow:hidden;position:relative;min-height:220px;display:flex;flex-direction:column}
+  .panel.dark{background:#1A1E1F;color:#EAE6E0}
+  .panel.sage{background:#6B8E73;color:#FFFCF6}
+  .gutter{padding:22px}
+  .kicker{font-size:10px;letter-spacing:.12em;font-weight:600;color:#7AAE9A}
+  .dark .kicker{color:#8FC0A8}
+  h2{font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-weight:600;line-height:1.15}
+  .mono{font-family:ui-monospace,Menlo,monospace;font-size:10px;color:#9AA3A6}
+  .swatch{height:42px;border-radius:999px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;font-size:11px;font-weight:600}
+  .tag{font-size:11px;border:1px solid rgba(0,0,0,.08);padding:6px 10px;border-radius:999px;background:#fff}
+  @media(max-width:900px){.grid{grid-template-columns:1fr 1fr} .panel{min-height:200px}}
+  @media(max-width:560px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="outer">
+  <div class="topbar"><span>SIAGA BUNDA — SISTEM INFORMASI ANTISIPASI &amp; MENJAGA BUNDA</span><span>BRANDKIT v2 • REVISI IBU HAMIL • 03 SEP 2026</span></div>
+
+  <div class="grid">
+
+    <!-- 1 Logo Cover -->
+    <div class="panel" style="grid-row:span 1;align-items:center;justify-content:center;min-height:260px">
+      <div style="text-align:center;padding:28px">
+        <img src="/logo-siaga-bunda-v2.svg" alt="Logo SIAGA Bunda v2 ibu hamil" width="96" height="96" style="object-fit:contain"/>
+        <h2 style="font-size:22px;margin-top:14px;letter-spacing:-.02em">SIAGA Bunda</h2>
+        <p style="font-size:11px;letter-spacing:.14em;color:#7AAE9A;font-weight:600;margin-top:4px">SIAGA MENJAGA BUNDA DAN BUAH HATI</p>
+        <p style="font-size:11px;color:#8A8F93;margin-top:8px">Revisi: ibu hamil sebagai pusat mark — satu goresan, tetap 1 warna</p>
+      </div>
+      <span class="mono" style="position:absolute;bottom:12px;left:16px">01 / COVER</span>
+    </div>
+
+    <!-- 2 Construction -->
+    <div class="panel dark">
+      <div class="gutter">
+        <p class="kicker">02 — CONSTRUCTION</p>
+        <h2 style="font-size:15px;margin-top:8px">Tangan + ibu + daun + bintang = 1 sistem</h2>
+        <p style="font-size:11px;color:#9AA3A6;margin-top:6px;line-height:1.5">Grid 200×200. Dua tangan = pelukan 62° simetri. Siluet ibu = negative space dipertajam dari celah putih lama — perut = kurva daun. Bintang 1 titik = pengetahuan.</p>
+        <div style="margin-top:14px;display:grid;place-items:center;background:#0F1110;border-radius:16px;padding:10px;border:1px solid rgba(255,255,255,.08)">
+          <svg viewBox="0 0 200 200" width="150" height="150" style="opacity:.95">
+            <g fill="none" stroke="rgba(255,255,255,.22)" stroke-width="0.7">
+              <circle cx="100" cy="100" r="96"/><line x1="100" y1="8" x2="100" y2="192"/><line x1="8" y1="100" x2="192" y2="100"/>
+              <circle cx="100" cy="58" r="22" stroke-dasharray="3 3"/>
+            </g>
+            <image href="/logo-siaga-bunda-v2.svg" x="48" y="22" width="104" height="104"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 Digital app -->
+    <div class="panel">
+      <div class="gutter" style="padding-bottom:12px">
+        <p class="kicker">03 — DIGITAL</p>
+        <h2 style="font-size:13px;margin-top:6px">App header 32px • PWA manifest</h2>
+      </div>
+      <div style="margin:0 14px 14px;border:1px solid #EAE6E0;border-radius:16px;overflow:hidden;background:#fff">
+        <div style="height:44px;display:flex;align-items:center;gap:10px;padding:0 12px;background:rgba(255,255,255,.9);border-bottom:1px solid #EAE6E0">
+          <img src="/logo-siaga-bunda-v2.svg" width="28" height="28" style="border-radius:8px;background:#fff;object-fit:contain;padding:2px;border:1px solid #EAE6E0"/>
+          <span style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-weight:600;font-size:13px">SIAGA Bunda</span>
+          <span style="margin-left:auto;font-size:11px;color:#8A8F93">Beranda • Skrining • Belajar</span>
+        </div>
+        <div style="padding:12px 12px 10px">
+          <div style="background:#F0F5F1;border-radius:14px;padding:10px;display:flex;gap:8px;align-items:center;border:1px solid #EAE6E0">
+            <span style="background:#7AAE9A;color:#fff;font-size:10px;padding:4px 8px;border-radius:999px;font-weight:600">Aman</span>
+            <span style="font-size:12px;color:#1E2326">Trimester 2, 28 minggu</span>
+          </div>
+          <div style="margin-top:8px;display:flex;gap:6px">
+            <span style="font-size:11px;background:#7AAE9A;color:#fff;padding:6px 10px;border-radius:999px">Skrining</span>
+            <span style="font-size:11px;border:1px solid #EAE6E0;padding:6px 10px;border-radius:999px">Pengingat</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 Tagline -->
+    <div class="panel dark" style="justify-content:center">
+      <div class="gutter">
+        <p class="kicker" style="color:#FFE2E2">04 — ESSENCE</p>
+        <h2 style="font-size:22px;margin-top:10px;line-height:1.2">Siaga<br/>menjaga<br/><span style="color:#FFE2E2">bunda dan buah hati</span></h2>
+        <p style="font-size:11px;color:#9AA3A6;margin-top:12px">Tenang. Siaga. Mendampingi — bukan menakuti.</p>
+      </div>
+    </div>
+
+    <!-- 5 Color -->
+    <div class="panel">
+      <div class="gutter">
+        <p class="kicker">05 — COLOR</p>
+        <h2 style="font-size:13px;margin-top:6px">Sage sebagai satu aksen — trust-first</h2>
+        <div style="margin-top:14px;display:grid;gap:8px">
+          <div class="swatch" style="background:#6B8E73;color:#fff">Primary Sage <span>#6B8E73</span></div>
+          <div class="swatch" style="background:#7AAE9A;color:#fff">Aksen Lembut <span>#7AAE9A</span></div>
+          <div class="swatch" style="background:#FFFCF6;border:1px solid #EAE6E0">Warm Paper <span>#FFFCF6</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:4px">
+            <span class="tag" style="background:#EDF6EF;border-color:#7ACB8A;color:#2E7D32;text-align:center">HIJAU #81C784</span>
+            <span class="tag" style="background:#FFF8EC;border-color:#F5C16C;color:#8A6D00;text-align:center">KUNING #F3B465</span>
+            <span class="tag" style="background:#FDECEC;border-color:#E57373;color:#C62828;text-align:center">MERAH #E57373</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6 Typography -->
+    <div class="panel">
+      <div class="gutter">
+        <p class="kicker">06 — TYPE</p>
+        <h2 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:26px;line-height:1">Plus Jakarta Sans 700</h2>
+        <p style="font-size:12px;color:#6C757D;margin-top:2px">Heading • 500 / 600 • tracking -0.02em</p>
+        <h2 style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:20px;margin-top:12px;font-weight:600">Plus Jakarta Sans 400 / 700</h2>
+        <p style="font-size:12px;color:#6C757D;margin-top:2px">Body • warm, humanist, ibu-centred</p>
+        <p style="font-size:11px;color:#9AA3A6;margin-top:12px">Jangan pakai Inter / Roboto. Minimal 14px, tap target 44px, kontras 4.5:1.</p>
+      </div>
+    </div>
+
+    <!-- 7 Physical -->
+    <div class="panel" style="background:#F7F2EB">
+      <div class="gutter">
+        <p class="kicker">07 — APPLICATION</p>
+        <h2 style="font-size:13px;margin-top:6px">Kartu KIA • Badge bidan • Stiker</h2>
+        <div style="margin-top:14px;background:#fff;border-radius:16px;padding:14px;border:1px solid #EAE6E0;display:flex;gap:12px;align-items:center">
+          <img src="/logo-siaga-bunda-v2.svg" width="44" height="44" style="border-radius:10px;border:1px solid #EAE6E0;padding:4px;background:#fff;object-fit:contain"/>
+          <div>
+            <p style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-weight:600;font-size:12px">SIAGA Bunda • Puskesmas</p>
+            <p style="font-size:11px;color:#8A8F93">Kartu skrining — dibawa saat rujukan</p>
+          </div>
+          <span style="margin-left:auto;background:#6B8E73;color:#fff;font-size:10px;padding:4px 8px;border-radius:999px">PONED</span>
+        </div>
+        <p style="font-size:11px;color:#8A8F93;margin-top:10px">1 warna Sage di atas Warm Paper — murah cetak, tetap premium.</p>
+      </div>
+    </div>
+
+    <!-- 8 Image direction -->
+    <div class="panel dark" style="padding:0;overflow:hidden">
+      <img src="https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=700&h=700&fit=crop&auto=format&q=60" alt="Ibu hamil Indonesia hangat" style="width:100%;height:100%;object-fit:cover;opacity:.92;filter:saturate(.85)"/>
+      <div style="position:absolute;inset:0;background:linear-gradient(0deg, rgba(15,17,16,.72) 0%, rgba(15,17,16,.08) 58%)"></div>
+      <div style="position:absolute;bottom:16px;left:16px;right:16px">
+        <p class="kicker" style="color:#FFE2E2">08 — IMAGE</p>
+        <p style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-weight:600;font-size:13px;color:#fff;margin-top:6px">Hangat, inklusif, tidak klinis dingin</p>
+        <p style="font-size:11px;color:#EAE6E0;margin-top:4px">Flat vector warm pastel hanya untuk UI. Foto = real ibu Indonesia, cahaya pagi, kain lembut.</p>
+      </div>
+    </div>
+
+    <!-- 9 System detail -->
+    <div class="panel">
+      <div class="gutter">
+        <p class="kicker">09 — SYSTEM</p>
+        <h2 style="font-size:13px;margin-top:6px">Traffic light + 1 aksen</h2>
+        <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">
+          <span style="background:#EDF6EF;color:#2E7D32;border:1px solid #7ACB8A;padding:6px 10px;border-radius:999px;font-size:11px;font-weight:600">● Aman</span>
+          <span style="background:#FFF8EC;color:#8A6D00;border:1px solid #F5C16C;padding:6px 10px;border-radius:999px;font-size:11px;font-weight:600">● Waspada</span>
+          <span style="background:#FDECEC;color:#C62828;border:1px solid #E57373;padding:6px 10px;border-radius:999px;font-size:11px;font-weight:600">● Rujuk</span>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:6px">
+          <span style="background:#7AAE9A;color:#fff;padding:8px 14px;border-radius:999px;font-size:11px;font-weight:600">Lihat hasil</span>
+          <span style="border:1px solid #EAE6E0;padding:8px 14px;border-radius:999px;font-size:11px">Batal</span>
+        </div>
+        <p style="font-size:11px;color:#8A8F93;margin-top:10px">Card 24px, ring 1px, shadow soft 0 12px 32px -12px. Max 480px.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="margin-top:14px;background:#FFFCF6;border-radius:16px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border:1px solid #EAE6E0">
+    <span style="font-size:11px;color:#6C757D">Revisi: siluet ibu hamil diperjelas sebagai “perut = daun kehidupan” — tetap 1 warna, tetap minimal. Logo lama (tangan+daun) tetap valid sebagai alternate mark tanpa figur.</span>
+    <a href="/logo-siaga-bunda-v2.svg" download style="font-size:11px;background:#6B8E73;color:#fff;padding:8px 12px;border-radius:999px;text-decoration:none;font-weight:600">Unduh SVG</a>
+  </div>
+</div>
+</body>
+</html>

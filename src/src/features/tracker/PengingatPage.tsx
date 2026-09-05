@@ -110,7 +110,7 @@ export default function PengingatPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="font-[Poppins] text-[18px] font-semibold text-[#1E2326]">Pengingat</h2>
+        <h2 className="text-[18px] font-semibold text-[#1E2326]">Pengingat</h2>
         <p className="text-sm text-[#8A8F93]">Pengingat suplemen dan jadwal periksa</p>
       </div>
 

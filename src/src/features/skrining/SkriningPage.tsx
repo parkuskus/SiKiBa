@@ -127,7 +127,7 @@ export default function SkriningPage({
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="font-[Poppins] text-[18px] font-semibold text-[#1E2326] leading-tight">Skrining Kesehatan</h2>
+        <h2 className="text-[18px] font-semibold text-[#1E2326] leading-tight">Skrining Kesehatan</h2>
         <p className="mt-1 text-sm leading-relaxed text-[#8A8F93]">Jawab pertanyaan singkat. Hasil ditampilkan dengan warna agar mudah dipahami.</p>
       </div>
 

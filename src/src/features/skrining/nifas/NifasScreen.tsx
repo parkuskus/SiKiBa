@@ -104,7 +104,7 @@ export default function NifasScreen({
             </span>
             <span className="text-xs text-[#8A8F93]">Hari ke {form.hariKe} MEOWS {result.meows}</span>
           </div>
-          <h3 className={`font-[Poppins] text-[16px] font-semibold leading-tight ${text}`}>
+          <h3 className={`text-[16px] font-semibold leading-tight ${text}`}>
             {result.kategori === "MERAH" ? "Perlu rujukan segera" : result.kategori === "KUNING" ? "Perlu perhatian" : "Kondisi aman"}
           </h3>
           <p className="text-sm leading-relaxed text-[#2E3436]">{rekomendasi}</p>

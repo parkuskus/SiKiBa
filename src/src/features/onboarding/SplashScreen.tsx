@@ -47,7 +47,7 @@ export default function SplashScreen({ onDaftar, onMasuk, onAutoMasuk }: Props) 
       <div className="mx-auto flex w-full max-w-[480px] flex-1 flex-col items-center justify-center px-6 pb-10 pt-16 text-center">
         <div className="animate-in fade-in zoom-in duration-700">
           <img src="/logo-siaga-bunda.png" alt="SIAGA Bunda" className="mx-auto size-20 rounded-[20px] bg-white p-2.5 ring-1 ring-black/5 object-contain shadow-sm" />
-          <h1 className="mt-4 font-[Poppins] text-[22px] font-semibold leading-tight text-[#1E2326]">SIAGA Bunda</h1>
+          <h1 className="mt-4 text-[22px] font-extrabold tracking-tight leading-tight text-[#1E2326]">SIAGA Bunda</h1>
           <p className="mt-1 text-sm leading-relaxed text-[#8A8F93]">Siaga menjaga Bunda dan buah hati</p>
         </div>
 

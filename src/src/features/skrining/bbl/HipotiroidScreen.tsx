@@ -71,7 +71,7 @@ export default function HipotiroidScreen({
             <span className={`rounded-full px-3 py-1 text-xs font-bold ring-1 bg-white ${text} ${ring}`}>{result.kategori}</span>
             <span className="text-xs text-[#8A8F93]">{form.sudahTSH ? "Sudah TSH" : `Belum TSH hari ke ${form.usiaBayiHari}`}</span>
           </div>
-          <h3 className={`font-[Poppins] text-[16px] font-semibold leading-tight ${text}`}>
+          <h3 className={`text-[16px] font-semibold leading-tight ${text}`}>
             {result.kategori === "MERAH" ? "Perlu rujukan segera" : result.kategori === "KUNING" ? "Perlu perhatian" : "Kondisi terpantau baik"}
           </h3>
           <p className="text-sm leading-relaxed text-[#2E3436]">{rekomendasi}</p>

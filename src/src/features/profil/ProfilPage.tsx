@@ -83,7 +83,7 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
         <CardContent className="p-4 flex gap-3 items-center">
           <div className="size-12 rounded-2xl bg-[#EAF2EC] ring-1 ring-[#7AAE9A]/15 grid place-items-center text-[#7AAE9A] font-semibold">{inisial}</div>
           <div className="min-w-0 flex-1">
-            <p className="font-[Poppins] text-sm font-semibold text-[#1E2326] leading-none">
+            <p className="text-sm font-semibold text-[#1E2326] leading-none">
               {nama} {usia ? `${usia} tahun` : "26 tahun"}
             </p>
             <p className="text-xs text-[#8A8F93]">Hamil minggu ke {uk}, perkiraan lahir {hplLabel} {gpa}</p>
