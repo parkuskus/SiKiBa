@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { Baby, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -11,8 +12,24 @@ export default function BirthDialog({
 }: {
   open: boolean
   onOpenChange: (v: boolean) => void
-  onSave: () => void
+  onSave: (data: { tanggal: string; jam: string; bb: number; pb: number }) => void
 }) {
+  const [tanggal, setTanggal] = useState("2026-08-30")
+  const [jam, setJam] = useState("02:15")
+  const [bb, setBb] = useState("3200")
+  const [pb, setPb] = useState("49")
+  const [err, setErr] = useState<string | null>(null)
+
+  const handleSave = () => {
+    const bbNum = Number(bb)
+    const pbNum = Number(pb)
+    if (!tanggal) return setErr("Tanggal lahir wajib diisi")
+    if (bbNum < 1000 || bbNum > 6000) return setErr("Berat lahir 1000–6000 gram")
+    if (pbNum < 30 || pbNum > 60) return setErr("Panjang lahir 30–60 cm")
+    setErr(null)
+    onSave({ tanggal, jam, bb: bbNum, pb: pbNum })
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="rounded-[24px] bg-white p-0 gap-0 overflow-hidden border-0 ring-1 ring-black/10 max-w-[360px] w-[calc(100%-24px)]">
@@ -27,29 +44,30 @@ export default function BirthDialog({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs">Tanggal lahir</Label>
-              <Input type="date" defaultValue="2026-08-30" className="rounded-xl bg-[#FFFCF6]" />
+              <Input type="date" value={tanggal} onChange={(e) => setTanggal(e.target.value)} className="rounded-xl bg-[#FFFCF6]" />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Jam lahir</Label>
-              <Input type="time" defaultValue="02.15" className="rounded-xl bg-[#FFFCF6]" />
+              <Input type="time" value={jam} onChange={(e) => setJam(e.target.value)} className="rounded-xl bg-[#FFFCF6]" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs">Berat lahir gram</Label>
-              <Input type="number" defaultValue="3200" className="rounded-xl bg-[#FFFCF6]" />
+              <Input type="number" value={bb} onChange={(e) => setBb(e.target.value)} className="rounded-xl bg-[#FFFCF6]" />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Panjang lahir sentimeter</Label>
-              <Input type="number" defaultValue="49" className="rounded-xl bg-[#FFFCF6]" />
+              <Input type="number" value={pb} onChange={(e) => setPb(e.target.value)} className="rounded-xl bg-[#FFFCF6]" />
             </div>
           </div>
+          {err && <p className="text-xs text-[#E57373] text-center">{err}</p>}
         </div>
         <div className="flex gap-2 p-4 bg-[#FFFCF6] border-t border-[#EAE6E0]">
           <Button variant="outline" className="flex-1 rounded-full" onClick={() => onOpenChange(false)}>
             Batal
           </Button>
-          <Button className="flex-1 rounded-full bg-[#7AAE9A] hover:bg-[#6B9E8A] gap-1.5" onClick={onSave}>
+          <Button className="flex-1 rounded-full bg-[#7AAE9A] hover:bg-[#6B9E8A] gap-1.5" onClick={handleSave}>
             Simpan <Check className="size-4" />
           </Button>
         </div>

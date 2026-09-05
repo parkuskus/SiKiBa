@@ -76,13 +76,10 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
     <div className="space-y-6">
       <div className="flex flex-col gap-2">
         <p className="!m-0 text-xs leading-none text-[#8A8F93]">{hariIniLabel()}</p>
-        <h1 className="!m-0 text-[22px] font-extrabold tracking-tight leading-none text-[#1E2326]">Selamat datang, {nama}</h1>
+        <h1 className="!m-0 text-[22px] font-extrabold tracking-tight leading-none text-[#1E2326]">Halo, {nama}</h1>
       </div>
 
-      <section className="space-y-3">
-        <div className="flex items-center justify-between px-1">
-          <h2 className="!m-0 text-[15px] font-bold tracking-tight text-[#1E2326]">{isPostpartum ? "Masa Nifas" : "Perjalanan Kehamilan"}</h2>
-        </div>
+      <section>
         <ProfileCard
           isPostpartum={isPostpartum}
           uk={uk}
@@ -91,7 +88,11 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
           hplLabel={hplLabel}
           gpa={gpa}
           onShowBirth={() => setShowBirth(true)}
-          onBackToPregnant={() => setIsPostpartum(false)}
+          // ponytail: testing mode — bolak-balik bebas tanpa 42 hari
+          onBackToPregnant={() => {
+            setIsPostpartum(false)
+            try { localStorage.removeItem("siaga_birth_date") } catch {}
+          }}
         />
       </section>
 

@@ -12,26 +12,27 @@ type Props = {
   onBackToPregnant: () => void
 }
 
-// S-02a ProfileCard — kartu profil hamil/nifas (judul di luar di BerandaPage)
+// S-02a ProfileCard — judul disatuin di dalam card (request)
 export default function ProfileCard({ isPostpartum, uk, progress, countdown, hplLabel, gpa, onShowBirth, onBackToPregnant }: Props) {
   return (
     <Card className="rounded-[24px] border-0 bg-[#F0F5F1] ring-1 ring-[#EAE6E0] overflow-hidden">
       <CardContent className="p-4">
         {!isPostpartum ? (
           <>
-            <div className="flex items-center gap-2.5">
+            <p className="text-[11px] font-bold tracking-[0.08em] text-[#7AAE9A]">PERJALANAN KEHAMILAN</p>
+            <div className="mt-2 flex items-center gap-2.5">
               <div className="size-8 rounded-full bg-white grid place-items-center text-[#7AAE9A] ring-1 ring-[#EAE6E0]">
                 <CalendarDays className="size-4" />
               </div>
               <div>
-                <p className="text-[15px] font-bold tracking-tight text-[#1E2326] leading-tight">Trimester {uk < 14 ? 1 : uk < 28 ? 2 : 3}, Minggu ke-{uk}</p>
-                <p className="text-xs text-[#6C757D]">{uk} / 40 minggu · {progress}%</p>
+                <p className="text-[16px] font-bold tracking-tight text-[#1E2326] leading-tight">Trimester {uk < 14 ? 1 : uk < 28 ? 2 : 3}, Minggu ke-{uk}</p>
+                <p className="text-xs font-medium text-[#3C4245]">{uk} / 40 minggu · {progress}%</p>
               </div>
             </div>
             <div className="mt-3 h-2 w-full rounded-full bg-white overflow-hidden ring-1 ring-black/5">
               <div className="h-full rounded-full bg-[#7AAE9A]" style={{ width: `${progress}%` }} />
             </div>
-            <div className="mt-1.5 flex justify-between text-[11px] text-[#6C757D]">
+            <div className="mt-1.5 flex justify-between text-xs font-medium text-[#2E3436]">
               <span>{uk} dari 40 minggu</span>
               <span>{countdown} hari menuju perkiraan lahir</span>
             </div>
@@ -51,19 +52,20 @@ export default function ProfileCard({ isPostpartum, uk, progress, countdown, hpl
           </>
         ) : (
           <>
-            <div className="flex items-center gap-2.5">
+            <p className="text-[11px] font-bold tracking-[0.08em] text-[#7AAE9A]">MASA NIFAS</p>
+            <div className="mt-2 flex items-center gap-2.5">
               <div className="size-8 rounded-full bg-white grid place-items-center text-[#7AAE9A] ring-1 ring-[#EAE6E0]">
                 <Baby className="size-4" />
               </div>
               <div>
-                <p className="text-[20px] font-bold tracking-tight text-[#1E2326] leading-tight">Hari ke-2</p>
-                <p className="text-xs text-[#6C757D]">Masa Nifas, perbanyak istirahat!</p>
+                <p className="text-[16px] font-bold tracking-tight text-[#1E2326] leading-tight">Hari ke 2, 40 hari lagi</p>
+                <p className="text-xs font-medium text-[#3C4245]">Masa nifas · pemulihan</p>
               </div>
             </div>
             <div className="mt-3 h-2 w-full rounded-full bg-white overflow-hidden ring-1 ring-black/5">
               <div className="h-full rounded-full bg-[#7AAE9A]" style={{ width: "5%" }} />
             </div>
-            <div className="mt-1.5 flex justify-between text-[11px] text-[#6C757D]">
+            <div className="mt-1.5 flex justify-between text-xs font-medium text-[#2E3436]">
               <span>2 dari 42 hari</span>
               <span>40 hari lagi</span>
             </div>

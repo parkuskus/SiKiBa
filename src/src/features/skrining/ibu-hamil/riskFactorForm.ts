@@ -31,6 +31,11 @@ export function validateRiskFactor(v: RiskFactorInput): Record<string, string> {
   if (v.usia < 10 || v.usia > 60) e.usia = 'Usia 10-60 tahun'
   if (v.paritas < 0 || v.paritas > 15) e.paritas = 'Paritas 0-15'
   if (v.jarakTahun !== undefined && (v.jarakTahun < 0 || v.jarakTahun > 20)) e.jarakTahun = 'Jarak 0-20 th'
+  if (v.ukMinggu !== undefined && (v.ukMinggu < 0 || v.ukMinggu > 45)) e.ukMinggu = 'UK 0-45 minggu'
+  if (v.sistolik !== undefined && (v.sistolik < 70 || v.sistolik > 250)) e.sistolik = 'Sistolik 70-250'
+  if (v.diastolik !== undefined && (v.diastolik < 40 || v.diastolik > 150)) e.diastolik = 'Diastolik 40-150'
+  if (v.tbCm !== undefined && (v.tbCm < 100 || v.tbCm > 200)) e.tbCm = 'TB 100-200 cm'
+  if (v.bbKg !== undefined && (v.bbKg < 20 || v.bbKg > 250)) e.bbKg = 'BB 20-250 kg'
   return e
 }
 
@@ -42,7 +47,8 @@ export async function submitRiskFactor(input: RiskFactorInput) {
     usia: input.usia,
     paritas: input.paritas,
     jarakTahun: input.jarakTahun,
-    riwayatSC: input.riwayatSC || input.riwayatKomplikasi,
+    riwayatKomplikasi: input.riwayatKomplikasi,
+    riwayatSC: input.riwayatSC,
     riwayatPE: input.riwayatPE,
     penyakitKronik: input.penyakitKronik,
     kehamilanGanda: input.kehamilanGanda,
@@ -52,11 +58,29 @@ export async function submitRiskFactor(input: RiskFactorInput) {
 
   const faktorRisiko: string[] = []
   if (input.usia < 20 || input.usia > 35) faktorRisiko.push('Usia berisiko (<20/>35)')
-  if (input.paritas >= 4) faktorRisiko.push('Grande multipara')
+  if (input.paritas >= 4) faktorRisiko.push('Grande multipara (4+ anak)')
+  if (input.paritas > 4) faktorRisiko.push('Terlalu banyak anak (>4)')
   if (input.jarakTahun !== undefined && input.jarakTahun < 2) faktorRisiko.push('Jarak <2th')
-  if (input.penyakitKronik) faktorRisiko.push('Penyakit kronik')
+  if (input.riwayatKomplikasi) faktorRisiko.push('Riwayat komplikasi kehamilan')
+  if (input.riwayatSC) faktorRisiko.push('Riwayat operasi caesar')
+  if (input.riwayatPE) faktorRisiko.push('Riwayat preeklamsia')
+  if (input.penyakitKronik) faktorRisiko.push('Penyakit kronik (HT/DM/Jantung/Ginjal)')
   if (input.kehamilanGanda) faktorRisiko.push('Kehamilan ganda')
-  if (input.kelainanLetak) faktorRisiko.push('Kelainan letak')
+  if (input.hidramnion) faktorRisiko.push('Air ketuban banyak (hidramnion)')
+  if (input.kelainanLetak) faktorRisiko.push('Kelainan letak (sungsang/lintang)')
+  if (input.trb) faktorRisiko.push('Hamil dengan bantuan reproduksi (TRB) — info, tidak tambah skor')
+
+  const faktorAman: string[] = []
+  if (input.usia >= 20 && input.usia <= 35) faktorAman.push('Usia 20–35 tahun (rentang aman)')
+  if (input.paritas >= 1 && input.paritas <= 3) faktorAman.push('Jumlah anak 1–3 (tidak grande)')
+  if (input.jarakTahun === undefined || input.jarakTahun >= 2) faktorAman.push('Jarak kehamilan ≥2 tahun')
+  if (!input.riwayatSC && !input.riwayatKomplikasi) faktorAman.push('Tidak ada riwayat komplikasi/SC')
+  if (!input.riwayatPE) faktorAman.push('Tidak ada riwayat preeklamsia')
+  if (!input.penyakitKronik) faktorAman.push('Tidak ada penyakit kronik')
+  if (!input.kehamilanGanda) faktorAman.push('Kehamilan tunggal')
+  if (input.sistolik !== undefined && input.diastolik !== undefined) {
+    if (input.sistolik < 140 && input.diastolik < 90) faktorAman.push(`TD ${input.sistolik}/${input.diastolik} normal`)
+  }
 
   const id = globalThis.crypto?.randomUUID?.() ?? `rf-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
   const createdAt = new Date().toISOString()
@@ -72,5 +96,5 @@ export async function submitRiskFactor(input: RiskFactorInput) {
   await db.screeningResults.put(row)
   syncScreening(row as never)
 
-  return { skor, kategori, warna, faktorRisiko }
+  return { skor, kategori, warna, faktorRisiko, faktorAman }
 }

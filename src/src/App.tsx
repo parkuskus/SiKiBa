@@ -11,13 +11,17 @@ import SplashScreen from "@/features/onboarding/SplashScreen"
 import RegisterScreen from "@/features/onboarding/RegisterScreen"
 import LoginScreen from "@/features/onboarding/LoginScreen"
 import { supabase } from "@/data/supabase"
+import { db } from "@/data/db"
+import { getCurrentUserId } from "@/data/currentUser"
 
 type Tab = "beranda" | "skrining" | "edukasi" | "tracker" | "profil"
 type Onboarding = "splash" | "register" | "login" | "app"
 
 export default function App() {
   const [tab, setTab] = useState<Tab>("beranda")
-  const [isPostpartum, setIsPostpartum] = useState(false)
+  const [isPostpartum, setIsPostpartum] = useState(() => {
+    try { return localStorage.getItem("siaga_isPostpartum") === "true" } catch { return false }
+  })
   const [showBirth, setShowBirth] = useState(false)
   const [onboarding, setOnboarding] = useState<Onboarding>("splash")
 
@@ -33,6 +37,24 @@ export default function App() {
     })
     return () => subscription.unsubscribe()
   }, [])
+
+  // persist isPostpartum & cek 42 hari nifas selesai → buka kunci hamil lagi
+  useEffect(() => {
+    try { localStorage.setItem("siaga_isPostpartum", String(isPostpartum)) } catch {}
+  }, [isPostpartum])
+
+  useEffect(() => {
+    // jika nifas sudah lewat 42 hari, otomatis izinkan kembali ke hamil (tapi jangan paksa, biarkan user tap Kembali)
+    try {
+      const bd = localStorage.getItem("siaga_birth_date")
+      if (isPostpartum && bd) {
+        const diff = Math.floor((Date.now() - new Date(bd).getTime()) / 86400000)
+        if (diff > 42) {
+          // biarkan tetap postpartum sampai user konfirmasi, tapi Skrining akan unlock hamil
+        }
+      }
+    } catch {}
+  }, [isPostpartum])
 
   const uk = 28
   const progress = 70
@@ -84,7 +106,15 @@ export default function App() {
       <BirthDialog
         open={showBirth}
         onOpenChange={setShowBirth}
-        onSave={() => {
+        onSave={async ({ tanggal, jam, bb, pb }) => {
+          const iso = new Date(`${tanggal}T${jam || "00:00"}`).toISOString()
+          try { localStorage.setItem("siaga_birth_date", iso) } catch {}
+          try {
+            const uid = await getCurrentUserId()
+            await db.bblProfiles.put({ id: uid, userId: uid, dataLahir: iso, apgar: undefined, usiaGestasi: undefined } as never)
+            // simpan juga berat/panjang di detail jika ada field
+            await db.nifasScreenings.put({ id: `birth-${Date.now()}`, userId: uid, hariKe: 0, parameterVital: { bb, pb, tanggal, jam }, status: "lahir", createdAt: iso } as never)
+          } catch {}
           setIsPostpartum(true)
           setShowBirth(false)
           setTab("beranda")
