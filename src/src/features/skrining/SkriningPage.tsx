@@ -174,7 +174,7 @@ export default function SkriningPage({
   if (activeForm === "danger") {
     return (
       <div className="space-y-4">
-        <DangerSignScreen onBack={() => setActiveForm(null)} onSuccess={(r: any) => handleSuccess("danger", { warna: (r as { kategori: string }).kategori }, { tipeLabel: "Tanda Bahaya Kehamilan", kategori: (r as { kategori: string }).kategori, faktorRisiko: (r as { flags: string[] }).flags ?? [], faktorAman: (r as { kategori: string }).kategori === "HIJAU" ? ["Tidak ada tanda bahaya terdeteksi"] : [] })} />
+        <DangerSignScreen onBack={() => setActiveForm(null)} onSuccess={(r: any) => handleSuccess("danger", { warna: (r as { kategori: string }).kategori }, { tipeLabel: "Tanda Bahaya Kehamilan", kategori: (r as { kategori: string }).kategori, faktorRisiko: (r as { faktorRisiko?: string[] }).faktorRisiko ?? [], faktorAman: (r as { faktorAman?: string[] }).faktorAman ?? [] })} />
       </div>
     )
   }
@@ -188,7 +188,7 @@ export default function SkriningPage({
   if (activeForm === "dmg") {
     return (
       <div className="space-y-4">
-        <DmgScreen onBack={() => setActiveForm(null)} onSuccess={(r: any) => handleSuccess("dmg", { warna: (r as { kategori: string }).kategori, extra: (r as { perluTTGO: boolean }).perluTTGO ? "Perlu TTGO" : "Tidak perlu TTGO" }, { tipeLabel: "Diabetes Gestasional", kategori: (r as { kategori: string }).kategori, faktorRisiko: (r as { kategori: string }).kategori === "MERAH" ? ["Risiko tinggi DMG — perlu TTGO 24–28 minggu"] : (r as { kategori: string }).kategori === "KUNING" ? ["Risiko sedang — pantau gula darah"] : [], faktorAman: (r as { kategori: string }).kategori === "HIJAU" ? ["Tidak ada faktor risiko DMG"] : [] })} />
+        <DmgScreen onBack={() => setActiveForm(null)} onSuccess={(r: any) => handleSuccess("dmg", { warna: (r as { kategori: string }).kategori, extra: (r as { perluTTGO: boolean }).perluTTGO ? "Perlu TTGO" : "Tidak perlu TTGO" }, { tipeLabel: "Diabetes Gestasional", kategori: (r as { kategori: string }).kategori, faktorRisiko: (r as { faktorRisiko?: string[] }).faktorRisiko ?? [], faktorAman: (r as { faktorAman?: string[] }).faktorAman ?? [], rekomendasiTambahan: (r as { perluTTGO?: boolean }).perluTTGO ? ["Lakukan tes TTGO pada UK 24–28 minggu di fasyankes"] : [] })} />
       </div>
     )
   }
@@ -204,7 +204,7 @@ export default function SkriningPage({
       <div className="space-y-4">
         <NifasScreen
           onBack={() => setActiveForm(null)}
-          onSuccess={(r) => handleSuccess("nifas", { warna: r.warna, kategori: r.kategori, extra: r.warna }, { tipeLabel: "Masa Nifas (MEOWS)", kategori: r.kategori, faktorRisiko: r.warna !== "HIJAU" ? [`Parameter nifas menunjukkan ${r.kategori}`] : [], faktorAman: r.warna === "HIJAU" ? ["Tanda vital nifas normal"] : [] })}
+          onSuccess={(r) => handleSuccess("nifas", { warna: r.warna, kategori: r.kategori, extra: r.warna }, { tipeLabel: "Masa Nifas (MEOWS)", kategori: r.kategori, faktorRisiko: (r as { faktorRisiko?: string[] }).faktorRisiko ?? [], faktorAman: (r as { faktorAman?: string[] }).faktorAman ?? [] })}
         />
       </div>
     )
@@ -214,7 +214,7 @@ export default function SkriningPage({
       <div className="space-y-4">
         <LaktasiScreen
           onBack={() => setActiveForm(null)}
-          onSuccess={(r) => handleSuccess("laktasi", { warna: r.warna, kategori: r.kategori, extra: r.warna }, { tipeLabel: "Laktasi & Menyusui", kategori: r.kategori, faktorRisiko: r.warna !== "HIJAU" ? [r.kategori] : [], faktorAman: r.warna === "HIJAU" ? ["Menyusui berjalan baik"] : [] })}
+          onSuccess={(r) => handleSuccess("laktasi", { warna: r.warna, kategori: r.kategori, extra: r.warna }, { tipeLabel: "Laktasi & Menyusui", kategori: r.kategori, faktorRisiko: (r as { faktorRisiko?: string[] }).faktorRisiko ?? [], faktorAman: (r as { faktorAman?: string[] }).faktorAman ?? [] })}
         />
       </div>
     )
@@ -224,7 +224,7 @@ export default function SkriningPage({
       <div className="space-y-4">
         <IkterusScreen
           onBack={() => setActiveForm(null)}
-          onSuccess={(r) => handleSuccess("ikterus", { warna: r.warna, kategori: r.kategori, extra: r.warna }, { tipeLabel: "Ikterus Neonatal (Kramer)", kategori: r.kategori, faktorRisiko: r.warna !== "HIJAU" ? [`Ikterus — ${r.kategori}`] : [], faktorAman: r.warna === "HIJAU" ? ["Ikterus fisiologis — pantau"] : [] })}
+          onSuccess={(r) => handleSuccess("ikterus", { warna: r.warna, kategori: r.kategori, extra: r.warna }, { tipeLabel: "Ikterus Neonatal (Kramer)", kategori: r.kategori, faktorRisiko: (r as { faktorRisiko?: string[] }).faktorRisiko ?? [], faktorAman: (r as { faktorAman?: string[] }).faktorAman ?? [] })}
         />
       </div>
     )
@@ -234,7 +234,7 @@ export default function SkriningPage({
       <div className="space-y-4">
         <HipotiroidScreen
           onBack={() => setActiveForm(null)}
-          onSuccess={(r) => handleSuccess("hipotiroid", { warna: r.warna, kategori: r.kategori, extra: r.warna }, { tipeLabel: "Hipotiroid Kongenital", kategori: r.kategori, faktorRisiko: r.kategori === "HIJAU" ? [] : ["Gejala hipotiroid atau TSH belum diperiksa"], faktorAman: r.kategori === "HIJAU" ? ["TSH dalam window 48–72 jam atau tanpa gejala"] : [] })}
+          onSuccess={(r) => handleSuccess("hipotiroid", { warna: r.warna, kategori: r.kategori, extra: r.warna }, { tipeLabel: "Hipotiroid Kongenital", kategori: r.kategori, faktorRisiko: (r as { faktorRisiko?: string[] }).faktorRisiko ?? [], faktorAman: (r as { faktorAman?: string[] }).faktorAman ?? [] })}
         />
       </div>
     )
@@ -285,7 +285,7 @@ export default function SkriningPage({
             <div className="h-full rounded-full bg-[#7AAE9A] transition-all" style={{ width: `${progressPct}%` }} />
           </div>
           <p className="text-[11px] font-medium text-[#2E3436] mt-1">{doneCount} dari {totalForMode} skrining sudah selesai</p>
-          <p className="text-[10px] text-[#8A8F93]">Keterangan: progress skrining direset setiap hari</p>
+          <p className="text-[10px] text-[#8A8F93]">Progress skrining direset setiap hari</p>
         </div>
       </div>
 

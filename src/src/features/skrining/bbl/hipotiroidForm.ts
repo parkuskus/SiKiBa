@@ -9,10 +9,20 @@ export type HipotiroidInput = {
   gejala?: { ikterusLama?: boolean; konstipasi?: boolean; tangisanSerak?: boolean; aktivitasKurang?: boolean; lidahBesar?: boolean }
 }
 
+const GEJALA_LABEL: Record<string, string> = {
+  ikterusLama: 'Kuning lebih dari 2 minggu',
+  konstipasi: 'Sembelit',
+  tangisanSerak: 'Tangisan serak',
+  aktivitasKurang: 'Aktivitas kurang',
+  lidahBesar: 'Lidah besar',
+}
+
 export function kategoriHipotiroid(v: HipotiroidInput): 'HIJAU' | 'KUNING' | 'MERAH' {
   if (v.sudahTSH) {
     const g = v.gejala
     if (g && (g.lidahBesar || g.aktivitasKurang)) return 'MERAH'
+    // ponytail: gejala ringan + TSH sudah → tetap pantau (KUNING), bukan HIJAU
+    if (g && (g.ikterusLama || g.konstipasi || g.tangisanSerak)) return 'KUNING'
     return 'HIJAU'
   }
   // belum TSH
@@ -23,8 +33,22 @@ export function kategoriHipotiroid(v: HipotiroidInput): 'HIJAU' | 'KUNING' | 'ME
 export async function submitHipotiroid(input: HipotiroidInput) {
   if (!input.userId) throw new Error('userId wajib')
   const kategori = kategoriHipotiroid(input)
-  const row = { id: globalThis.crypto?.randomUUID?.() ?? ("demo-" + Date.now() + "-" + Math.random().toString(36).slice(2,8)), userId: input.userId, tipe: 'hipotiroid', skor: input.sudahTSH ? 1 : 0, kategori, detail: { ...input }, createdAt: new Date().toISOString() }
+
+  const gejalaAktif = Object.entries(input.gejala ?? {}).filter(([, v]) => v).map(([k]) => GEJALA_LABEL[k] ?? k)
+  const faktorRisiko: string[] = []
+  if (!input.sudahTSH) {
+    faktorRisiko.push(`Belum tes TSH hari ke-${input.usiaBayiHari ?? '?'} (window 48–72 jam)`)
+  }
+  for (const g of gejalaAktif) faktorRisiko.push(g)
+
+  const faktorAman: string[] = []
+  if (kategori === 'HIJAU') {
+    faktorAman.push('TSH sudah diperiksa pada window 48–72 jam')
+    faktorAman.push('Tanpa gejala mencurigakan')
+  }
+
+  const row = { id: globalThis.crypto?.randomUUID?.() ?? ("demo-" + Date.now() + "-" + Math.random().toString(36).slice(2,8)), userId: input.userId, tipe: 'hipotiroid', skor: input.sudahTSH ? 1 : 0, kategori, detail: { ...input, faktorRisiko }, createdAt: new Date().toISOString() }
   await db.screeningResults.put(row)
   syncScreening(row as never)
-  return { kategori }
+  return { kategori, warna: kategori, faktorRisiko, faktorAman }
 }

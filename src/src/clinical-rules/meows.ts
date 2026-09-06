@@ -18,8 +18,8 @@ export function warnaMEOWS(v: MEOWSInput): 'HIJAU' | 'KUNING' | 'MERAH' {
   if (v.spo2 !== undefined && v.spo2 < 95) return 'MERAH'
   if (v.perdarahanMl !== undefined && v.perdarahanMl > 500) return 'MERAH'
   if (v.adaDemamNyeriUterus) return 'MERAH'
-  // KUNING
-  if ((v.sistolik >= 150 && v.sistolik <= 159) || (v.diastolik >= 100 && v.diastolik <= 109) || (v.sistolik >= 80 && v.sistolik <= 89)) return 'KUNING'
+  // KUNING (SK06: TD 150-159/100-109 atau 80-89/50-59)
+  if ((v.sistolik >= 150 && v.sistolik <= 159) || (v.diastolik >= 100 && v.diastolik <= 109) || (v.sistolik >= 80 && v.sistolik <= 89) || (v.diastolik !== undefined && v.diastolik >= 50 && v.diastolik <= 59)) return 'KUNING'
   if (v.suhu >= 38 && v.suhu <= 38.4) return 'KUNING'
   return 'HIJAU'
 }

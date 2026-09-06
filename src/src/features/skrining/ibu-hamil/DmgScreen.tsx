@@ -7,13 +7,13 @@ import { Label } from "@/components/ui/label"
 import { submitDMG } from "@/features/skrining/ibu-hamil/dmgForm"
 
 export default function DmgScreen({ onBack, onSuccess }: { onBack: () => void; onSuccess: (r: any) => void }) {
-  const [form, setForm] = useState({ usia: 26, imtPre: 24, ukMinggu: 26, riwayatDMG: false, riwayatMakrosomia: false, riwayatDMKeluarga: false })
+  const [form, setForm] = useState({ usia: 26, imtPre: 24, ukMinggu: 26, riwayatDMG: false, riwayatMakrosomia: false, riwayatDMKeluarga: false, glikosuria: false, pcos: false, etnisRisiko: false })
   const [loading, setLoading] = useState(false)
 
   const handle = async () => {
     setLoading(true)
     try {
-      const res = await submitDMG({ userId: await getCurrentUserId(), usia: Number(form.usia), imtPre: Number(form.imtPre), ukMinggu: Number(form.ukMinggu), riwayatDMG: form.riwayatDMG, riwayatMakrosomia: form.riwayatMakrosomia, riwayatDMKeluarga: form.riwayatDMKeluarga })
+      const res = await submitDMG({ userId: await getCurrentUserId(), usia: Number(form.usia), imtPre: Number(form.imtPre), ukMinggu: Number(form.ukMinggu), riwayatDMG: form.riwayatDMG, riwayatMakrosomia: form.riwayatMakrosomia, riwayatDMKeluarga: form.riwayatDMKeluarga, glikosuria: form.glikosuria, pcos: form.pcos, etnisRisiko: form.etnisRisiko })
       onSuccess(res)
     } finally {
       setLoading(false)
@@ -48,8 +48,11 @@ export default function DmgScreen({ onBack, onSuccess }: { onBack: () => void; o
         <div className="space-y-2">
           {[
             { k: "riwayatDMG", l: "Pernah diabetes saat hamil sebelumnya" },
-            { k: "riwayatMakrosomia", l: "Pernah bayi besar di atas 4 kg" },
-            { k: "riwayatDMKeluarga", l: "Keluarga ada diabetes" },
+            { k: "riwayatMakrosomia", l: "Riwayat melahirkan bayi besar di atas 4 kg (makrosomia)" },
+            { k: "riwayatDMKeluarga", l: "Riwayat Keluarga ada diabetes" },
+            { k: "glikosuria", l: "Gula dalam pemeriksaan urine (Glikosuria)" },
+            { k: "pcos", l: "Riwayat PCOS (polisistik ovarium)" },
+            { k: "etnisRisiko", l: "Etnis berisiko tinggi (Asia/Afrika)" },
           ].map((it) => (
             <label key={it.k} className="flex items-center justify-between rounded-2xl bg-[#FFFCF6] px-3 py-3 ring-1 ring-[#EAE6E0] cursor-pointer">
               <span className="text-sm text-[#1E2326]">{it.l}</span>

@@ -6,28 +6,29 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { submitLaktasi } from "@/features/skrining/nifas/laktasiForm"
 
-type Result = { warna: "HIJAU" | "KUNING" | "MERAH"; masalah?: string }
+type Result = { warna: "HIJAU" | "KUNING" | "MERAH"; kategori: string; masalah?: string; faktorRisiko: string[]; faktorAman: string[] }
 
 export default function LaktasiScreen({
   onBack,
   onSuccess,
 }: {
   onBack: () => void
-  onSuccess: (r: { warna: string; kategori: string }) => void
+  onSuccess: (r: Result) => void
 }) {
   const [form, setForm] = useState({
     usiaBayiHari: 3,
     frekuensiMenyusuPerHari: 8,
+    durasiMenyusuMenit: 15,
     kondisiPuting: "normal" as "normal" | "nyeri" | "luka" | "masuk",
     kondisiPayudara: "normal" as "normal" | "bengkak" | "keras" | "merah",
     volumeASI: "cukup" as "cukup" | "sedikit" | "tidak ada",
     bbBayiTren: "naik" as "naik" | "stagnan" | "turun",
     bakPerHari: 6,
+    urin: "jernih" as "jernih" | "kuning" | "gelap",
     demam: false,
   })
   const [loading, setLoading] = useState(false)
   const [err, setErr] = useState<string | null>(null)
-  const [result, setResult] = useState<Result | null>(null)
 
   const handle = async () => {
     setErr(null)
@@ -37,66 +38,21 @@ export default function LaktasiScreen({
         userId: await getCurrentUserId(),
         usiaBayiHari: Number(form.usiaBayiHari),
         frekuensiMenyusuPerHari: Number(form.frekuensiMenyusuPerHari),
+        durasiMenyusuMenit: form.durasiMenyusuMenit ? Number(form.durasiMenyusuMenit) : undefined,
         kondisiPuting: form.kondisiPuting,
         kondisiPayudara: form.kondisiPayudara,
         volumeASI: form.volumeASI,
         bbBayiTren: form.bbBayiTren,
         bakPerHari: Number(form.bakPerHari),
+        urin: form.urin,
         demam: form.demam,
       })
-      setResult(res as Result)
+      onSuccess(res as Result)
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : "Gagal menyimpan")
     } finally {
       setLoading(false)
     }
-  }
-
-  const closeWithResult = () => {
-    if (result) onSuccess({ warna: result.warna, kategori: result.warna })
-    else onBack()
-  }
-
-  if (result) {
-    const bg = result.warna === "MERAH" ? "bg-[#FDECEC]" : result.warna === "KUNING" ? "bg-[#FFF8EC]" : "bg-[#EDF6EF]"
-    const ring = result.warna === "MERAH" ? "ring-[#E57373]/20" : result.warna === "KUNING" ? "ring-[#F5C16C]/20" : "ring-[#7ACB8A]/20"
-    const text = result.warna === "MERAH" ? "text-[#C62828]" : result.warna === "KUNING" ? "text-[#8A6D00]" : "text-[#2E7D32]"
-    const rekomendasi =
-      result.warna === "MERAH"
-        ? "Dugaan mastitis. Segera ke fasilitas kesehatan untuk evaluasi dan terapi antibiotik jika diperlukan."
-        : result.warna === "KUNING"
-          ? "Perlu bantuan. Perbaiki pelekatan dan tingkatkan frekuensi menyusui. Hubungi bidan atau konselor laktasi."
-          : "Menyusui terpantau baik. Lanjutkan pelekatan yang benar dan pantau BAK bayi."
-
-    return (
-      <Card className={`rounded-[24px] border-0 ${bg} ring-1 ${ring} shadow-sm`}>
-        <CardContent className="p-4 space-y-3">
-          <div className="flex items-center gap-2">
-            <span className={`rounded-full px-3 py-1 text-xs font-bold ring-1 bg-white ${text} ${ring}`}>{result.warna}</span>
-            <span className="text-xs text-[#8A8F93]">Hari ke {form.usiaBayiHari} BAK {form.bakPerHari} kali</span>
-          </div>
-          <h3 className={`text-[16px] font-semibold leading-tight ${text}`}>
-            {result.warna === "MERAH" ? "Perlu rujukan segera" : result.warna === "KUNING" ? "Perlu perhatian" : "Kondisi baik"}
-          </h3>
-          {result.masalah && <p className={`text-sm font-medium ${text}`}>{result.masalah}</p>}
-          <p className="text-sm leading-relaxed text-[#2E3436]">{rekomendasi}</p>
-          <div className="rounded-2xl bg-white p-3 ring-1 ring-[#EAE6E0] space-y-1">
-            <p className="text-xs font-semibold text-[#1E2326]">Ringkasan cek</p>
-            <p className="text-xs text-[#6C757D] leading-relaxed">
-              Usia {form.usiaBayiHari} hari Menyusu {form.frekuensiMenyusuPerHari} kali Puting {form.kondisiPuting} Payudara {form.kondisiPayudara} ASI {form.volumeASI} BB {form.bbBayiTren} BAK {form.bakPerHari} kali {form.demam ? " Demam ya" : ""}
-            </p>
-          </div>
-          <div className="flex gap-2 pt-1">
-            <Button variant="outline" className="flex-1 rounded-full bg-white" onClick={() => setResult(null)}>
-              Ulangi
-            </Button>
-            <Button className="flex-1 rounded-full bg-[#7AAE9A] hover:bg-[#6B9E8A] text-white" onClick={closeWithResult}>
-              Tutup
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    )
   }
 
   return (
@@ -122,11 +78,28 @@ export default function LaktasiScreen({
             <Label className="text-xs">BAK bayi per hari</Label>
             <Input type="number" value={form.bakPerHari} onChange={(e) => setForm((s) => ({ ...s, bakPerHari: Number(e.target.value) }))} className="rounded-xl bg-[#FFFCF6]" />
           </div>
-          <div className="space-y-1.5 flex items-end">
-            <label className="flex w-full items-center justify-between rounded-2xl bg-[#FFFCF6] px-3 py-3 ring-1 ring-[#EAE6E0] cursor-pointer">
-              <span className="text-sm text-[#1E2326] leading-tight">Demam</span>
-              <input type="checkbox" checked={form.demam} onChange={(e) => setForm((s) => ({ ...s, demam: e.target.checked }))} className="size-5 accent-[#7AAE9A]" />
-            </label>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Durasi per sesi menit</Label>
+            <Input type="number" value={form.durasiMenyusuMenit} onChange={(e) => setForm((s) => ({ ...s, durasiMenyusuMenit: Number(e.target.value) }))} className="rounded-xl bg-[#FFFCF6]" />
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label className="text-xs">Demam pada ibu</Label>
+          <label className="flex w-full items-center justify-between rounded-2xl bg-[#FFFCF6] px-3 py-3 ring-1 ring-[#EAE6E0] cursor-pointer">
+            <span className="text-sm text-[#1E2326] leading-tight">Demam (curiga mastitis bila payudara bengkak)</span>
+            <input type="checkbox" checked={form.demam} onChange={(e) => setForm((s) => ({ ...s, demam: e.target.checked }))} className="size-5 shrink-0 accent-[#7AAE9A]" />
+          </label>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label className="text-xs">Warna urin bayi</Label>
+          <div className="flex gap-1.5">
+            {(["jernih", "kuning", "gelap"] as const).map((v) => (
+              <button key={v} onClick={() => setForm((s) => ({ ...s, urin: v }))} className={`flex-1 rounded-full py-2 text-xs font-semibold ring-1 transition-colors ${form.urin === v ? "bg-[#7AAE9A] text-white ring-[#7AAE9A]" : "bg-white text-[#8A8F93] ring-[#EAE6E0]"}`}>
+                {v === "jernih" ? "Jernih" : v === "kuning" ? "Kuning" : "Gelap pekat"}
+              </button>
+            ))}
           </div>
         </div>
 
