@@ -10,6 +10,10 @@ export async function generateRingkasanPDF(userId: string): Promise<Blob> {
   const results = await db.screeningResults.where('userId').equals(userId).toArray()
   const weights = await db.weightEntries.where('userId').equals(userId).toArray()
   const anc = await db.ancVisits.where('userId').equals(userId).toArray()
+  const diary = await db.diaryEntries.where('userId').equals(userId).toArray()
+  const nifas = await db.nifasScreenings.where('userId').equals(userId).toArray()
+  const bbl = await db.bblProfiles.where('userId').equals(userId).toArray()
+  const suplemen = await db.supplementReminders.where('userId').equals(userId).toArray()
 
   const doc = new jsPDF({ format: 'a4' })
   const W = doc.internal.pageSize.getWidth()
@@ -51,8 +55,22 @@ export async function generateRingkasanPDF(userId: string): Promise<Blob> {
   // tracker
   doc.setFontSize(11); doc.text('Tracker', 14, y); y += 6
   doc.setFontSize(8)
-  doc.text(`BB entries: ${weights.length}  |  ANC: ${anc.filter(a=>a.statusSelesai).length}/${anc.length} selesai`, 14, y)
-  y += 10
+  doc.text(`BB entries: ${weights.length}  |  ANC: ${anc.filter(a=>a.statusSelesai).length}/${anc.length} selesai  |  Diary: ${diary.length}`, 14, y)
+  y += 5
+  if (suplemen.length) { doc.text(`Suplemen: ${suplemen.filter(s=>s.statusAktif).map(s=>`${s.namaSuplemen} ${s.waktu}`).join(', ')}`, 14, y); y += 5 }
+  if (weights.length) {
+    const last = weights.slice(-5)
+    for (const w of last) { doc.text(`- ${w.tanggal}: ${w.beratKg} kg`, 14, y); y += 4; if (y > H - 20) { doc.addPage(); y = 20 } }
+  }
+  y += 4
+  // nifas & bbl
+  if (nifas.length || bbl.length) {
+    doc.setFontSize(11); doc.text('Nifas & Bayi', 14, y); y += 6
+    doc.setFontSize(8)
+    for (const n of nifas.slice(-6)) { doc.text(`- Nifas hari ke-${n.hariKe}: ${n.status} (${new Date(n.createdAt).toLocaleDateString('id-ID')})`, 14, y); y += 5; if (y > H - 20) { doc.addPage(); y = 20 } }
+    for (const b of bbl) { doc.text(`- Bayi lahir: ${new Date(b.dataLahir).toLocaleDateString('id-ID')}`, 14, y); y += 5; if (y > H - 20) { doc.addPage(); y = 20 } }
+    y += 4
+  }
   doc.setFontSize(7); doc.setTextColor(120); doc.text('SIAGA Bunda — Siaga menjaga bunda dan buah hati. Dokumen ini untuk dibagikan ke bidan via WhatsApp (S-08b).', 14, H - 10)
 
   return doc.output('blob')

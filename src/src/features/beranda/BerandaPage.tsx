@@ -32,7 +32,7 @@ function hariIniLabel(): string {
 export default function BerandaPage({ uk: ukProp, progress: progressProp, countdown: countdownProp, isPostpartum, setIsPostpartum, setShowBirth, setTab }: Props) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [last, setLast] = useState<ScreeningResult | null>(null)
-  const [supJam, setSupJam] = useState<string | null>(null)
+  const [meds, setMeds] = useState<{ nama: string; waktu: string }[]>([])
   const [nextAncLabel, setNextAncLabel] = useState<string | null>(null)
 
   useEffect(() => {
@@ -41,14 +41,20 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
       if (p) setProfile(p)
       const uid = p?.id ?? (await getCurrentUserId())
       const all = await db.screeningResults.where("userId").equals(uid).toArray()
-      if (all.length) {
-        all.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-        setLast(all[0])
+      // ponytail: entri timbangan (tipe weight) bukan skrining — jangan tampil sebagai Cek Terakhir
+      const skr = all.filter((r) => r.tipe !== "weight")
+      if (skr.length) {
+        skr.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+        setLast(skr[0])
       }
       const sup = await db.supplementReminders.where("userId").equals(uid).toArray()
-      const aktif = sup.find((s) => s.statusAktif)
-      if (aktif) setSupJam(aktif.waktu)
-      else if (sup.length) setSupJam(sup[0].waktu)
+      setMeds(
+        sup
+          .filter((s) => s.statusAktif)
+          .sort((a, b) => a.waktu.localeCompare(b.waktu))
+          .slice(0, 3)
+          .map((s) => ({ nama: s.namaSuplemen, waktu: (s.waktuList?.[0] ?? s.waktu) || s.waktu })),
+      )
       const anc = await db.ancVisits.where("userId").equals(uid).toArray()
       const upcoming = anc
         .filter((a) => !a.statusSelesai)
@@ -120,7 +126,7 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
           <h2 className="!m-0 text-[15px] font-bold tracking-tight text-[#1E2326]">Reminder Hari Ini</h2>
           <button onClick={() => setTab("tracker")} className="text-xs font-semibold text-[#7AAE9A]">Lihat semua</button>
         </div>
-        <TodayReminderCard supJam={supJam} nextAncLabel={nextAncLabel} />
+        <TodayReminderCard meds={meds} nextAncLabel={nextAncLabel} />
       </section>
     </div>
   )

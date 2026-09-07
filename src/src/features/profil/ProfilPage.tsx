@@ -7,6 +7,8 @@ import { getCurrentProfile, getCurrentUserId } from "@/data/currentUser"
 import { weeksFromHpht, calcHPL } from "@/clinical-rules/ukHpl"
 import { generateRingkasanPDF, shareViaWA } from "@/services/exportService"
 import SettingScreen from "@/features/profil/SettingScreen"
+import EditProfileScreen from "@/features/profil/EditProfileScreen"
+import HistoryScreen from "@/features/profil/HistoryScreen"
 import type { Profile, ScreeningResult } from "@/data/db"
 
 type Props = { uk: number; hplLabel: string }
@@ -25,9 +27,10 @@ function hitungUsia(tglLahir?: string): number | null {
 export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [history, setHistory] = useState<ScreeningResult[]>([])
-  const [showAll, setShowAll] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [showSetting, setShowSetting] = useState(false)
+  const [showEdit, setShowEdit] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
 
   const [uid, setUid] = useState<string>("demo-siti")
 
@@ -73,9 +76,11 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
     }
   }
 
-  const items = showAll ? history : history.slice(0, 3)
+  const items = history.slice(0, 3)
 
   if (showSetting) return <SettingScreen onBack={() => setShowSetting(false)} />
+  if (showEdit && profile) return <EditProfileScreen profile={profile} onBack={() => setShowEdit(false)} onSaved={() => { setShowEdit(false); void load() }} />
+  if (showHistory) return <HistoryScreen history={history} onBack={() => setShowHistory(false)} onChanged={() => void load()} />
 
   return (
     <div className="space-y-4">
@@ -89,7 +94,7 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
             <p className="text-xs text-[#8A8F93]">Hamil minggu ke {uk}, perkiraan lahir {hplLabel} {gpa}</p>
             {profile?.fasyankes && <p className="text-[11px] text-[#8A8F93] truncate">{profile.fasyankes} {profile.nama_bidan ? `${profile.nama_bidan}` : ""}</p>}
           </div>
-          <Button variant="outline" size="sm" className="rounded-full text-xs">
+          <Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => profile && setShowEdit(true)}>
             Ubah
           </Button>
         </CardContent>
@@ -118,9 +123,9 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
               </div>
             )}
           </div>
-          {history.length > 3 && (
-            <Button variant="outline" className="w-full mt-3 rounded-full gap-1.5 text-sm" size="sm" onClick={() => setShowAll((v) => !v)}>
-              {showAll ? "Sembunyikan" : "Lihat semua riwayat"} <ChevronRight className="size-4" />
+          {history.length > 0 && (
+            <Button variant="outline" className="w-full mt-3 rounded-full gap-1.5 text-sm" size="sm" onClick={() => setShowHistory(true)}>
+              Lihat semua riwayat <ChevronRight className="size-4" />
             </Button>
           )}
         </CardContent>

@@ -27,10 +27,11 @@ export interface ScreeningResult {
   createdAt: string
 }
 
-export interface WeightEntry { id: string; userId: string; tanggal: string; beratKg: number }
-export interface SupplementReminder { id: string; userId: string; namaSuplemen: string; waktu: string; statusAktif: boolean; riwayatKepatuhan: number[] }
+export interface WeightEntry { id: string; userId: string; tanggal: string; beratKg: number; createdAt?: string }
+export interface SupplementReminder { id: string; userId: string; namaSuplemen: string; waktu: string; statusAktif: boolean; riwayatKepatuhan: number[]; bentuk?: string; dosis?: string; jumlah?: number; tanggalMulai?: string; tanggalSelesai?: string; frekuensi?: 'harian1' | 'harian2' | 'harian3' | 'mingguan' | string; hari?: number[]; waktuList?: string[] }
+export interface DoseLog { id: string; userId: string; suplemenId: string; tanggal: string; waktu: string; status: 'taken' | 'skip' | 'none' }
 export interface ANCVisit { id: string; userId: string; tanggalTerjadwal: string; statusSelesai: boolean; catatan?: string }
-export interface DiaryEntry { id: string; userId: string; tanggal: string; teks: string; mood: number }
+export interface DiaryEntry { id: string; userId: string; tanggal: string; teks: string; mood: number; judul?: string }
 export interface NifasScreening { id: string; userId: string; hariKe: number; parameterVital: Record<string, unknown>; status: string; createdAt: string }
 export interface BBLProfile { id: string; userId: string; dataLahir: string; apgar?: number; usiaGestasi?: number }
 export interface SyncQueueItem { id?: number; table: string; op: 'insert' | 'upsert'; payload: Record<string, unknown>; onConflict?: string; createdAt: string }
@@ -44,6 +45,7 @@ export class SIAGADB extends Dexie {
   diaryEntries!: Table<DiaryEntry, string>
   nifasScreenings!: Table<NifasScreening, string>
   bblProfiles!: Table<BBLProfile, string>
+  doseLogs!: Table<DoseLog, string>
   syncQueue!: Table<SyncQueueItem, number>
 
   constructor() {
@@ -63,6 +65,9 @@ export class SIAGADB extends Dexie {
     })
     this.version(3).stores({
       profiles: 'id, hpht, noHp',
+    })
+    this.version(4).stores({
+      doseLogs: 'id, userId, tanggal',
     })
   }
 }

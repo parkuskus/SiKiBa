@@ -1,4 +1,5 @@
-import { Check, TriangleAlert, OctagonAlert, ArrowLeft, Share2, RotateCcw, Home } from "lucide-react"
+import { useEffect } from "react"
+import { Check, TriangleAlert, OctagonAlert, ArrowLeft, Share2, RotateCcw, Home, MapPin, Siren } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 
@@ -15,6 +16,7 @@ type Props = {
   rekomendasi: string[] // numbered steps
   urgensiLabel: string // "Pantau mandiri" | "Kunjungi bidan" | "Segera ke IGD"
   waktuISO: string
+  mapsQuery?: string // nama fasyankes untuk link peta darurat
   onUlangi: () => void
   onBeranda: () => void
   onBagikan: () => void
@@ -48,9 +50,21 @@ const warnaConfig: Record<Warna, { bg: string; ring: string; iconBg: string; ico
   },
 }
 
-export default function SkriningResultScreen({ tipeLabel, warna, kategori, skor, skorLabel, faktorRisiko, faktorAman = [], rekomendasi, urgensiLabel, waktuISO, onUlangi, onBeranda, onBagikan, onBack }: Props) {
+export default function SkriningResultScreen({ tipeLabel, warna, kategori, skor, skorLabel, faktorRisiko, faktorAman = [], rekomendasi, urgensiLabel, waktuISO, mapsQuery, onUlangi, onBeranda, onBagikan, onBack }: Props) {
   const cfg = warnaConfig[warna]
   const waktu = new Date(waktuISO).toLocaleString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsQuery || "puskesmas PONED terdekat")}`
+
+  // notifikasi lokal saat MERAH (hanya bila izin sudah diberikan di Pengaturan;
+  // push ke bidan lintas-perangkat butuh server — Supabase Edge Function, di luar klien)
+  useEffect(() => {
+    if (warna !== "MERAH") return
+    try {
+      if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+        new Notification("SIAGA Bunda: perlu rujukan segera", { body: `${tipeLabel} — ${kategori}. Segera ke fasyankes.` })
+      }
+    } catch {}
+  }, [warna, tipeLabel, kategori])
 
   return (
     <div className="space-y-4">
@@ -144,9 +158,17 @@ export default function SkriningResultScreen({ tipeLabel, warna, kategori, skor,
           </ol>
 
           {warna === "MERAH" && (
-            <div className="mt-4 rounded-2xl bg-[#FDECEC] p-3 ring-1 ring-[#E57373]/15">
-              <p className="text-xs font-bold text-[#C62828]">Butuh bantuan cepat?</p>
-              <p className="mt-1 text-xs leading-relaxed text-[#8A2A2A]">Hubungi bidan pendamping dan buka peta fasyankes terdekat dari menu bantuan. Bawa kartu skrining ini saat rujukan.</p>
+            <div className="mt-4 rounded-2xl bg-[#C62828] p-4 text-white shadow-sm">
+              <p className="flex items-center gap-2 text-sm font-bold"><Siren className="size-4" /> Darurat — jangan tunda</p>
+              <p className="mt-1 text-xs leading-relaxed text-white/85">Hasil merah berarti perlu rujukan segera. Bawa KTP, buku KIA, dan hasil ini.</p>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <a href={mapsUrl} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-1.5 rounded-full bg-white py-2.5 text-xs font-bold text-[#C62828] active:scale-[0.98] transition">
+                  <MapPin className="size-3.5" /> Buka Peta
+                </a>
+                <button onClick={onBagikan} className="flex items-center justify-center gap-1.5 rounded-full bg-white/15 py-2.5 text-xs font-bold text-white ring-1 ring-white/40 active:scale-[0.98] transition">
+                  <Share2 className="size-3.5" /> Ke Bidan
+                </button>
+              </div>
             </div>
           )}
         </CardContent>
