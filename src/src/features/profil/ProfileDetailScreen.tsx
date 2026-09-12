@@ -17,12 +17,20 @@ function Row({ label, value, verified }: { label: string; value: string; verifie
 }
 
 // Profil Saya ala Gojek — data sesuai model SIAGA (tanpa email/alamat fiktif)
+function hitungUsia(tglLahir?: string): number | null {
+  if (!tglLahir) return null
+  const b = new Date(tglLahir)
+  const t = new Date()
+  let u = t.getFullYear() - b.getFullYear()
+  if (t.getMonth() < b.getMonth() || (t.getMonth() === b.getMonth() && t.getDate() < b.getDate())) u--
+  return u
+}
+
 export default function ProfileDetailScreen({
   profile,
   uk,
   hplLabel,
   gpa,
-  usia,
   verified,
   onBack,
   onEdit,
@@ -32,12 +40,12 @@ export default function ProfileDetailScreen({
   uk: number
   hplLabel: string
   gpa: string
-  usia: number | null
   verified: boolean
   onBack: () => void
   onEdit: () => void
   onDeleteAccount: () => void
 }) {
+  const usia = hitungUsia(profile.tanggal_lahir)
   const tglLahir = profile.tanggal_lahir
     ? new Date(`${profile.tanggal_lahir}T00:00:00`).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })
     : "-"

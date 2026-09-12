@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { ChevronRight, ClipboardList, Share2, Settings, CircleHelp, Pencil, FileDown } from "lucide-react"
+import { ChevronRight, ClipboardList, Share2, Bell, Database, CircleHelp, Pencil, FileDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { db } from "@/data/db"
@@ -7,7 +7,8 @@ import { supabase } from "@/data/supabase"
 import { getCurrentProfile, getCurrentUserId } from "@/data/currentUser"
 import { weeksFromHpht, calcHPL } from "@/clinical-rules/ukHpl"
 import { generateRingkasanPDF, shareViaWA } from "@/services/exportService"
-import SettingScreen from "@/features/profil/SettingScreen"
+import NotificationSettingScreen from "@/features/profil/NotificationSettingScreen"
+import StorageSettingScreen from "@/features/profil/StorageSettingScreen"
 import EditProfileScreen from "@/features/profil/EditProfileScreen"
 import HistoryScreen from "@/features/profil/HistoryScreen"
 import ProfileDetailScreen from "@/features/profil/ProfileDetailScreen"
@@ -16,15 +17,6 @@ import type { Profile, ScreeningResult } from "@/data/db"
 type Props = { uk: number; hplLabel: string }
 
 const DEMO_HPHT = "2026-02-12"
-
-function hitungUsia(tglLahir?: string): number | null {
-  if (!tglLahir) return null
-  const b = new Date(tglLahir)
-  const t = new Date()
-  let u = t.getFullYear() - b.getFullYear()
-  if (t.getMonth() < b.getMonth() || (t.getMonth() === b.getMonth() && t.getDate() < b.getDate())) u--
-  return u
-}
 
 function MenuRow({ icon, label, onClick, last }: { icon: React.ReactNode; label: string; onClick: () => void; last?: boolean }) {
   return (
@@ -40,7 +32,8 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [history, setHistory] = useState<ScreeningResult[]>([])
   const [exporting, setExporting] = useState(false)
-  const [showSetting, setShowSetting] = useState(false)
+  const [showNotif, setShowNotif] = useState(false)
+  const [showStorage, setShowStorage] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
   const [showDetail, setShowDetail] = useState(false)
@@ -70,7 +63,6 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
   const hpht = profile?.hpht ?? DEMO_HPHT
   const uk = profile ? weeksFromHpht(hpht) : ukProp
   const hplLabel = profile ? new Date(calcHPL(hpht)).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) : hplProp
-  const usia = hitungUsia(profile?.tanggal_lahir)
   const nama = profile?.nama ?? "Siti"
   const gpa = profile ? `G${profile.gravida}P${profile.para}A${profile.abortus}` : "G2P1A0"
   const inisial = nama.charAt(0).toUpperCase()
@@ -117,7 +109,8 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
     window.location.reload()
   }
 
-  if (showSetting) return <SettingScreen onBack={() => setShowSetting(false)} />
+  if (showNotif) return <NotificationSettingScreen onBack={() => setShowNotif(false)} />
+  if (showStorage) return <StorageSettingScreen onBack={() => setShowStorage(false)} />
   if (showEdit && profile) return <EditProfileScreen profile={profile} onBack={() => setShowEdit(false)} onSaved={() => { setShowEdit(false); void load() }} />
   if (showHistory) return <HistoryScreen history={history} onBack={() => setShowHistory(false)} onChanged={() => void load()} />
   if (showDetail && profile)
@@ -127,7 +120,6 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
         uk={uk}
         hplLabel={hplLabel}
         gpa={gpa}
-        usia={usia}
         verified={verified}
         onBack={() => setShowDetail(false)}
         onEdit={() => setShowEdit(true)}
@@ -175,12 +167,13 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
         </Card>
       </section>
 
-      {/* Menu: Pengaturan */}
+      {/* Menu: Pengaturan — list seperti Data Saya, tiap baris ke halamannya */}
       <section className="space-y-4">
-        <p className="px-1 text-[15px] font-bold text-[#3C4245]">Pengaturan</p>
+        <p className="px-1 text-[13px] font-bold text-[#3C4245]">Pengaturan</p>
         <Card className="rounded-[20px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm overflow-hidden">
           <CardContent className="p-0">
-            <MenuRow icon={<Settings className="size-4" />} label="Pengaturan" onClick={() => setShowSetting(true)} last />
+            <MenuRow icon={<Bell className="size-4" />} label="Notifikasi" onClick={() => setShowNotif(true)} />
+            <MenuRow icon={<Database className="size-4" />} label="Penyimpanan lokal" onClick={() => setShowStorage(true)} last />
           </CardContent>
         </Card>
       </section>
