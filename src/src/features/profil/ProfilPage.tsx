@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react"
-import { ChevronRight, Heart, FileDown, Settings } from "lucide-react"
+import { ChevronRight, ClipboardList, Share2, Settings, CircleHelp, Pencil, FileDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { db } from "@/data/db"
+import { supabase } from "@/data/supabase"
 import { getCurrentProfile, getCurrentUserId } from "@/data/currentUser"
 import { weeksFromHpht, calcHPL } from "@/clinical-rules/ukHpl"
 import { generateRingkasanPDF, shareViaWA } from "@/services/exportService"
 import SettingScreen from "@/features/profil/SettingScreen"
 import EditProfileScreen from "@/features/profil/EditProfileScreen"
 import HistoryScreen from "@/features/profil/HistoryScreen"
+import ProfileDetailScreen from "@/features/profil/ProfileDetailScreen"
 import type { Profile, ScreeningResult } from "@/data/db"
 
 type Props = { uk: number; hplLabel: string }
@@ -24,6 +26,16 @@ function hitungUsia(tglLahir?: string): number | null {
   return u
 }
 
+function MenuRow({ icon, label, onClick, last }: { icon: React.ReactNode; label: string; onClick: () => void; last?: boolean }) {
+  return (
+    <button onClick={onClick} className={`flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left active:bg-[#FFFCF6] transition-colors ${last ? "" : "border-b border-[#F7F2EB]"}`}>
+      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-[#F0F5F1] text-[#5A8A7A]">{icon}</span>
+      <span className="flex-1 text-sm font-medium text-[#1E2326]">{label}</span>
+      <ChevronRight className="size-4 shrink-0 text-[#C2C8CB]" />
+    </button>
+  )
+}
+
 export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [history, setHistory] = useState<ScreeningResult[]>([])
@@ -31,7 +43,10 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
   const [showSetting, setShowSetting] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
-
+  const [showDetail, setShowDetail] = useState(false)
+  const [showExport, setShowExport] = useState(false)
+  const [showHelp, setShowHelp] = useState(false)
+  const [verified, setVerified] = useState(false)
   const [uid, setUid] = useState<string>("demo-siti")
 
   const load = async () => {
@@ -42,6 +57,10 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
     const h = await db.screeningResults.where("userId").equals(id).toArray()
     h.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     setHistory(h)
+    try {
+      const { data } = await supabase.auth.getSession()
+      setVerified(!!data.session?.user)
+    } catch {}
   }
 
   useEffect(() => {
@@ -76,114 +95,118 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
     }
   }
 
-  const items = history.slice(0, 3)
+  const handleLogout = async () => {
+    if (!window.confirm("Keluar dari akun? Data lokal tetap tersimpan di ponsel.")) return
+    try {
+      await supabase.auth.signOut()
+    } catch {}
+  }
+
+  const handleDeleteAccount = async () => {
+    if (!window.confirm("Hapus akun? Semua data lokal di ponsel ini akan dihapus permanen dan Anda keluar.")) return
+    if (!window.confirm("Yakin? Tindakan ini tidak dapat dibatalkan.")) return
+    try {
+      await supabase.auth.signOut()
+    } catch {}
+    try {
+      for (const k of ["siaga_isPostpartum", "siaga_birth_date", "siaga_bb_target"]) localStorage.removeItem(k)
+    } catch {}
+    try {
+      await db.delete()
+    } catch {}
+    window.location.reload()
+  }
 
   if (showSetting) return <SettingScreen onBack={() => setShowSetting(false)} />
   if (showEdit && profile) return <EditProfileScreen profile={profile} onBack={() => setShowEdit(false)} onSaved={() => { setShowEdit(false); void load() }} />
   if (showHistory) return <HistoryScreen history={history} onBack={() => setShowHistory(false)} onChanged={() => void load()} />
+  if (showDetail && profile)
+    return (
+      <ProfileDetailScreen
+        profile={profile}
+        uk={uk}
+        hplLabel={hplLabel}
+        gpa={gpa}
+        usia={usia}
+        verified={verified}
+        onBack={() => setShowDetail(false)}
+        onEdit={() => setShowEdit(true)}
+        onDeleteAccount={() => void handleDeleteAccount()}
+      />
+    )
 
   return (
     <div className="space-y-4">
-      <Card className="rounded-[24px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm">
-        <CardContent className="p-4 flex gap-3 items-center">
-          <div className="size-12 rounded-2xl bg-[#EAF2EC] ring-1 ring-[#7AAE9A]/15 grid place-items-center text-[#7AAE9A] font-semibold">{inisial}</div>
+      {/* Kartu profil: Nama — GPA — No HP + pensil */}
+      <Card className="rounded-[20px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm overflow-hidden">
+        <CardContent className="flex items-center gap-3 p-4">
+          <span className="grid size-12 shrink-0 place-items-center rounded-full bg-[#EAF2EC] text-[18px] font-bold text-[#5A8A7A] ring-1 ring-[#7AAE9A]/15">
+            {inisial}
+          </span>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-[#1E2326] leading-none">
-              {nama} {usia ? `${usia} tahun` : "26 tahun"}
-            </p>
-            <p className="text-xs text-[#8A8F93]">Hamil minggu ke {uk}, perkiraan lahir {hplLabel} {gpa}</p>
-            {profile?.fasyankes && <p className="text-[11px] text-[#8A8F93] truncate">{profile.fasyankes} {profile.nama_bidan ? `${profile.nama_bidan}` : ""}</p>}
+            <p className="truncate text-[17px] font-extrabold tracking-tight text-[#1E2326]">{nama}</p>
+            <p className="text-[13px] leading-snug text-[#6C757D]">{gpa}</p>
+            <p className="text-[13px] leading-snug text-[#6C757D]">{profile?.noHp ?? "-"}</p>
           </div>
-          <Button variant="outline" size="sm" className="rounded-full text-xs" onClick={() => profile && setShowEdit(true)}>
-            Ubah
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card className="rounded-[24px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm">
-        <CardContent className="p-4">
-          <p className="text-sm font-semibold text-[#1E2326]">Riwayat cek</p>
-          <p className="text-xs text-[#8A8F93]">{history.length ? `${history.length} cek tersimpan` : "Belum ada cek"}</p>
-          <div className="mt-2.5 rounded-2xl ring-1 ring-[#EAE6E0] overflow-hidden divide-y divide-[#F7F2EB]">
-            {items.length ? (
-              items.map((r) => {
-                const c = r.kategori === "HIJAU" ? "bg-[#7ACB8A]" : r.kategori === "KUNING" ? "bg-[#F5C16C]" : "bg-[#E57373]"
-                const label = `${new Date(r.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short" })} ${r.tipe} ${r.kategori === "HIJAU" ? "aman" : r.kategori === "KUNING" ? "perlu perhatian" : "perlu rujuk"}`
-                return (
-                  <div key={r.id} className="flex items-center gap-2.5 px-3 py-2.5 bg-white">
-                    <span className={`size-2 rounded-full ${c}`} />
-                    <span className="text-sm text-[#1E2326] flex-1 truncate">{label}</span>
-                    <ChevronRight className="size-4 text-[#C2C8CB]" />
-                  </div>
-                )
-              })
-            ) : (
-              <div className="px-3 py-6 text-center">
-                <p className="text-sm text-[#8A8F93]">Belum ada riwayat. Lakukan skrining di menu Skrining.</p>
-              </div>
-            )}
-          </div>
-          {history.length > 0 && (
-            <Button variant="outline" className="w-full mt-3 rounded-full gap-1.5 text-sm" size="sm" onClick={() => setShowHistory(true)}>
-              Lihat semua riwayat <ChevronRight className="size-4" />
-            </Button>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card className="rounded-[24px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2.5">
-            <div className="size-8 rounded-xl bg-[#F0F5F1] grid place-items-center text-[#7AAE9A] ring-1 ring-[#EAE6E0]">
-              <FileDown className="size-4" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-[#1E2326] leading-none">Bagikan ke bidan</p>
-              <p className="text-xs text-[#8A8F93]">Ekspor PDF ringkasan cek</p>
-            </div>
-          </div>
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            <Button variant="outline" className="rounded-full text-xs" disabled={exporting} onClick={() => void handleExport(false)}>
-              {exporting ? "Memproses" : "Unduh PDF"}
-            </Button>
-            <Button className="rounded-full bg-[#7AAE9A] hover:bg-[#6B9E8A] text-white text-xs" disabled={exporting} onClick={() => void handleExport(true)}>
-              Bagikan WA
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="rounded-[24px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm">
-        <CardContent className="p-0">
-          <button onClick={() => setShowSetting(true)} className="flex w-full items-center gap-3 px-4 py-3.5 text-left hover:bg-[#FFFCF6] transition-colors">
-            <div className="size-10 rounded-xl bg-[#F0F5F1] grid place-items-center text-[#7AAE9A] ring-1 ring-[#EAE6E0]">
-              <Settings className="size-5" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-[#1E2326] leading-none">Pengaturan</p>
-              <p className="text-xs text-[#8A8F93]">Notifikasi dan privasi</p>
-            </div>
-            <ChevronRight className="size-4 text-[#C2C8CB]" />
+          <button onClick={() => profile && setShowDetail(true)} aria-label="Lihat profil lengkap" className="grid size-9 shrink-0 place-items-center rounded-full text-[#6C757D] hover:bg-[#FFFCF6] active:scale-[0.95] transition">
+            <Pencil className="size-4" />
           </button>
         </CardContent>
       </Card>
 
-      <Card className="rounded-[24px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm">
-        <CardContent className="p-4 flex gap-3 items-center">
-          <div className="size-10 rounded-xl bg-[#F7F2EB] grid place-items-center text-[#7AAE9A] ring-1 ring-[#EAE6E0]">
-            <Heart className="size-5" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-[#1E2326] leading-none">Butuh bantuan</p>
-            <p className="text-xs text-[#8A8F93]">Hubungi bidan pendamping</p>
-          </div>
-          <Button size="sm" variant="outline" className="rounded-full">
-            Chat
-          </Button>
-        </CardContent>
-      </Card>
+      {/* Menu: Data Saya */}
+      <section className="space-y-10">
+        <p className="px-1 text-[15px] font-bold text-[#3C4245]">Data Saya</p>
+        <Card className="rounded-[20px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm overflow-hidden">
+          <CardContent className="p-0">
+            <MenuRow icon={<ClipboardList className="size-4" />} label={`Riwayat skrining${history.length ? ` (${history.length})` : ""}`} onClick={() => setShowHistory(true)} />
+            <MenuRow icon={<Share2 className="size-4" />} label="Bagikan ke bidan" onClick={() => setShowExport((v) => !v)} last />
+            {showExport && (
+              <div className="grid grid-cols-2 gap-2 border-t border-[#F7F2EB] p-3">
+                <Button variant="outline" className="rounded-full text-xs" disabled={exporting} onClick={() => void handleExport(false)}>
+                  <FileDown className="size-3.5" /> {exporting ? "Memproses" : "Unduh PDF"}
+                </Button>
+                <Button className="rounded-full bg-[#7AAE9A] hover:bg-[#6B9E8A] text-white text-xs" disabled={exporting} onClick={() => void handleExport(true)}>
+                  Bagikan WA
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </section>
 
-      <p className="text-center text-[11px] leading-relaxed text-[#9AA3A6] px-6">Data tersimpan aman di ponsel. Dapat dibuka tanpa internet.</p>
+      {/* Menu: Pengaturan */}
+      <section className="space-y-4">
+        <p className="px-1 text-[15px] font-bold text-[#3C4245]">Pengaturan</p>
+        <Card className="rounded-[20px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm overflow-hidden">
+          <CardContent className="p-0">
+            <MenuRow icon={<Settings className="size-4" />} label="Pengaturan" onClick={() => setShowSetting(true)} last />
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Menu: Lainnya */}
+      <section className="space-y-4">
+        <p className="px-1 text-[15px] font-bold text-[#3C4245]">Lainnya</p>
+        <Card className="rounded-[20px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm overflow-hidden">
+          <CardContent className="p-0">
+            <MenuRow icon={<CircleHelp className="size-4" />} label="Butuh bantuan" onClick={() => setShowHelp((v) => !v)} last />
+            {showHelp && (
+              <div className="border-t border-[#F7F2EB] p-4">
+                <p className="text-sm font-semibold text-[#1E2326]">Bidan pendamping</p>
+                <p className="mt-1 text-sm text-[#6C757D]">{profile?.nama_bidan || "Belum diisi"} {profile?.fasyankes ? `· ${profile.fasyankes}` : ""}</p>
+                <p className="mt-2 text-xs leading-relaxed text-[#8A8F93]">Ubah data bidan lewat ikon pensil di kartu profil.</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Keluar */}
+      <button onClick={() => void handleLogout()} className="w-full rounded-full border border-[#E57373] py-3 text-sm font-bold text-[#C62828] active:scale-[0.99] transition">
+        Keluar
+      </button>
+      <p className="text-center text-[11px] leading-relaxed text-[#9AA3A6]">Versi 0.1.0 · Data tersimpan aman di ponsel</p>
     </div>
   )
 }
