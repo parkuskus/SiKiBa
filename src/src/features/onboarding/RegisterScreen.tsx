@@ -5,19 +5,12 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { submitRegister, formatGPA } from "@/features/onboarding/registerForm"
+import { toE164, dummyEmail, makeDummyCode } from "@/features/onboarding/otpDummy"
 import { supabase } from "@/data/supabase"
 import { db } from "@/data/db"
 import { syncProfile } from "@/data/sync"
 
 type Props = { onBack: () => void; onSuccess: () => void; onToLogin: () => void }
-
-function toE164(noHp: string): string {
-  const clean = noHp.replace(/[^0-9]/g, "")
-  if (clean.startsWith("0")) return `+62${clean.slice(1)}`
-  if (clean.startsWith("62")) return `+${clean}`
-  if (clean.startsWith("+62")) return clean
-  return `+62${clean}`
-}
 
 export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) {
   const [form, setForm] = useState({
@@ -90,14 +83,14 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
       const e164 = toE164(form.noHp)
       setPhoneForOtp(e164)
       // demo: generate kode sintetis agar bisa dicoba tanpa SMS/email beneran
-      const code = Math.floor(100000 + Math.random() * 900000).toString()
+      const code = makeDummyCode()
       setDemoCode(code)
       console.log("[demo OTP]", code, "untuk", e164)
       // coba phone OTP, kalau gagal fallback ke email sintetis — tapi demo tetap jalan
       try {
         const { error } = await supabase.auth.signInWithOtp({ phone: e164 })
         if (error) {
-          const email = `${form.noHp.replace(/[^0-9]/g, "")}@siagabunda.test`
+          const email = dummyEmail(form.noHp)
           setPhoneForOtp(email)
           await supabase.auth.signInWithOtp({ email })
         }
@@ -119,8 +112,30 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
       setOtpErr("Kode 6 digit wajib diisi")
       return
     }
+    // demo didahulukan — biar bisa dicoba tanpa SMS beneran (online maupun offline)
+    if (demoCode && otp.trim() === demoCode) {
+      const demoUserId = `demo-${form.noHp.replace(/[^0-9]/g, "")}`
+      const tmp = await submitRegister({
+        nama: form.nama,
+        tanggalLahir: form.tanggalLahir,
+        noHp: form.noHp,
+        gravida: Number(form.gravida),
+        para: Number(form.para),
+        abortus: Number(form.abortus),
+        hpht: form.hpht,
+        fasyankes: form.fasyankes,
+        namaBidan: form.namaBidan,
+      })
+      const profile = { ...tmp.profile, id: demoUserId }
+      await db.profiles.put(profile)
+      syncProfile(profile)
+      try { await db.profiles.delete(tmp.profile.id) } catch {}
+      console.log("[register demo]", tmp.uk, tmp.hpl, demoUserId)
+      onSuccess()
+      return
+    }
     const isOnline = typeof navigator !== "undefined" && navigator.onLine
-    // online → pakai verifikasi Supabase beneran, jangan override dengan demo
+    // online → coba verifikasi Supabase beneran
     if (isOnline) {
       setOtpLoading(true)
       try {
@@ -162,29 +177,7 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
         setOtpLoading(false)
       }
     }
-    // offline/demo fallback — hanya saat offline
-    if (demoCode && otp.trim() === demoCode) {
-      const demoUserId = `demo-${form.noHp.replace(/[^0-9]/g, "")}`
-      const tmp = await submitRegister({
-        nama: form.nama,
-        tanggalLahir: form.tanggalLahir,
-        noHp: form.noHp,
-        gravida: Number(form.gravida),
-        para: Number(form.para),
-        abortus: Number(form.abortus),
-        hpht: form.hpht,
-        fasyankes: form.fasyankes,
-        namaBidan: form.namaBidan,
-      })
-      const profile = { ...tmp.profile, id: demoUserId }
-      await db.profiles.put(profile)
-      syncProfile(profile)
-      try { await db.profiles.delete(tmp.profile.id) } catch {}
-      console.log("[register demo offline]", tmp.uk, tmp.hpl, demoUserId)
-      onSuccess()
-      return
-    }
-    setOtpErr("Kode salah atau kadaluarsa. Saat online pakai kode SMS/email asli, kode demo hanya untuk offline.")
+    setOtpErr("Kode salah atau kadaluarsa.")
   }
 
   if (step === "otp") {
@@ -196,11 +189,11 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
           </button>
           <h1 className="mt-4 text-[20px] font-semibold text-[#1E2326] leading-tight">Masukkan kode OTP</h1>
           <p className="mt-1 text-sm text-[#8A8F93] leading-relaxed">Kode 6 digit dikirim ke {phoneForOtp.includes("@") ? "email" : "WhatsApp"} {phoneForOtp}. Masukkan untuk verifikasi.</p>
-          {typeof navigator !== "undefined" && !navigator.onLine && demoCode && (
+          {demoCode && (
             <div className="mt-3 rounded-2xl bg-[#FFF8EC] px-3 py-2.5 ring-1 ring-[#F5C16C]/20 text-center">
-              <p className="text-xs font-medium text-[#8A6D00]">Kode demo offline</p>
+              <p className="text-xs font-medium text-[#8A6D00]">Kode demo untuk percobaan</p>
               <p className="font-mono text-lg font-bold tracking-[0.3em] text-[#1E2326]">{demoCode}</p>
-              <p className="text-[11px] text-[#8A8F93]">Gunakan saat offline tanpa SMS</p>
+              <p className="text-[11px] text-[#8A8F93]">Gunakan kode ini untuk verifikasi tanpa SMS</p>
             </div>
           )}
           <Card className="mt-4 rounded-[24px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm">

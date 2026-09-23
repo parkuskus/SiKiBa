@@ -6,16 +6,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { db } from "@/data/db"
 import { supabase } from "@/data/supabase"
+import { toE164, dummyEmail, makeDummyCode } from "@/features/onboarding/otpDummy"
 
 type Props = { onBack: () => void; onSuccess: () => void; onToRegister: () => void }
-
-function toE164(noHp: string): string {
-  const clean = noHp.replace(/[^0-9]/g, "")
-  if (clean.startsWith("0")) return `+62${clean.slice(1)}`
-  if (clean.startsWith("62")) return `+${clean}`
-  if (clean.startsWith("+62")) return clean
-  return `+62${clean}`
-}
 
 export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) {
   const [noHp, setNoHp] = useState("")
@@ -50,13 +43,13 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
     try {
       const e164 = toE164(noHp)
       setPhoneForOtp(e164)
-      const code = Math.floor(100000 + Math.random() * 900000).toString()
+      const code = makeDummyCode()
       setDemoCode(code)
       console.log("[demo OTP login]", code, "untuk", e164)
       try {
         const { error } = await supabase.auth.signInWithOtp({ phone: e164 })
         if (error) {
-          const email = `${noHp.replace(/[^0-9]/g, "")}@siagabunda.test`
+          const email = dummyEmail(noHp)
           setPhoneForOtp(email)
           await supabase.auth.signInWithOtp({ email })
         }
