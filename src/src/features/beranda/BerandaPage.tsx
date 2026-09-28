@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { Bell, Smile, ChevronRight } from "lucide-react"
 import { db } from "@/data/db"
 import { getCurrentProfile, getCurrentUserId } from "@/data/currentUser"
 import { weeksFromHpht, calcHPL, progressPercent } from "@/clinical-rules/ukHpl"
@@ -28,7 +29,7 @@ function hariIniLabel(): string {
   return new Date().toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" })
 }
 
-// Beranda — orkestrator tipis, render 4 bento S-02a-d sebagai komponen terpisah
+// S-02 Beranda — stage sage + hero illu-12 + sheet (ikut Figma 23:1098)
 export default function BerandaPage({ uk: ukProp, progress: progressProp, countdown: countdownProp, isPostpartum, setIsPostpartum, setShowBirth, setTab }: Props) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [last, setLast] = useState<ScreeningResult | null>(null)
@@ -75,59 +76,61 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
   const countdown = profile ? Math.max(0, Math.ceil((new Date(hpl).getTime() - new Date().getTime()) / 86400000)) : countdownProp
   const gpa = profile ? `G${profile.gravida}P${profile.para}A${profile.abortus}` : "G2P1A0"
   const nama = profile?.nama ? profile.nama.split(" ")[0] : "Siti"
-  const lastLabel = last ? `${last.kategori === "HIJAU" ? "Kondisi aman" : last.kategori === "KUNING" ? "Perlu perhatian" : "Perlu rujukan"} ` : "Kondisi aman"
-  const lastDate = last ? new Date(last.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "long" }) : "28 Agustus"
+  const lastLabel = last ? `${last.kategori === "HIJAU" ? "Kondisi aman" : last.kategori === "KUNING" ? "Skrining terakhir Waspada" : "Skrining terakhir Bahaya"}` : "Belum ada skrining"
+  const lastDate = last ? new Date(last.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short" }) : "Lakukan skrining pertama"
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-2">
-        <p className="!m-0 text-xs leading-none text-[#8A8F93]">{hariIniLabel()}</p>
-        <h1 className="!m-0 text-[22px] font-extrabold tracking-tight leading-none text-[#1E2326]">Halo, {nama}</h1>
+    <div>
+      <div className="-mx-4 -mt-5 rounded-b-[32px] bg-[#4A6E54] px-6 pb-6 pt-7 text-white">
+        <div className="flex items-center gap-2.5">
+          <p className="flex-1 text-xl font-bold">SIAGA Bunda</p>
+          <span className="grid size-11 place-items-center rounded-full bg-white text-[#4A6E54]"><Bell className="size-5" /></span>
+          <span className="grid size-11 place-items-center rounded-full bg-white text-[#DB2777]"><Smile className="size-6" /></span>
+        </div>
+        <div className="mt-4 flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-[17px] text-white/90">{hariIniLabel()}</p>
+            <h1 className="text-[80px] font-extrabold tracking-tight leading-none" style={{ color: "#fff", margin: 0, marginTop: 10 }}>Halo, {nama}</h1>
+            <p className="text-[17px] leading-relaxed text-white/90" style={{ margin: 0, marginTop: 12 }}>Yuk, jaga kesehatan diri dan si kecil di setiap tahap kehamilan</p>
+          </div>
+          <img src="/illu/illu-12-hero-2.png" alt="Bunda hamil" className="h-[170px] w-[130px] shrink-0 rounded-[20px] object-cover" />
+        </div>
+        <div className="mt-4">
+          <ProfileCard
+            isPostpartum={isPostpartum}
+            uk={uk}
+            progress={progress}
+            countdown={countdown}
+            hplLabel={hplLabel}
+            gpa={gpa}
+            onShowBirth={() => setShowBirth(true)}
+            // ponytail: testing mode — bolak-balik bebas tanpa 42 hari
+            onBackToPregnant={() => {
+              setIsPostpartum(false)
+              try { localStorage.removeItem("siaga_birth_date") } catch {}
+            }}
+          />
+        </div>
       </div>
 
-      <section>
-        <ProfileCard
-          isPostpartum={isPostpartum}
-          uk={uk}
-          progress={progress}
-          countdown={countdown}
-          hplLabel={hplLabel}
-          gpa={gpa}
-          onShowBirth={() => setShowBirth(true)}
-          // ponytail: testing mode — bolak-balik bebas tanpa 42 hari
-          onBackToPregnant={() => {
-            setIsPostpartum(false)
-            try { localStorage.removeItem("siaga_birth_date") } catch {}
-          }}
-        />
-      </section>
-
-      <section className="space-y-3">
-        <div className="flex items-center justify-between px-1">
-          <h2 className="!m-0 text-[15px] font-bold tracking-tight text-[#1E2326]">Aksi Cepat</h2>
-        </div>
+      <div className="space-y-3.5 px-5 pb-6 pt-5">
         <QuickActionGrid
           onSkrining={() => setTab("skrining")}
           onCatatBB={() => setTab("tracker")}
           onReminder={() => setTab("tracker")}
           onEdukasi={() => setTab("edukasi")}
         />
-      </section>
-
-      <section className="space-y-3">
-        <div className="flex items-center justify-between px-1">
-          <h2 className="!m-0 text-[15px] font-bold tracking-tight text-[#1E2326]">Cek Terakhir</h2>
-        </div>
-        <LastCheckCard label={lastLabel} dateLabel={lastDate} onLihat={() => setTab("skrining")} />
-      </section>
-
-      <section className="space-y-3">
-        <div className="flex items-center justify-between px-1">
-          <h2 className="!m-0 text-[15px] font-bold tracking-tight text-[#1E2326]">Reminder Hari Ini</h2>
-          <button onClick={() => setTab("tracker")} className="text-xs font-semibold text-[#7AAE9A]">Lihat semua</button>
-        </div>
+        <LastCheckCard label={lastLabel} dateLabel={lastDate} kategori={last?.kategori} onLihat={() => setTab("skrining")} />
+        <button onClick={() => setTab("tracker")} className="flex w-full items-center gap-3 rounded-[24px] bg-white p-4 text-left ring-2 ring-[#FFCFCF] active:scale-[0.99] transition">
+          <span className="grid size-12 shrink-0 place-items-center rounded-full bg-[#FFE2E2] text-[#DB2777]"><Smile className="size-7" /></span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-bold text-[#1D2B29]">Cek Mood Mama</span>
+            <span className="block text-xs text-[#33443F]">Biar dapat insightnya</span>
+          </span>
+          <ChevronRight className="size-5 shrink-0 text-[#1D2B29]" />
+        </button>
         <TodayReminderCard meds={meds} nextAncLabel={nextAncLabel} />
-      </section>
+      </div>
     </div>
   )
 }

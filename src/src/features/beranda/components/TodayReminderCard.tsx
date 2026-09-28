@@ -1,49 +1,50 @@
-import { CalendarDays } from "lucide-react"
-import { Card } from "@/components/ui/card"
+import { CalendarDays, Pill } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
 
 type Props = {
   meds: { nama: string; waktu: string }[]
   nextAncLabel: string | null
 }
 
-// S-02d ReminderSnippet — hanya data asli: ANC + obat pengguna (default kosong)
+// S-02d ReminderSnippet — kartu Hari ini + baris tile
 export default function TodayReminderCard({ meds, nextAncLabel }: Props) {
   return (
-    <Card className="rounded-[24px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm overflow-hidden">
-      <div className="divide-y divide-[#F0F0F0]">
-        <div className="flex items-center gap-3 px-4 py-3.5">
-          <div className="size-10 rounded-full bg-[#E6F0FF] grid place-items-center text-[#4A6FA5] shrink-0">
-            <CalendarDays className="size-5" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-[#1E2326] leading-none">Jadwal ANC</p>
-            <p className="text-xs text-[#8A8F93] mt-1 truncate">{nextAncLabel ?? "Belum ada jadwal — atur di Reminder"}</p>
-          </div>
-        </div>
+    <Card className="rounded-[24px] border-0 bg-[#EAF4F0] ring-0 shadow-sm overflow-hidden">
+      <CardContent className="p-4 space-y-2.5">
+        <p className="text-sm font-bold text-[#1D2B29]">Hari ini</p>
         {meds.length ? (
           meds.map((m) => (
-            <div key={`${m.nama}|${m.waktu}`} className="flex items-center gap-3 px-4 py-3.5">
-              <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-[#EAF2EC]">
-                <img src="/illu/illu-obat.svg" alt="Obat" className="size-7 object-contain" />
+            <div key={`${m.nama}|${m.waktu}`} className="flex items-center gap-3">
+              <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-white text-[#1F7A6D]">
+                <Pill className="size-5" />
               </span>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-[#1E2326] leading-none truncate">{m.nama}</p>
-                <p className="text-xs text-[#8A8F93] mt-1">Jam {m.waktu}</p>
+                <p className="text-[13px] font-semibold text-[#1D2B29] leading-tight truncate">{m.nama} {m.waktu} diminum</p>
+                <p className="text-xs text-[#33443F] mt-0.5">Ketuk saat sudah minum</p>
               </div>
             </div>
           ))
         ) : (
-          <div className="flex items-center gap-3 px-4 py-3.5">
-            <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-[#F7F2EB]">
-              <img src="/illu/illu-obat.svg" alt="Obat" className="size-7 object-contain opacity-60" />
+          <div className="flex items-center gap-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-white text-[#1F7A6D]">
+              <Pill className="size-5" />
             </span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-[#1E2326] leading-none">Belum ada pengingat obat</p>
-              <p className="text-xs text-[#8A8F93] mt-1">Tambah di menu Reminder</p>
+              <p className="text-[13px] font-semibold text-[#1D2B29] leading-tight">Belum ada pengingat obat</p>
+              <p className="text-xs text-[#33443F] mt-0.5">Tambah di menu Reminder</p>
             </div>
           </div>
         )}
-      </div>
+        <div className="flex items-center gap-3">
+          <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-white text-[#DB2777]">
+            <CalendarDays className="size-5" />
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="text-[13px] font-semibold text-[#1D2B29] leading-tight truncate">{nextAncLabel ?? "Belum ada jadwal ANC"}</p>
+            <p className="text-xs text-[#33443F] mt-0.5">{nextAncLabel ? "Siapkan berkas" : "Atur di menu Reminder"}</p>
+          </div>
+        </div>
+      </CardContent>
     </Card>
   )
 }

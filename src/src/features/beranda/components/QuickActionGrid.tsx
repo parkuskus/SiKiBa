@@ -7,26 +7,23 @@ type Props = {
   onEdukasi: () => void
 }
 
-// S-02b QuickAction — 4 aksi cepat
+// S-02b QuickAction — 4 tile warna + label 12px
+const tile = "grid size-16 place-items-center rounded-[20px] transition active:scale-[0.98]"
 export default function QuickActionGrid({ onSkrining, onCatatBB, onReminder, onEdukasi }: Props) {
+  const items = [
+    { label: "Skrining", onClick: onSkrining, icon: <ClipboardList className="size-7" />, tileBg: "bg-[#FFE2E2]", iconColor: "text-[#DB2777]" },
+    { label: "Catat BB", onClick: onCatatBB, icon: <Weight className="size-7" />, tileBg: "bg-[#FFF1E8]", iconColor: "text-[#9A5B00]" },
+    { label: "Reminder", onClick: onReminder, icon: <Bell className="size-7" />, tileBg: "bg-[#DFF0EA]", iconColor: "text-[#16685C]" },
+    { label: "Edukasi", onClick: onEdukasi, icon: <BookOpen className="size-7" />, tileBg: "bg-[#E2EFEA]", iconColor: "text-[#DB2777]" },
+  ]
   return (
-    <div className="grid grid-cols-4 gap-3">
-      <button onClick={onSkrining} className="flex flex-col items-center gap-2 rounded-[20px] bg-white px-2 py-4 ring-1 ring-black/[0.05] shadow-sm active:scale-[0.98] transition">
-        <span className="grid size-10 place-items-center rounded-full bg-[#EAF6EF] text-[#5A8A7A] ring-1 ring-[#7AAE9A]/15"><ClipboardList className="size-5" /></span>
-        <span className="text-[11px] font-semibold leading-tight text-[#1E2326] text-center">Skrining</span>
-      </button>
-      <button onClick={onCatatBB} className="flex flex-col items-center gap-2 rounded-[20px] bg-white px-2 py-4 ring-1 ring-black/[0.05] shadow-sm active:scale-[0.98] transition">
-        <span className="grid size-10 place-items-center rounded-full bg-[#FFF8EC] text-[#8A6D00] ring-1 ring-[#F5C16C]/20"><Weight className="size-5" /></span>
-        <span className="text-[11px] font-semibold leading-tight text-[#1E2326] text-center">Catat BB</span>
-      </button>
-      <button onClick={onReminder} className="flex flex-col items-center gap-2 rounded-[20px] bg-white px-2 py-4 ring-1 ring-black/[0.05] shadow-sm active:scale-[0.98] transition">
-        <span className="grid size-10 place-items-center rounded-full bg-[#FFF1E8] text-[#A66A3C] ring-1 ring-[#EAD8C8]"><Bell className="size-5" /></span>
-        <span className="text-[11px] font-semibold leading-tight text-[#1E2326] text-center">Reminder</span>
-      </button>
-      <button onClick={onEdukasi} className="flex flex-col items-center gap-2 rounded-[20px] bg-white px-2 py-4 ring-1 ring-black/[0.05] shadow-sm active:scale-[0.98] transition">
-        <span className="grid size-10 place-items-center rounded-full bg-[#EAF0FF] text-[#4A6FA5] ring-1 ring-[#C8D6F0]"><BookOpen className="size-5" /></span>
-        <span className="text-[11px] font-semibold leading-tight text-[#1E2326] text-center">Edukasi</span>
-      </button>
+    <div className="grid grid-cols-4 gap-2">
+      {items.map((it) => (
+        <button key={it.label} onClick={it.onClick} className="flex flex-col items-center gap-1.5">
+          <span className={`${tile} ${it.tileBg} ${it.iconColor}`}>{it.icon}</span>
+          <span className="text-xs font-medium leading-tight text-[#33443F] text-center">{it.label}</span>
+        </button>
+      ))}
     </div>
   )
 }

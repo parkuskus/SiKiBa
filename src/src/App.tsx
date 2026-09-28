@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react"
 import { MessageCircleHeart, X } from "lucide-react"
-import AppHeader from "@/shared/components/layout/AppHeader"
 import BottomNav from "@/shared/components/layout/BottomNav"
 import BirthDialog from "@/shared/components/layout/BirthDialog"
 import BerandaPage from "@/features/beranda/BerandaPage"
@@ -82,8 +81,6 @@ export default function App() {
 
   return (
     <div className="min-h-[100dvh] bg-[#FFFCF6] text-[#2E3436]">
-      <AppHeader />
-
       <main className="mx-auto max-w-[480px] px-4 pb-28 pt-5">
         <div className="w-full">
           {tab === "beranda" && (
