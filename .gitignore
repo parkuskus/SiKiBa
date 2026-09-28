@@ -1,1 +1,3 @@
 extra/
+supabase/.env
+supabase/.temp/

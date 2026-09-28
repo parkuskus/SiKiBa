@@ -24,8 +24,9 @@ export async function tanyaChatbot(pesan: string): Promise<ChatReply> {
     const { data, error } = await supabase.functions.invoke("chat", { body: { message: teks } })
     if (error) throw error
     return { answer: data.answer as string, sources: (data.sources as string[]) ?? [], escalate: !!data.escalate, offline: false }
-  } catch {
+  } catch (e) {
     // online gagal (Edge Function belum deploy / belum login) -> fallback lokal biar UX tidak mati
+    console.warn("[siba] invoke chat gagal, pakai FAQ lokal:", e)
     const j = jawabOffline(teks)
     return { answer: j, sources: [], escalate: false, offline: true }
   }

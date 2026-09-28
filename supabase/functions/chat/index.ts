@@ -1,5 +1,5 @@
 // SIAGA Bunda — Edge Function `chat` (Deno, Supabase)
-// Deploy: npx supabase functions deploy chat --no-verify-jwt (biarkan verify JWT aktif)
+// Deploy: npx supabase functions deploy chat (verify JWT default aktif, jangan tambah --no-verify-jwt)
 // Secrets: npx supabase secrets set LLM_API_KEY=... LLM_MODEL=gpt-4o-mini LLM_BASE_URL=https://api.openai.com/v1 EMBEDDING_MODEL=text-embedding-3-small
 // Alur: auth (RLS) -> ambil screening terakhir -> retrieval guideline -> rakit prompt -> panggil LLM -> simpan chat_messages
 
@@ -10,6 +10,23 @@ const LLM_BASE_URL = Deno.env.get("LLM_BASE_URL") ?? "https://api.openai.com/v1"
 const LLM_API_KEY = Deno.env.get("LLM_API_KEY") ?? "";
 const LLM_MODEL = Deno.env.get("LLM_MODEL") ?? "gpt-4o-mini";
 const EMBEDDING_MODEL = Deno.env.get("EMBEDDING_MODEL") ?? "text-embedding-3-small";
+// ponytail: header atribusi OpenRouter (opsional, diabaikan provider lain). Isi SITE_URL saat deploy.
+const SITE_URL = Deno.env.get("SITE_URL") ?? "";
+const APP_TITLE = Deno.env.get("APP_TITLE") ?? "SIAGA Bunda";
+
+function llmHeaders(): Record<string, string> {
+  const h: Record<string, string> = { "Content-Type": "application/json", Authorization: `Bearer ${LLM_API_KEY}` };
+  if (SITE_URL) h["HTTP-Referer"] = SITE_URL;
+  if (APP_TITLE) h["X-Title"] = APP_TITLE;
+  return h;
+}
+
+// ponytail: CORS browser — wajib untuk invoke dari localhost/Vercel. Gateway 401 (tanpa JWT valid)
+// tetap tidak membawa header ini, jadi pastikan login Supabase beneran (bukan demo lokal).
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 const SYSTEM_PROMPT = `Kamu Siba, Sahabat Bunda — pendamping hangat SIAGA Bunda untuk ibu hamil, ibu nifas, dan orang tua bayi baru lahir. Bicara Bahasa Indonesia sederhana yang manusiawi dan menghangatkan, seperti bidan senior yang mendengarkan.
 Gaya wajib (biar tidak kering):
@@ -34,7 +51,7 @@ function ringkasSkrining(rows: Screening[]): string {
 async function embed(text: string): Promise<number[]> {
   const res = await fetch(`${LLM_BASE_URL}/embeddings`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${LLM_API_KEY}` },
+    headers: llmHeaders(),
     body: JSON.stringify({ model: EMBEDDING_MODEL, input: text.slice(0, 2000) }),
   });
   if (!res.ok) throw new Error(`embed gagal: ${res.status}`);
@@ -43,7 +60,8 @@ async function embed(text: string): Promise<number[]> {
 }
 
 serve(async (req) => {
-  if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method !== "POST") return new Response("Method not allowed", { status: 405, headers: corsHeaders });
   try {
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -51,10 +69,10 @@ serve(async (req) => {
       { global: { headers: { Authorization: req.headers.get("Authorization")! } } },
     );
     const { data: { user }, error: authErr } = await supabase.auth.getUser();
-    if (authErr || !user) return Response.json({ error: "unauthorized" }, { status: 401 });
+    if (authErr || !user) return Response.json({ error: "unauthorized" }, { status: 401, headers: corsHeaders });
 
     const { message } = await req.json() as { message: string };
-    if (!message?.trim()) return Response.json({ error: "message kosong" }, { status: 400 });
+    if (!message?.trim()) return Response.json({ error: "message kosong" }, { status: 400, headers: corsHeaders });
 
     // 1. konteks skrining — ponytail: ringkas saja, jangan kirim detail JSONB mentah / nama / no_hp
     const { data: skrining } = await supabase.from("screening_results")
@@ -78,7 +96,7 @@ serve(async (req) => {
     const userBlock = `RINGKASAN SKRINING:\n${ringkasSkrining((skrining ?? []) as Screening[])}\nHPHT: ${(profil as { hpht?: string } | null)?.hpht ?? "-"}\n\nPOTONGAN GUIDELINE:\n${guideline || "(tidak ada)"}\n\nPERTANYAAN IBU:\n${message}`;
     const llmRes = await fetch(`${LLM_BASE_URL}/chat/completions`, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${LLM_API_KEY}` },
+      headers: llmHeaders(),
       body: JSON.stringify({
         model: LLM_MODEL, temperature: 0.2, max_tokens: 400,
         messages: [{ role: "system", content: SYSTEM_PROMPT }, { role: "user", content: userBlock }],
@@ -95,9 +113,9 @@ serve(async (req) => {
       { user_id: user.id, role: "assistant", content: answer, sources },
     ]).then(({ error }) => { if (error) console.warn("[chat] simpan skip:", error); });
 
-    return Response.json({ answer, sources, escalate });
+    return Response.json({ answer, sources, escalate }, { headers: corsHeaders });
   } catch (e) {
     console.error("[chat]", e);
-    return Response.json({ error: "chat gagal, coba lagi / hubungi bidan" }, { status: 500 });
+    return Response.json({ error: "chat gagal, coba lagi / hubungi bidan" }, { status: 500, headers: corsHeaders });
   }
 });

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { MessageCircleHeart, X } from "lucide-react"
 import AppHeader from "@/shared/components/layout/AppHeader"
 import BottomNav from "@/shared/components/layout/BottomNav"
 import BirthDialog from "@/shared/components/layout/BirthDialog"
@@ -7,6 +8,7 @@ import SkriningPage from "@/features/skrining/SkriningPage"
 import EdukasiPage from "@/features/edukasi/EdukasiPage"
 import PengingatPage from "@/features/tracker/PengingatPage"
 import ProfilPage from "@/features/profil/ProfilPage"
+import ChatbotPage from "@/features/chatbot/ChatbotPage"
 import SplashScreen from "@/features/onboarding/SplashScreen"
 import RegisterScreen from "@/features/onboarding/RegisterScreen"
 import LoginScreen from "@/features/onboarding/LoginScreen"
@@ -23,6 +25,7 @@ export default function App() {
     try { return localStorage.getItem("siaga_isPostpartum") === "true" } catch { return false }
   })
   const [showBirth, setShowBirth] = useState(false)
+  const [showChat, setShowChat] = useState(false)
   const [onboarding, setOnboarding] = useState<Onboarding>("splash")
 
   useEffect(() => {
@@ -102,6 +105,34 @@ export default function App() {
       </main>
 
       <BottomNav active={tab} onChange={setTab} />
+
+      {/* ponytail: FAB Siba — sheet overlay, BottomNav 5 tab tidak berubah */}
+      <button
+        aria-label="Tanya Siba"
+        onClick={() => setShowChat(true)}
+        className="fixed bottom-24 right-[max(1rem,calc(50%-240px+1rem))] z-40 grid size-[56px] place-items-center rounded-full bg-[#DB2777] text-white shadow-lg active:scale-95"
+      >
+        <MessageCircleHeart className="size-6" />
+      </button>
+
+      {showChat && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={() => setShowChat(false)}>
+          <div className="w-full max-w-[480px] px-4 pb-[calc(1rem+env(safe-area-inset-bottom))]" onClick={(e) => e.stopPropagation()}>
+            <div className="rounded-3xl bg-[#FFFCF6] p-3 shadow-xl">
+              <div className="flex justify-end">
+                <button
+                  aria-label="Tutup chat"
+                  onClick={() => setShowChat(false)}
+                  className="grid min-h-[44px] min-w-[44px] place-items-center rounded-full text-[#6C757D] hover:bg-[#F7F2EB]"
+                >
+                  <X className="size-5" />
+                </button>
+              </div>
+              <ChatbotPage />
+            </div>
+          </div>
+        </div>
+      )}
 
       <BirthDialog
         open={showBirth}
