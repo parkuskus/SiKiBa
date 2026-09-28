@@ -107,7 +107,7 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
             // ponytail: testing mode — bolak-balik bebas tanpa 42 hari
             onBackToPregnant={() => {
               setIsPostpartum(false)
-              try { localStorage.removeItem("siaga_birth_date") } catch {}
+              try { localStorage.removeItem("siaga_birth_date") } catch { /* abaikan: storage tak tersedia */ }
             }}
           />
         </div>

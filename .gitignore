@@ -1,3 +1,12 @@
-extra/
+# secrets & local Supabase CLI state
 supabase/.env
 supabase/.temp/
+app/supabase/
+.env
+
+# python
+scripts/__pycache__/
+__pycache__/
+
+# binary design assets (PDF/PNG/XLSX) — docs/*.md tetap di-track
+assets/

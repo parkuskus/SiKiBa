@@ -1,6 +1,6 @@
 -- SIAGA Bunda — initial schema (idempotent, safe re-run)
 -- Brand: SIAGA Bunda (sebelumnya SiKiBa) — Sistem Informasi Antisipasi & menjaGA Bunda
--- Mirror Dexie src/src/data/db.ts — push via: npx supabase db push (tidak overwrite jika sudah ada)
+-- Mirror Dexie app/src/data/db.ts — push via: npx supabase db push (tidak overwrite jika sudah ada)
 
 create extension if not exists "pgcrypto";
 

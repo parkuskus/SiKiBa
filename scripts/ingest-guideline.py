@@ -16,7 +16,7 @@ from supabase import create_client
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 load_dotenv(os.path.join(ROOT, "supabase", ".env"))
 
-PDF = os.path.join(ROOT, "extra", "Guideline Chatbot_SIAGA.pdf")
+PDF = os.path.join(ROOT, "assets", "Guideline Chatbot_SIAGA.pdf")
 LABEL = "Guideline Chatbot SIAGA"
 BASE_URL = os.getenv("LLM_BASE_URL", "https://openrouter.ai/api/v1")
 EMB_MODEL = os.getenv("EMBEDDING_MODEL", "openai/text-embedding-3-small")
