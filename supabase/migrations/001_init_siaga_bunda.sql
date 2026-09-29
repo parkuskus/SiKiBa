@@ -93,7 +93,7 @@ create table if not exists bbl_profiles (
   created_at timestamptz default now()
 );
 
--- RLS (tidak overwrite data, hanya policy)
+-- RLS (safe: cek dulu, tidak drop/overwrite jika policy sudah ada)
 alter table profiles enable row level security;
 alter table screening_results enable row level security;
 alter table weight_entries enable row level security;
@@ -103,20 +103,29 @@ alter table diary_entries enable row level security;
 alter table nifas_screenings enable row level security;
 alter table bbl_profiles enable row level security;
 
-drop policy if exists "own_profiles" on profiles;
-create policy "own_profiles" on profiles for all using (auth.uid() = id) with check (auth.uid() = id);
-
-drop policy if exists "own_screening" on screening_results;
-create policy "own_screening" on screening_results for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
-drop policy if exists "own_weight" on weight_entries;
-create policy "own_weight" on weight_entries for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
-drop policy if exists "own_supplement" on supplement_reminders;
-create policy "own_supplement" on supplement_reminders for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
-drop policy if exists "own_anc" on anc_visits;
-create policy "own_anc" on anc_visits for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
-drop policy if exists "own_diary" on diary_entries;
-create policy "own_diary" on diary_entries for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
-drop policy if exists "own_nifas" on nifas_screenings;
-create policy "own_nifas" on nifas_screenings for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
-drop policy if exists "own_bbl" on bbl_profiles;
-create policy "own_bbl" on bbl_profiles for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='profiles' AND policyname='own_profiles') THEN
+    CREATE POLICY "own_profiles" ON profiles FOR ALL USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='screening_results' AND policyname='own_screening') THEN
+    CREATE POLICY "own_screening" ON screening_results FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='weight_entries' AND policyname='own_weight') THEN
+    CREATE POLICY "own_weight" ON weight_entries FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='supplement_reminders' AND policyname='own_supplement') THEN
+    CREATE POLICY "own_supplement" ON supplement_reminders FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='anc_visits' AND policyname='own_anc') THEN
+    CREATE POLICY "own_anc" ON anc_visits FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='diary_entries' AND policyname='own_diary') THEN
+    CREATE POLICY "own_diary" ON diary_entries FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='nifas_screenings' AND policyname='own_nifas') THEN
+    CREATE POLICY "own_nifas" ON nifas_screenings FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='bbl_profiles' AND policyname='own_bbl') THEN
+    CREATE POLICY "own_bbl" ON bbl_profiles FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+  END IF;
+END $$;

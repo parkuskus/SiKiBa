@@ -47,9 +47,12 @@ $$;
 alter table chat_messages enable row level security;
 alter table guideline_chunks enable row level security;
 
-drop policy if exists "own_chat" on chat_messages;
-create policy "own_chat" on chat_messages for all
-  using (auth.uid() = user_id) with check (auth.uid() = user_id);
-
-drop policy if exists "read_guideline" on guideline_chunks;
-create policy "read_guideline" on guideline_chunks for select using (auth.role() = 'authenticated');
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='chat_messages' AND policyname='own_chat') THEN
+    CREATE POLICY "own_chat" ON chat_messages FOR ALL
+      USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='guideline_chunks' AND policyname='read_guideline') THEN
+    CREATE POLICY "read_guideline" ON guideline_chunks FOR SELECT USING (auth.role() = 'authenticated');
+  END IF;
+END $$;

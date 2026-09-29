@@ -22,6 +22,7 @@
 - [x] Clinical-rules 7/7: `ukHpl` (4⅓+Naegele), `poedjiRochjati` SK01, `imtLila` SK03, `mapCalculator` SK02, `epds` SK05 Tabel1, `meows` SK06, `kramerZone` S-05a
 - [x] Forms logic (tanpa FE): `registerForm` S-01, `riskFactorForm` S-03a, `giziForm` S-03b, `dangerSignForm` S-03c, `preeklamsiaForm` S-03d, `dmgForm` S-03e, `mentalForm` S-03f, `nifasForm` S-04, `laktasiForm` S-04a, `ikterusForm` S-05a, `hipotiroidForm` S-05b, `weight/supplement/anc/diary/timelineForm` S-07a-d, `exportService` S-08b rudimentary
 - [x] Kuisioner EPDS final 10 item (Tabel 1, Cox 1987) → sinkron ke S-03f & SK05, siap implementasi `app/src/clinical-rules/epds.ts`
+- [x] Supabase migrations aman no-overwrite: `supabase/migrations/001_init_siaga_bunda.sql` (8 tabel `IF NOT EXISTS`) + `002_chat_rag.sql` — policy RLS via cek `pg_policies` dulu (tanpa `DROP`), `003_chat_grants.sql` grant-only
 
 ## In Progress
 - [x] OTP Supabase Auth S-01/S-01b — **DEMO** sintetis `@siagabunda.test` + kode demo 6 digit tampil di UI `RegisterScreen.tsx:90` `LoginScreen.tsx:30` — real SMS OTP pending setup Twilio di Supabase Dashboard (Auth → Providers → Phone), untuk UAT ganti ke SMS beneran
