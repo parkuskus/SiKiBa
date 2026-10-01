@@ -1,9 +1,11 @@
-import { useState } from "react"
-import { getCurrentUserId } from "@/data/currentUser"
+import { useEffect, useState } from "react"
+import { Apple } from "lucide-react"
+import { getCurrentProfile, getCurrentUserId } from "@/data/currentUser"
+import { weeksFromHpht } from "@/clinical-rules/ukHpl"
+import { calcIMT, kategoriIMT, kategoriLILA } from "@/clinical-rules/imtLila"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import SkriningFormShell from "@/features/skrining/components/SkriningFormShell"
 import { submitGizi } from "@/features/skrining/ibu-hamil/giziForm"
 
 export default function GiziScreen({ onBack, onSuccess }: { onBack: () => void; onSuccess: (r: any) => void }) {
@@ -11,6 +13,19 @@ export default function GiziScreen({ onBack, onSuccess }: { onBack: () => void; 
   const [err, setErr] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [fieldErrs, setFieldErrs] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    void (async () => {
+      const profile = await getCurrentProfile().catch(() => null)
+      if (!profile?.hpht) return
+      const uk = weeksFromHpht(profile.hpht)
+      if (uk >= 0 && uk <= 45) setForm((current) => ({ ...current, ukMinggu: uk }))
+    })()
+  }, [])
+
+  const imt = form.bbPreKg > 0 && form.tbCm > 0 ? calcIMT(form.bbPreKg, form.tbCm) : null
+  const imtInfo = imt === null ? null : kategoriIMT(imt)
+  const lila = form.lilaCm > 0 ? kategoriLILA(form.lilaCm) : null
 
   const handle = async () => {
     setErr(null)
@@ -29,52 +44,50 @@ export default function GiziScreen({ onBack, onSuccess }: { onBack: () => void; 
   }
 
   return (
-    <Card className="rounded-[24px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm">
-      <CardContent className="p-4 space-y-4">
-        <div>
-          <div>
-            <p className="text-sm font-semibold text-[#1E2326] leading-none">Skrining Status Gizi</p>
-            <p className="text-xs text-[#8A8F93]">Skrining untuk memantau gizi Bunda dan janin</p>
+    <SkriningFormShell title="Status Gizi" subtitle="IMT LILA dan BB" onBack={onBack}>
+      <div className="space-y-3.5">
+        <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
+          <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Pengukuran</h2>
+          <div className="grid grid-cols-2 gap-2.5">
+            {[
+              { key: "bbPreKg", label: "BB awal kg", value: form.bbPreKg },
+              { key: "tbCm", label: "Tinggi cm", value: form.tbCm },
+              { key: "lilaCm", label: "LILA cm", value: form.lilaCm },
+              { key: "bbSekarangKg", label: "BB kini kg", value: form.bbSekarangKg },
+            ].map((field) => (
+              <div key={field.key} className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
+                <label className="block text-xs text-[#33443F]">{field.label}</label>
+                <Input
+                  type="number"
+                  aria-label={field.label}
+                  value={field.value}
+                  onChange={(event) => setForm((current) => ({ ...current, [field.key]: Number(event.target.value) }))}
+                  className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0"
+                />
+                {fieldErrs[field.key] && <p className="text-[11px] text-[#C62828]">{fieldErrs[field.key]}</p>}
+              </div>
+            ))}
           </div>
-        </div>
+        </section>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label className="text-xs">BB sebelum hamil kg</Label>
-            <Input type="number" value={form.bbPreKg} onChange={(e) => setForm((s) => ({ ...s, bbPreKg: Number(e.target.value) }))} className="rounded-xl bg-[#FFFCF6]" />
-            {fieldErrs.bbPreKg && <p className="text-xs text-[#E57373]">{fieldErrs.bbPreKg}</p>}
+        <section className="flex min-h-[72px] items-center gap-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
+          <span className="grid size-12 shrink-0 place-items-center rounded-[16px] bg-white text-[#2E7D32]"><Apple className="size-6" /></span>
+          <div className="min-w-0">
+            <p className="text-[13px] font-bold leading-tight text-[#1D2B29]">
+              {imtInfo ? `IMT ${imt?.toFixed(1)} ${imtInfo.kat}` : "IMT menunggu data"}
+            </p>
+            <p className="text-xs leading-normal text-[#33443F]">
+              {imtInfo ? `Target tambah ${imtInfo.targetKg[0]} sampai ${imtInfo.targetKg[1]} kg` : "Isi berat awal dan tinggi badan"}
+            </p>
           </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Tinggi badan cm</Label>
-            <Input type="number" value={form.tbCm} onChange={(e) => setForm((s) => ({ ...s, tbCm: Number(e.target.value) }))} className="rounded-xl bg-[#FFFCF6]" />
-            {fieldErrs.tbCm && <p className="text-xs text-[#E57373]">{fieldErrs.tbCm}</p>}
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Lingkar lengan cm</Label>
-            <Input type="number" value={form.lilaCm} onChange={(e) => setForm((s) => ({ ...s, lilaCm: Number(e.target.value) }))} className="rounded-xl bg-[#FFFCF6]" />
-            {fieldErrs.lilaCm && <p className="text-xs text-[#E57373]">{fieldErrs.lilaCm}</p>}
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">BB sekarang kg</Label>
-            <Input type="number" value={form.bbSekarangKg} onChange={(e) => setForm((s) => ({ ...s, bbSekarangKg: Number(e.target.value) }))} className="rounded-xl bg-[#FFFCF6]" />
-            {fieldErrs.bbSekarangKg && <p className="text-xs text-[#E57373]">{fieldErrs.bbSekarangKg}</p>}
-          </div>
-          <div className="col-span-2 space-y-1.5">
-            <Label className="text-xs">Usia kehamilan minggu</Label>
-            <Input type="number" value={form.ukMinggu} onChange={(e) => setForm((s) => ({ ...s, ukMinggu: Number(e.target.value) }))} className="rounded-xl bg-[#FFFCF6]" />
-            {fieldErrs.ukMinggu && <p className="text-xs text-[#E57373]">{fieldErrs.ukMinggu}</p>}
-          </div>
-        </div>
+        </section>
 
-        {err && <p className="text-xs text-[#E57373] text-center">{err}</p>}
-
-        <div className="flex gap-2">
-          <Button variant="outline" className="flex-1 rounded-full" onClick={onBack}>Batal</Button>
-          <Button className="flex-1 rounded-full bg-[#7AAE9A] hover:bg-[#6B9E8A]" disabled={loading} onClick={handle}>
-            {loading ? "Menyimpan" : "Lihat hasil"}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+        {err && <p role="alert" className="text-center text-xs text-[#C62828]">{err}</p>}
+        <Button className="min-h-12 w-full rounded-full bg-[#4A6E54] text-base font-bold text-white hover:bg-[#3D5C46]" disabled={loading} onClick={handle}>
+          {loading ? "Menyimpan" : "Simpan hasil"}
+        </Button>
+        <p className="text-xs leading-normal text-[#33443F]">LILA di bawah 23,5 cm tanda KEK{lila === "KEK" ? ". Ukuran saat ini di bawah batas." : ""}</p>
+      </div>
+    </SkriningFormShell>
   )
 }

@@ -25,6 +25,8 @@
 - [x] Supabase migrations aman no-overwrite: `supabase/migrations/001_init_siaga_bunda.sql` (8 tabel `IF NOT EXISTS`) + `002_chat_rag.sql` — policy RLS via cek `pg_policies` dulu (tanpa `DROP`), `003_chat_grants.sql` grant-only
 
 ## In Progress — sesi Figma-first redesign (2026-10-01, lihat `AGENTS.md`)
+- [x] FE S-03a/b/c 2026-10-01: form Faktor Risiko tiga langkah, Status Gizi, dan Tanda Bahaya memakai shell header/isi/floral sesuai Figma; BottomNav dan Siba disembunyikan selama form terbuka.
+- [x] S-03 state nifas/bayi terkunci 2026-10-01: dua frame Figma dibuat dari pola menu skrining dengan ilustrasi `illu-06-nifas` dan `illu-07-bayi`; node `126:2`, `126:126`.
 - [x] Format tanggal form 2026-10-01: seluruh input tanggal menampilkan `DD/MM/YYYY` melalui komponen bersama, nilai tersimpan tetap `YYYY-MM-DD`; lock dicatat di `DESIGN.md`.
 - [x] Aturan latar screen 2026-10-01: semua kanvas screen memakai `#FFFCF6` seperti Beranda; dicatat sebagai lock di `DESIGN.md`.
 - [x] Fix reload setelah login demo 2026-10-01: hapus penanda logout saat jalur login/daftar sukses, termasuk akun demo tanpa sesi Supabase.

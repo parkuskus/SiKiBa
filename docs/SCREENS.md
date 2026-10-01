@@ -31,7 +31,7 @@ Legenda: `DONE` sudah di Figma (ID node) · `TODO` belum digambar.
 
 | ID | Layar | Figma | Isi kunci |
 |---|---|---|---|
-| S-03 | SkrMenuScreen | DONE `23:1345` | Stage + tab + 6 kartu menu |
+| S-03 | SkrMenuScreen | DONE `23:1345` · Nifas terkunci `126:2` · Bayi terkunci `126:126` | Stage + tab + kartu menu / empty state terkunci |
 | S-03a | RiskFactorScreen | DONE `24:1845` + L2 `24:1892` + L3 `24:1947` | Ala FE 3 langkah lengkap |
 | S-03b | GiziScreen | DONE `24:1516` | Ukur + kartu IMT otomatis |
 | S-03c | DangerSignScreen | DONE `24:1553` | Toggle Ya Tidak + hasil |

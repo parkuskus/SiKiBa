@@ -274,7 +274,7 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
             <ChevronRight className="size-5 rotate-180" />
           </button>
           <div className="flex-1">
-            <h1 className="text-lg font-extrabold tracking-tight text-white">Daftar akun baru</h1>
+            <h1 className="text-lg font-extrabold tracking-tight text-white">Daftar Akun Baru</h1>
             <p className="text-xs text-white/90">Langkah 1 dari 2</p>
           </div>
         </div>

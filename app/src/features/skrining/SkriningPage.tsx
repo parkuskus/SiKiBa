@@ -23,10 +23,12 @@ export default function SkriningPage({
   setTab,
   setShowBirth,
   isPostpartum = false,
+  setShowBottomNav,
 }: {
   setTab: (t: "beranda" | "skrining" | "edukasi" | "tracker" | "profil") => void
   setShowBirth: (v: boolean) => void
   isPostpartum?: boolean
+  setShowBottomNav: (v: boolean) => void
 }) {
   const [fasyankes, setFasyankes] = useState<string | null>(null)
   const [skriningTab, setSkriningTab] = useState<SkriningTab>("hamil")
@@ -79,6 +81,12 @@ export default function SkriningPage({
   useEffect(() => {
     if (isNifasActive && skriningTab === "hamil") setSkriningTab("nifas")
   }, [isNifasActive, skriningTab])
+
+  useEffect(() => {
+    setShowBottomNav(activeForm === null && activeResult === null)
+  }, [activeForm, activeResult, setShowBottomNav])
+
+  useEffect(() => () => setShowBottomNav(true), [setShowBottomNav])
 
   useEffect(() => {
     void (async () => {
@@ -306,7 +314,7 @@ export default function SkriningPage({
 
   return (
     <div className="-mx-4 -mt-5">
-      <header className="rounded-b-[32px] bg-[#4A6E54] px-6 pb-12 pt-7 text-white">
+      <header className="rounded-b-[32px] bg-[#4A6E54] px-6 pb-7 pt-7 text-white">
         <h1 className="text-3xl font-bold leading-normal">Skrining Kesehatan</h1>
         <p className="mt-1 text-xs leading-normal">Jawab singkat hasil warna mudah dipahami</p>
         <div className="mt-2.5 flex items-center gap-2.5 rounded-[20px] bg-white px-3.5 py-2.5 text-[#1D2B29]">
@@ -330,7 +338,7 @@ export default function SkriningPage({
                 key={t}
                 disabled={lockedHamil}
                 onClick={() => !lockedHamil && setSkriningTab(t)}
-                className={`min-h-11 flex-1 rounded-[20px] px-2 text-[13px] transition-colors ${skriningTab === t ? "bg-[#4A6E54] font-bold text-white" : "bg-[#EAF4F0] text-[#33443F]"} ${lockedHamil ? "cursor-not-allowed opacity-40" : ""}`}
+                className={`min-h-9 flex-1 rounded-[20px] px-2 text-[13px] transition-colors ${skriningTab === t ? "bg-[#4A6E54] font-bold text-white" : "bg-[#EAF4F0] text-[#33443F]"} ${lockedHamil ? "cursor-not-allowed opacity-40" : ""}`}
                 title={lockedHamil ? "Terkunci selama masa nifas (42 hari)" : undefined}
               >
                 {t === "hamil" ? "Hamil" : t === "nifas" ? "Nifas" : "Bayi"}
@@ -339,7 +347,7 @@ export default function SkriningPage({
           })}
         </div>
 
-        <div className="space-y-2 rounded-[24px] bg-[#EAF4F0] p-2">
+        <div className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-2">
           {menuItems.length ? menuItems.map((item) => {
             const result = results[item.key]
             const statusClass = !result

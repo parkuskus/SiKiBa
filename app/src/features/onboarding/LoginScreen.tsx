@@ -204,7 +204,7 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
       <div className="mx-auto w-full max-w-[480px] px-6 pb-6 pt-6">
         <Card className="rounded-[24px] border-0 bg-[#EAF4F0] shadow-none">
           <CardContent className="space-y-2.5 p-3.5">
-            <p className="text-[13px] leading-normal text-[#33443F]">Masukkan nomor HP saat daftar</p>
+            <p className="text-[13px] leading-normal text-[#33443F]">Masukkan nomor HP Bunda</p>
             <div className="flex items-center gap-2 rounded-2xl border border-[#D9E7E2] bg-white px-3.5 py-3">
               <span className="rounded-[10px] bg-[#FFE2E2] px-2 py-1 text-[13px] font-bold leading-normal text-[#9D2553]">+62</span>
               <Input value={noHp} onChange={(e) => setNoHp(e.target.value)} placeholder="8xxxxxxxxxx" aria-label="Nomor HP" inputMode="tel" className="h-auto min-w-0 flex-1 border-0 bg-transparent p-0 text-sm leading-normal text-[#1D2B29] shadow-none placeholder:text-[#8A8F93] focus-visible:ring-0" />
@@ -212,8 +212,8 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
 
             {err && <p className="text-xs text-[#E57373] text-center">{err}</p>}
 
-            <Button onClick={handleRequestOtp} disabled={loading} className="w-full rounded-full bg-[#4A6E54] px-4 py-3.5 text-base font-bold text-white hover:bg-[#3D5C46]">
-              {loading ? "Mengirim kode" : "Kirim kode OTP"}
+            <Button onClick={handleRequestOtp} disabled={loading} className="w-full rounded-full bg-[#4A6E54] px-4 py-4 text-base font-bold text-white hover:bg-[#3D5C46]">
+              {loading ? "Mengirim kode" : "Kirim Kode OTP"}
             </Button>
 
             <button onClick={onToRegister} className="w-full text-center text-sm font-medium leading-normal text-[#33443F]">

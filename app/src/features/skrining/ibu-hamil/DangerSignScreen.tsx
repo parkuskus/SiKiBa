@@ -1,18 +1,20 @@
 import { useState } from "react"
+import { Activity, Baby, Droplets, Eye, Hand, Thermometer, Wind, Waves, Zap, type LucideIcon } from "lucide-react"
 import { getCurrentUserId } from "@/data/currentUser"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { submitDangerSign } from "@/features/skrining/ibu-hamil/dangerSignForm"
+import SkriningFormShell from "@/features/skrining/components/SkriningFormShell"
 
-const GEJALA: { k: string; l: string; hint?: string }[] = [
-  { k: "perdarahan", l: "Perdarahan per vagina" },
-  { k: "pandanganKabur", l: "Pandangan kabur atau berkunang" },
-  { k: "nyeriAbdomenHebat", l: "Nyeri perut hebat menetap" },
-  { k: "bengkakWajahTangan", l: "Bengkak wajah dan tangan" },
-  { k: "gerakanJaninBerkurang", l: "Gerakan janin berkurang", hint: "Kurang dari 10 kali dalam 2 jam" },
-  { k: "demamTinggi", l: "Demam tinggi", hint: "Suhu di atas 38°C" },
-  { k: "ketubanPecah", l: "Ketuban pecah", hint: "Cairan merembes sebelum waktunya" },
-  { k: "sesakNapas", l: "Sesak napas mendadak" },
+const GEJALA: { k: string; l: string; Icon: LucideIcon; tint?: boolean; hint?: string }[] = [
+  { k: "perdarahan", l: "Perdarahan per vagina", Icon: Droplets, tint: true },
+  { k: "nyeriKepalaHebat", l: "Nyeri kepala hebat", Icon: Zap },
+  { k: "pandanganKabur", l: "Pandangan kabur", Icon: Eye },
+  { k: "demamTinggi", l: "Demam di atas 38°C", Icon: Thermometer, hint: "Suhu tubuh lebih dari 38°C" },
+  { k: "ketubanPecah", l: "Ketuban pecah dini", Icon: Waves, hint: "Cairan merembes sebelum waktunya" },
+  { k: "nyeriAbdomenHebat", l: "Nyeri perut hebat menetap", Icon: Activity },
+  { k: "bengkakWajahTangan", l: "Bengkak wajah dan tangan", Icon: Hand },
+  { k: "gerakanJaninBerkurang", l: "Gerakan janin berkurang", Icon: Baby, hint: "Kurang dari 10 kali dalam 2 jam" },
+  { k: "sesakNapas", l: "Sesak napas mendadak", Icon: Wind },
 ]
 
 export default function DangerSignScreen({ onBack, onSuccess }: { onBack: () => void; onSuccess: (r: any) => void }) {
@@ -26,12 +28,16 @@ export default function DangerSignScreen({ onBack, onSuccess }: { onBack: () => 
     ketubanPecah: false,
     sesakNapas: false,
   })
-  const [nyeriSkala, setNyeriSkala] = useState<number | null>(null)
+  const [nyeriSkala, setNyeriSkala] = useState(0)
   const [tdTinggi, setTdTinggi] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const toggle = (k: string) => {
+    if (k === "nyeriKepalaHebat") {
+      setNyeriSkala((current) => current >= 4 ? 0 : 4)
+      return
+    }
     setForm((s) => {
       const next = { ...s, [k]: !s[k] }
       if (k === "bengkakWajahTangan" && s[k]) setTdTinggi(false)
@@ -41,7 +47,6 @@ export default function DangerSignScreen({ onBack, onSuccess }: { onBack: () => 
 
   const handle = async () => {
     setError(null)
-    if (nyeriSkala === null) return setError("Pilih skala nyeri kepala")
     setLoading(true)
     try {
       const res = await submitDangerSign({
@@ -60,75 +65,58 @@ export default function DangerSignScreen({ onBack, onSuccess }: { onBack: () => 
   }
 
   return (
-    <Card className="rounded-[24px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm">
-      <CardContent className="space-y-5 p-5">
-        <div>
-          <p className="text-[16px] font-bold tracking-tight text-[#1E2326]">Tanda Bahaya Kehamilan</p>
-          <p className="mt-1 text-xs leading-relaxed text-[#8A8F93]">Centang yang Bunda rasakan saat ini. Kosongkan bila tidak ada.</p>
-        </div>
-
-        <div className="space-y-3">
-          <p className="text-sm font-semibold text-[#1E2326]">Nyeri kepala (skala 0–5)</p>
-          <div className="grid grid-cols-6 gap-2">
-            {[0, 1, 2, 3, 4, 5].map((v) => (
-              <button
-                key={v}
-                type="button"
-                onClick={() => setNyeriSkala(v)}
-                className={`rounded-full py-2.5 text-sm font-semibold ring-1 transition-colors active:scale-[0.98] ${nyeriSkala === v ? "bg-[#7AAE9A] text-white ring-[#7AAE9A]" : "bg-white text-[#8A8F93] ring-[#EAE6E0]"}`}
-              >
-                {v}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <p className="text-sm font-semibold text-[#1E2326]">Gejala lain</p>
-          {GEJALA.map((it) => {
-            const checked = !!form[it.k]
-            return (
-              <div key={it.k}>
-                <button
-                  type="button"
-                  onClick={() => toggle(it.k)}
-                  className={`flex w-full items-center gap-3 rounded-full px-4 py-3 text-left text-sm ring-1 transition-colors active:scale-[0.99] ${checked ? "bg-[#7AAE9A] font-semibold text-white ring-[#7AAE9A]" : "bg-white text-[#1E2326] ring-[#EAE6E0] hover:bg-[#FFFCF6]"}`}
-                >
-                  <span className={`grid size-4 shrink-0 place-items-center rounded-[5px] ring-1 ${checked ? "bg-white ring-white" : "bg-white ring-[#C2C8CB]"}`}>
-                    {checked && (
-                      <svg viewBox="0 0 10 8" className="size-2.5 fill-none stroke-[#1E2326] stroke-2">
-                        <path d="M1 4l2.5 2.5L9 1" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    )}
-                  </span>
-                  <span className="leading-tight">
-                    {it.l}
-                    {it.hint && <span className={`block text-[11px] font-normal ${checked ? "text-white/85" : "text-[#8A8F93]"}`}>{it.hint}</span>}
-                  </span>
-                </button>
-                {it.k === "bengkakWajahTangan" && checked && (
-                  <div className="ml-4 mt-2 space-y-2 rounded-2xl bg-[#FFFCF6] p-3 ring-1 ring-[#EAE6E0]">
-                    <p className="text-xs font-semibold text-[#1E2326]">Tekanan darah ≥140/90?</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button type="button" onClick={() => setTdTinggi(true)} className={`rounded-full py-2 text-xs font-semibold ring-1 transition-colors ${tdTinggi ? "bg-[#7AAE9A] text-white ring-[#7AAE9A]" : "bg-white text-[#8A8F93] ring-[#EAE6E0]"}`}>Ya</button>
-                      <button type="button" onClick={() => setTdTinggi(false)} className={`rounded-full py-2 text-xs font-semibold ring-1 transition-colors ${!tdTinggi ? "bg-[#7AAE9A] text-white ring-[#7AAE9A]" : "bg-white text-[#8A8F93] ring-[#EAE6E0]"}`}>Tidak</button>
-                    </div>
-                  </div>
-                )}
+    <SkriningFormShell title="Tanda Bahaya" subtitle="Cek mandiri tanda bahaya" onBack={onBack}>
+      <div className="space-y-2.5">
+        <p className="px-1 text-[13px] text-[#33443F]">Tandai gejala yang Bunda rasakan</p>
+        {GEJALA.map((item, index) => {
+          const checked = item.k === "nyeriKepalaHebat" ? nyeriSkala >= 4 : !!form[item.k]
+          const Icon = item.Icon
+          return (
+            <div key={item.k}>
+              <div className="flex min-h-16 items-center gap-2.5 rounded-[20px] bg-[#EAF4F0] px-2.5 py-2">
+                <span className={`grid size-10 shrink-0 place-items-center rounded-[14px] ${item.tint ? "bg-[#FFE2E2] text-[#DB2777]" : "bg-white text-[#7AAE9A]"}`}>
+                  <Icon className="size-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[13px] font-bold leading-tight text-[#1D2B29]">{item.l}</span>
+                  {item.hint && <span className="mt-0.5 block text-[11px] leading-tight text-[#33443F]">{item.hint}</span>}
+                </span>
+                <div className="flex shrink-0 gap-1.5">
+                  {[true, false].map((choice) => (
+                    <button
+                      key={String(choice)}
+                      type="button"
+                      aria-pressed={checked === choice}
+                      onClick={() => checked !== choice && toggle(item.k)}
+                      className={`min-h-11 min-w-11 rounded-[14px] px-2 text-xs font-semibold transition-colors active:scale-95 ${checked === choice ? "bg-[#4A6E54] text-white" : "bg-white text-[#33443F] ring-1 ring-[#D9E7E2]"}`}
+                    >
+                      {choice ? "Ya" : "Tidak"}
+                    </button>
+                  ))}
+                </div>
               </div>
-            )
-          })}
-        </div>
-
-        {error && <p className="text-center text-xs text-[#E57373]">{error}</p>}
-
-        <div className="flex gap-2">
-          <Button variant="outline" className="flex-1 rounded-full" onClick={onBack}>Batal</Button>
-          <Button className="flex-1 rounded-full bg-[#7AAE9A] hover:bg-[#6B9E8A]" disabled={loading} onClick={handle}>
-            {loading ? "Menyimpan" : "Lihat hasil"}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+              {item.k === "bengkakWajahTangan" && checked && (
+                <div className="mt-2 flex items-center justify-between gap-2 rounded-[18px] bg-white p-3 ring-1 ring-[#D9E7E2]">
+                  <p className="text-xs font-semibold text-[#1D2B29]">Tekanan darah 140/90 atau lebih?</p>
+                  <div className="flex gap-1.5">
+                    {[true, false].map((choice) => (
+                      <button key={String(choice)} type="button" aria-pressed={tdTinggi === choice} onClick={() => setTdTinggi(choice)} className={`min-h-11 min-w-11 rounded-[14px] px-2 text-xs font-semibold ${tdTinggi === choice ? "bg-[#4A6E54] text-white" : "bg-white text-[#33443F] ring-1 ring-[#D9E7E2]"}`}>
+                        {choice ? "Ya" : "Tidak"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {index === 4 && <p className="py-1 text-xs text-[#33443F]">Masih ada 4 gejala lain di bawah</p>}
+            </div>
+          )
+        })}
+        {error && <p role="alert" className="text-center text-xs text-[#C62828]">{error}</p>}
+        <Button className="min-h-12 w-full rounded-full bg-[#4A6E54] text-base font-bold text-white hover:bg-[#3D5C46]" disabled={loading} onClick={handle}>
+          {loading ? "Menyimpan" : "Lihat hasil"}
+        </Button>
+        <p className="pb-1 text-xs text-[#33443F]">Satu tanda Ya langsung status bahaya</p>
+      </div>
+    </SkriningFormShell>
   )
 }

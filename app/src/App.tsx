@@ -26,6 +26,7 @@ export default function App() {
   const [showBirth, setShowBirth] = useState(false)
   const [showChat, setShowChat] = useState(false)
   const [onboarding, setOnboarding] = useState<Onboarding>("splash")
+  const [showBottomNav, setShowBottomNav] = useState(true)
 
   const enterApp = useCallback(() => {
     try { localStorage.removeItem("siaga_logged_out") } catch {}
@@ -95,7 +96,7 @@ export default function App() {
 
   return (
     <div className="min-h-[100dvh] bg-[#FFFCF6] text-[#2E3436]">
-      <main className="mx-auto max-w-[480px] px-4 pb-28 pt-5">
+      <main className={`mx-auto max-w-[480px] px-4 pt-5 ${showBottomNav ? "pb-28" : "pb-0"}`}>
         <div className="w-full">
           {tab === "beranda" && (
             <BerandaPage
@@ -108,23 +109,25 @@ export default function App() {
               setTab={setTab}
             />
           )}
-          {tab === "skrining" && <SkriningPage setTab={setTab} setShowBirth={setShowBirth} isPostpartum={isPostpartum} />}
+          {tab === "skrining" && <SkriningPage setTab={setTab} setShowBirth={setShowBirth} isPostpartum={isPostpartum} setShowBottomNav={setShowBottomNav} />}
           {tab === "edukasi" && <EdukasiPage />}
           {tab === "tracker" && <PengingatPage />}
           {tab === "profil" && <ProfilPage uk={uk} hplLabel={hplLabel} />}
         </div>
       </main>
 
-      <BottomNav active={tab} onChange={setTab} />
+      {showBottomNav && <BottomNav active={tab} onChange={setTab} />}
 
       {/* ponytail: FAB Siba — sheet overlay, BottomNav 5 tab tidak berubah */}
-      <button
-        aria-label="Tanya Siba"
-        onClick={() => setShowChat(true)}
-        className="fixed bottom-24 right-[max(1rem,calc(50%-240px+1rem))] z-40 grid size-[56px] place-items-center rounded-full bg-[#DB2777] text-white shadow-lg active:scale-95"
-      >
-        <MessageCircleHeart className="size-6" />
-      </button>
+      {showBottomNav && (
+        <button
+          aria-label="Tanya Siba"
+          onClick={() => setShowChat(true)}
+          className="fixed bottom-24 right-[max(1rem,calc(50%-240px+1rem))] z-40 grid size-[56px] place-items-center rounded-full bg-[#DB2777] text-white shadow-lg active:scale-95"
+        >
+          <MessageCircleHeart className="size-6" />
+        </button>
+      )}
 
       {showChat && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={() => setShowChat(false)}>
