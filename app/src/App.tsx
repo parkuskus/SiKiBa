@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { MessageCircleHeart, X } from "lucide-react"
 import BottomNav from "@/shared/components/layout/BottomNav"
 import BirthDialog from "@/shared/components/layout/BirthDialog"
@@ -26,6 +26,11 @@ export default function App() {
   const [showBirth, setShowBirth] = useState(false)
   const [showChat, setShowChat] = useState(false)
   const [onboarding, setOnboarding] = useState<Onboarding>("splash")
+
+  const enterApp = useCallback(() => {
+    try { localStorage.removeItem("siaga_logged_out") } catch {}
+    setOnboarding("app")
+  }, [])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -75,17 +80,17 @@ export default function App() {
   if (onboarding === "splash") {
     return (
       <SplashScreen
-        onAutoMasuk={() => setOnboarding("app")}
+        onAutoMasuk={enterApp}
         onDaftar={() => setOnboarding("register")}
         onMasuk={() => setOnboarding("login")}
       />
     )
   }
   if (onboarding === "register") {
-    return <RegisterScreen onBack={() => setOnboarding("splash")} onSuccess={() => setOnboarding("app")} onToLogin={() => setOnboarding("login")} />
+    return <RegisterScreen onBack={() => setOnboarding("splash")} onSuccess={enterApp} onToLogin={() => setOnboarding("login")} />
   }
   if (onboarding === "login") {
-    return <LoginScreen onBack={() => setOnboarding("splash")} onSuccess={() => setOnboarding("app")} onToRegister={() => setOnboarding("register")} />
+    return <LoginScreen onBack={() => setOnboarding("splash")} onSuccess={enterApp} onToRegister={() => setOnboarding("register")} />
   }
 
   return (

@@ -3,6 +3,7 @@ import { ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { DateInput } from "@/components/ui/date-input"
 import { Label } from "@/components/ui/label"
 import { db } from "@/data/db"
 import { syncProfile } from "@/data/sync"
@@ -61,11 +62,11 @@ export default function EditProfileScreen({ profile, onBack, onSaved }: { profil
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs">Tanggal lahir</Label>
-              <Input type="date" value={form.tanggal_lahir} onChange={(e) => setForm((s) => ({ ...s, tanggal_lahir: e.target.value }))} className="rounded-full bg-white px-4" />
+              <DateInput value={form.tanggal_lahir} onChange={(value) => setForm((s) => ({ ...s, tanggal_lahir: value }))} aria-label="Tanggal lahir" className="rounded-full bg-white px-4" />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">HPHT</Label>
-              <Input type="date" value={form.hpht} onChange={(e) => setForm((s) => ({ ...s, hpht: e.target.value }))} className="rounded-full bg-white px-4" />
+              <DateInput value={form.hpht} onChange={(value) => setForm((s) => ({ ...s, hpht: value }))} aria-label="HPHT" className="rounded-full bg-white px-4" />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Gravida</Label>

@@ -90,7 +90,7 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
         <div className="mt-4 flex items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="text-[17px] text-white/90">{hariIniLabel()}</p>
-            <h1 className="text-[50px] font-extrabold tracking-tight leading-none" style={{ color: "#fff", margin: 0, marginTop: 10 }}>Halo, {nama}</h1>
+            <h1 className="text-[30px] font-extrabold tracking-tight leading-none" style={{ color: "#fff", margin: 0, marginTop: 10 }}>Halo, {nama}</h1>
             <p className="text-[14px] leading-relaxed text-white/90" style={{ margin: 0, marginTop: 15}}>Yuk, jaga kesehatan diri dan si kecil di setiap tahap kehamilan</p>
           </div>
           <img src="/illu/illu-12-hero-2.png" alt="Bunda hamil" className="h-[170px] w-[130px] shrink-0 rounded-[20px] object-cover" />
@@ -131,6 +131,7 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
           </span>
           <ChevronRight className="size-5 shrink-0 text-[#1D2B29]" />
         </button>
+        <p className="text-[15px] font-bold py-2 text-[#1D2B29]">Pengingat Harian</p>
         <TodayReminderCard meds={meds} nextAncLabel={nextAncLabel} />
       </div>
     </div>

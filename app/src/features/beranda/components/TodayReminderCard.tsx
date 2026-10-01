@@ -10,8 +10,7 @@ type Props = {
 export default function TodayReminderCard({ meds, nextAncLabel }: Props) {
   return (
     <Card className="rounded-[24px] border-0 bg-[#EAF4F0] ring-0 shadow-sm overflow-hidden">
-      <CardContent className="py-1 space-y-2.5">
-        <p className="text-[15px] font-bold text-[#1D2B29]">Hari ini</p>
+      <CardContent className="space-y-2.5">
         {meds.length ? (
           meds.map((m) => (
             <div key={`${m.nama}|${m.waktu}`} className="flex items-center gap-3">

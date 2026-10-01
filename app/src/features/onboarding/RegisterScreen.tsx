@@ -2,6 +2,7 @@ import { useRef, useState } from "react"
 import { ChevronRight, MessageCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { DateInput } from "@/components/ui/date-input"
 import { Label } from "@/components/ui/label"
 import { submitRegister, formatGPA } from "@/features/onboarding/registerForm"
 import { toE164, dummyEmail, makeDummyCode } from "@/features/onboarding/otpDummy"
@@ -292,7 +293,7 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs text-[#33443F]">Tanggal lahir</Label>
-              <Input type="date" value={form.tanggalLahir} onChange={(e) => set("tanggalLahir", e.target.value)} className="rounded-2xl bg-white" />
+              <DateInput value={form.tanggalLahir} onChange={(value) => set("tanggalLahir", value)} aria-label="Tanggal lahir" className="rounded-2xl bg-white" />
               {errs.tanggalLahir && <p className="text-xs text-[#E57373]">{errs.tanggalLahir}</p>}
             </div>
             <div className="space-y-1.5">
@@ -325,7 +326,7 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
 
           <div className="rounded-2xl bg-[#4A6E54] px-3.5 py-3">
             <Label className="text-xs text-white/90">Hari pertama haid terakhir</Label>
-            <Input type="date" value={form.hpht} onChange={(e) => set("hpht", e.target.value)} className="mt-1 rounded-xl bg-white font-bold" />
+            <DateInput value={form.hpht} onChange={(value) => set("hpht", value)} aria-label="Hari pertama haid terakhir" className="mt-1 rounded-xl bg-white font-bold" />
             {errs.hpht && <p className="text-xs text-[#FFE2E2]">{errs.hpht}</p>}
           </div>
 

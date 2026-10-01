@@ -4,13 +4,13 @@ type Tab = "beranda" | "skrining" | "edukasi" | "tracker" | "profil"
 
 export default function BottomNav({ active, onChange }: { active: Tab; onChange: (t: Tab) => void }) {
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-30 border-t border-[#EAE6E0] bg-white/95 backdrop-blur-[10px] supports-[backdrop-filter]:bg-white/85">
-      <div className="mx-auto flex max-w-[480px] items-center justify-around gap-1 px-2 py-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))]">
+    <nav aria-label="Navigasi utama" className="fixed inset-x-0 bottom-0 z-30 border border-[#D9E7E2] bg-white pb-[env(safe-area-inset-bottom)]">
+      <div className="mx-auto flex h-[76px] max-w-[480px] items-center justify-between gap-1 px-4">
         {[
           { id: "beranda", label: "Beranda", icon: Home },
           { id: "skrining", label: "Skrining", icon: ClipboardList },
           { id: "edukasi", label: "Belajar", icon: BookOpen },
-          { id: "tracker", label: "Pengingat", icon: Bell },
+          { id: "tracker", label: "Ingat", icon: Bell },
           { id: "profil", label: "Saya", icon: User },
         ].map((it) => {
           const isActive = active === (it.id as Tab)
@@ -18,10 +18,11 @@ export default function BottomNav({ active, onChange }: { active: Tab; onChange:
             <button
               key={it.id}
               onClick={() => onChange(it.id as Tab)}
-              className={`flex min-h-[44px] flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-2 py-1.5 text-[11px] font-medium leading-none transition-colors ${isActive ? "bg-[#7AAE9A] text-white shadow-sm" : "text-[#8A8F93] hover:bg-[#F7F2EB]"}`}
+              aria-current={isActive ? "page" : undefined}
+              className={`flex min-h-11 items-center justify-center rounded-[20px] transition-[background-color,color,transform] duration-200 ease-out active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7AAE9A] focus-visible:ring-offset-2 motion-reduce:transition-none ${isActive ? "shrink-0 gap-1.5 bg-[#4A6E54] px-3.5 py-3 text-white" : "min-w-0 flex-1 flex-col gap-0.5 px-1 py-1.5 text-[#33443F] hover:bg-[#EAF4F0]"}`}
             >
-              <it.icon className={`size-[18px] ${isActive ? "text-white" : "text-[#7AAE9A]"}`} strokeWidth={isActive ? 2.2 : 1.8} />
-              {it.label}
+              <it.icon className={`shrink-0 ${isActive ? "size-5 text-white" : "size-[22px] text-[#7AAE9A]"}`} strokeWidth={isActive ? 2 : 1.8} />
+              <span className={`whitespace-nowrap text-xs leading-normal ${isActive ? "font-bold" : "font-normal"}`}>{it.label}</span>
             </button>
           )
         })}

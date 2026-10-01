@@ -3,6 +3,7 @@ import { ArrowLeft, ChevronDown, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { DateInput } from "@/components/ui/date-input"
 import { Label } from "@/components/ui/label"
 import { getCurrentUserId } from "@/data/currentUser"
 import { upsertSupplement } from "@/features/tracker/supplementForm"
@@ -129,11 +130,11 @@ export default function MedForm({ onBack, onDone }: { onBack: () => void; onDone
           <div className="grid grid-cols-2 gap-3">
             <button type="button" className="rounded-2xl bg-[#FFFCF6] px-4 py-3 ring-1 ring-[#EAE6E0] text-left">
               <span className="block text-[11px] text-[#8A8F93]">Tanggal mulai</span>
-              <Input type="date" value={mulai} onChange={(e) => setMulai(e.target.value)} className="h-auto border-0 bg-transparent p-0 text-sm font-semibold text-[#1E2326] focus-visible:ring-0" />
+              <DateInput value={mulai} onChange={setMulai} aria-label="Tanggal mulai" className="h-auto border-0 bg-transparent p-0 text-sm font-semibold text-[#1E2326] focus-visible:ring-0" />
             </button>
             <button type="button" className="rounded-2xl bg-[#FFFCF6] px-4 py-3 ring-1 ring-[#EAE6E0] text-left">
               <span className="block text-[11px] text-[#8A8F93]">Tanggal selesai</span>
-              <Input type="date" value={selesai} onChange={(e) => setSelesai(e.target.value)} className="h-auto border-0 bg-transparent p-0 text-sm font-semibold text-[#1E2326] focus-visible:ring-0" />
+              <DateInput value={selesai} onChange={setSelesai} aria-label="Tanggal selesai" className="h-auto border-0 bg-transparent p-0 text-sm font-semibold text-[#1E2326] focus-visible:ring-0" />
             </button>
           </div>
 

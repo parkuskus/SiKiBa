@@ -2,6 +2,7 @@ import { useState } from "react"
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { DateInput } from "@/components/ui/date-input"
 import { Label } from "@/components/ui/label"
 import { getCurrentUserId } from "@/data/currentUser"
 import { deleteWeightEntry, submitWeight, updateWeightEntry } from "@/features/tracker/weightForm"
@@ -109,7 +110,7 @@ export default function WeightFormSheet({
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <Label className="text-xs">Tanggal</Label>
-            <Input type="date" value={tanggal} max={todayStr()} onChange={(e) => setTanggal(e.target.value)} className="h-12 rounded-2xl bg-white px-4" />
+            <DateInput value={tanggal} max={todayStr()} onChange={setTanggal} aria-label="Tanggal" className="h-12 rounded-2xl bg-white px-4" />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs">Jam</Label>

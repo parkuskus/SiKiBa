@@ -25,6 +25,10 @@
 - [x] Supabase migrations aman no-overwrite: `supabase/migrations/001_init_siaga_bunda.sql` (8 tabel `IF NOT EXISTS`) + `002_chat_rag.sql` — policy RLS via cek `pg_policies` dulu (tanpa `DROP`), `003_chat_grants.sql` grant-only
 
 ## In Progress — sesi Figma-first redesign (2026-10-01, lihat `AGENTS.md`)
+- [x] Format tanggal form 2026-10-01: seluruh input tanggal menampilkan `DD/MM/YYYY` melalui komponen bersama, nilai tersimpan tetap `YYYY-MM-DD`; lock dicatat di `DESIGN.md`.
+- [x] Aturan latar screen 2026-10-01: semua kanvas screen memakai `#FFFCF6` seperti Beranda; dicatat sebagai lock di `DESIGN.md`.
+- [x] Fix reload setelah login demo 2026-10-01: hapus penanda logout saat jalur login/daftar sukses, termasuk akun demo tanpa sesi Supabase.
+- [x] S-03 Menu Skrining 2026-10-01: stage/progress, tab, kartu menu enam skrining dan status mengikuti Figma `23:1345`; judul/deskripsi asli FE dipertahankan.
 - [x] S-01 OTP Login 2026-10-01: layar verifikasi enam kotak + DemoCard, stage, tombol, dan footer mengikuti referensi OTP Figma `21:1036`.
 - [x] S-01b Login 2026-10-01: layar input nomor mengikuti frame Figma `23:1071` — stage sapaan, awalan +62, tombol OTP, trust row, dan floral footer.
 - [x] Fix Keluar 2026-10-01: Splash tidak auto-masuk kembali dari profil Dexie setelah logout; penanda logout tersimpan sampai sesi baru dibuat.

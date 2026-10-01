@@ -17,6 +17,10 @@ BottomNav putih dengan pil pink aktif. Voice tetap baku EYD.
 
 ## 2. Warna (koleksi Figma `SIAGA Bunda`, 16 variabel)
 
+**Aturan latar layar (LOCK):** semua screen memakai latar dasar `#FFFCF6`, sama dengan Beranda. Panel berwarna dan kartu boleh memakai warna permukaan sesuai komponen, tetapi kanvas screen tidak boleh memakai warna dasar yang berbeda.
+
+**Format tanggal (LOCK):** semua tanggal yang terlihat di form ditampilkan `DD/MM/YYYY`. Pemilih tanggal native boleh dipakai, tetapi tampilan harus memakai format ini; data tetap disimpan sebagai `YYYY-MM-DD`.
+
 | Token | Hex | Pakai |
 |---|---|---|
 | `primary` | `#f472b6` | Aksen pink: dot, pil, ikon |
