@@ -7,6 +7,7 @@ type Props = {
   onAutoMasuk: () => void
 }
 
+// S-00 Splash — kotak hijau sampai atas + hero illu-01 (ikut Figma 21:936)
 export default function SplashScreen({ onDaftar, onMasuk, onAutoMasuk }: Props) {
   const [phase, setPhase] = useState<"splash" | "action">("splash")
   const [bar, setBar] = useState(0)
@@ -43,36 +44,53 @@ export default function SplashScreen({ onDaftar, onMasuk, onAutoMasuk }: Props) 
   }, [onAutoMasuk])
 
   return (
-    <div className="min-h-[100dvh] bg-[#FFFCF6] flex flex-col">
-      <div className="mx-auto flex w-full max-w-[480px] flex-1 flex-col items-center justify-center px-6 pb-10 pt-16 text-center">
-        <div className="animate-in fade-in zoom-in duration-700">
-          <img src="/logo-siaga-bunda.png" alt="SIAGA Bunda" className="mx-auto size-20 rounded-[20px] bg-white p-2.5 ring-1 ring-black/5 object-contain shadow-sm" />
-          <h1 className="mt-4 text-[22px] font-extrabold tracking-tight leading-tight text-[#1E2326]">SIAGA Bunda</h1>
-          <p className="mt-1 text-sm leading-relaxed text-[#8A8F93]">Siaga menjaga Bunda dan buah hati</p>
+    <div className="min-h-[100dvh] bg-white flex flex-col">
+      <div className="rounded-b-[32px] bg-[#4A6E54] px-6 pb-8 pt-[max(1.75rem,env(safe-area-inset-top))] mx-auto w-full max-w-[480px]">
+        <div className="mx-auto flex w-full max-w-[480px] items-center justify-center gap-2">
+          <img src="/logo-siaga-bunda.png" alt="SIAGA Bunda" className="size-9 rounded-xl bg-white p-1 object-contain" />
+          <p className="text-lg font-extrabold tracking-tight text-white">SIAGA Bunda</p>
+        </div>
+        <div className="mx-auto mt-4 w-full max-w-[480px]">
+          <img src="/illu/illu-01-hero.png" alt="Bunda hamil" className="mx-auto h-56 w-auto object-contain" />
+          <h1 className="mt-4 text-center text-[30px] font-extrabold tracking-tight leading-tight" style={{ color: "#ffffff", marginBottom: 2 }}>SIAGA Bunda</h1>
+          <p className="mt-1 text-center text-sm text-white/90">Siaga menjaga Bunda dan buah hati</p>
+        </div>
+      </div>
+
+      <div className="relative mx-auto flex w-full max-w-[480px] flex-1 flex-col items-center overflow-hidden px-6 pb-6 pt-6 text-center">
+        <div className="relative z-10 flex w-full flex-col items-center">
+        <div className="flex items-center justify-center gap-2">
+          <span className="rounded-full bg-[#FFE2E2] px-3 py-1.5 text-[15px] font-bold text-[#9D2553]">Hangat</span>
+          <span className="rounded-full bg-[#DFF0EA] px-3 py-1.5 text-s font-bold text-[#16685C]">Menjaga</span>
+          <span className="rounded-full bg-[#FFF1E8] px-3 py-1.5 text-s font-bold text-[#9A5B00]">Peduli</span>
         </div>
 
-        <div className="mt-10 w-full">
+        <div className="mt-6 w-full">
           {phase === "splash" ? (
             <div className="flex flex-col items-center gap-3">
-              <div className="h-1.5 w-32 rounded-full bg-[#EAE6E0] overflow-hidden">
-                <div className="h-full rounded-full bg-[#7AAE9A] transition-none" style={{ width: `${bar}%` }} />
+              <div className="h-2 w-44 overflow-hidden rounded-full bg-[#FFE2E2]">
+                <div className="h-full rounded-full bg-[#4A6E54] transition-none" style={{ width: `${bar}%` }} />
               </div>
-              <p className="text-xs text-[#9AA3A6]">Loading {Math.round(bar)}% persen</p>
+              <p className="text-xs text-[#33443F]">Memuat data kehamilan</p>
             </div>
           ) : (
             <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 space-y-3">
-              <button onClick={onDaftar} className="w-full rounded-full bg-[#7AAE9A] py-3.5 text-sm font-semibold text-white shadow-sm active:scale-[0.99] transition-transform">
+              <button onClick={onDaftar} className="w-full rounded-full bg-[#4A6E54] py-3.5 text-sm font-semibold text-white shadow-sm active:scale-[0.99] transition-transform">
                 Mulai sekarang
               </button>
-              <button onClick={onMasuk} className="w-full rounded-full bg-white py-3.5 text-sm font-semibold text-[#7AAE9A] ring-1 ring-[#EAE6E0] active:scale-[0.99] transition-transform">
-                Sudah punya akun
+              <button onClick={onMasuk} className="w-full rounded-full bg-white py-3.5 text-sm font-semibold text-[#33443F] ring-2 ring-[#FFCFCF] active:scale-[0.99] transition-transform">
+                Sudah punya akun? Masuk
               </button>
             </div>
           )}
         </div>
+        </div>
       </div>
 
-      <p className="pb-6 text-center text-[11px] text-[#9AA3A6]">Versi 0.1.0 • PDUPT Poltekkes Bandung</p>
+      <div className="relative mx-auto w-full max-w-[480px]">
+        <img src="/illu/illu-11-florist-2.png" alt="" aria-hidden className="pointer-events-none w-full select-none object-cover" />
+        <p className="absolute inset-x-0 bottom-4 left-4 text-center text-[8px] text-[#33443F]">Versi 1.0.0 Penelitian Poltekkes Bandung 2026</p>
+      </div>
     </div>
   )
 }

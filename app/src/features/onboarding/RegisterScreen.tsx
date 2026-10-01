@@ -1,7 +1,6 @@
-import { useState } from "react"
-import { ChevronRight } from "lucide-react"
+import { useRef, useState } from "react"
+import { ChevronRight, MessageCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { submitRegister, formatGPA } from "@/features/onboarding/registerForm"
@@ -28,7 +27,28 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
   const [loading, setLoading] = useState(false)
   const [globalErr, setGlobalErr] = useState<string | null>(null)
   const [step, setStep] = useState<"form" | "otp">("form")
-  const [otp, setOtp] = useState("")
+  const [digits, setDigits] = useState<string[]>(["", "", "", "", "", ""])
+  const boxRefs = useRef<(HTMLInputElement | null)[]>([])
+  const otpValue = digits.join("")
+  const setDigit = (i: number, v: string) => {
+    const d = v.replace(/[^0-9]/g, "").slice(-1)
+    setDigits((prev) => {
+      const next = [...prev]
+      next[i] = d
+      return next
+    })
+    if (d && i < 5) boxRefs.current[i + 1]?.focus()
+  }
+  const handleBoxKey = (i: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !digits[i] && i > 0) boxRefs.current[i - 1]?.focus()
+  }
+  const handleBoxPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const t = e.clipboardData.getData("text").replace(/[^0-9]/g, "").slice(0, 6)
+    if (!t) return
+    e.preventDefault()
+    setDigits(t.padEnd(6, " ").split(""))
+    boxRefs.current[Math.min(t.length, 5)]?.focus()
+  }
   const [otpErr, setOtpErr] = useState<string | null>(null)
   const [otpLoading, setOtpLoading] = useState(false)
   const [phoneForOtp, setPhoneForOtp] = useState("")
@@ -108,12 +128,12 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
 
   const handleVerifyOtp = async () => {
     setOtpErr(null)
-    if (otp.trim().length < 6) {
+    if (otpValue.trim().length < 6) {
       setOtpErr("Kode 6 digit wajib diisi")
       return
     }
     // demo didahulukan — biar bisa dicoba tanpa SMS beneran (online maupun offline)
-    if (demoCode && otp.trim() === demoCode) {
+    if (demoCode && otpValue.trim() === demoCode) {
       const demoUserId = `demo-${form.noHp.replace(/[^0-9]/g, "")}`
       const tmp = await submitRegister({
         nama: form.nama,
@@ -143,7 +163,7 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
         const { data, error } = await supabase.auth.verifyOtp({
           phone: isEmail ? undefined : (phoneForOtp as string),
           email: isEmail ? (phoneForOtp as string) : undefined,
-          token: otp.trim(),
+          token: otpValue.trim(),
           type: isEmail ? "email" : "sms",
         } as never)
         if (error) throw error
@@ -182,119 +202,164 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
 
   if (step === "otp") {
     return (
-      <div className="min-h-[100dvh] bg-[#FFFCF6] flex flex-col">
-        <div className="mx-auto w-full max-w-[480px] flex-1 px-4 pb-6 pt-4">
-          <button onClick={() => setStep("form")} className="size-9 rounded-full bg-white ring-1 ring-[#EAE6E0] grid place-items-center text-[#7AAE9A]">
-            <ChevronRight className="size-4 rotate-180" />
-          </button>
-          <h1 className="mt-4 text-[20px] font-semibold text-[#1E2326] leading-tight">Masukkan kode OTP</h1>
-          <p className="mt-1 text-sm text-[#8A8F93] leading-relaxed">Kode 6 digit dikirim ke {phoneForOtp.includes("@") ? "email" : "WhatsApp"} {phoneForOtp}. Masukkan untuk verifikasi.</p>
+      <div className="min-h-[100dvh] bg-white flex flex-col">
+        <div className="bg-[#4A6E54] px-6 pb-12 pt-[max(1.75rem,env(safe-area-inset-top))] mx-auto w-full max-w-[480px] rounded-b-[32px]">
+          <div className="flex items-center gap-2.5">
+            <button onClick={() => setStep("form")} aria-label="Kembali" className="grid size-11 shrink-0 place-items-center rounded-full bg-white text-[#4A6E54]">
+              <ChevronRight className="size-5 rotate-180" />
+            </button>
+            <div className="flex-1">
+              <h1 className="text-lg font-extrabold tracking-tight text-white">Masukkan kode OTP</h1>
+              <p className="text-xs text-white/90">Langkah 2 dari 2</p>
+            </div>
+            <span className="grid size-11 shrink-0 place-items-center rounded-full bg-white text-[#DB2777]">
+              <MessageCircle className="size-5" />
+            </span>
+          </div>
+        </div>
+        <div className="mx-auto w-full max-w-[480px] flex-1 px-6 pb-6 -mt-6">
+          <p className="text-center text-[13px] text-[#33443F]">Kode 6 digit dikirim ke {phoneForOtp.includes("@") ? "email" : "WhatsApp"} {phoneForOtp}</p>
           {demoCode && (
-            <div className="mt-3 rounded-2xl bg-[#FFF8EC] px-3 py-2.5 ring-1 ring-[#F5C16C]/20 text-center">
-              <p className="text-xs font-medium text-[#8A6D00]">Kode demo untuk percobaan</p>
-              <p className="font-mono text-lg font-bold tracking-[0.3em] text-[#1E2326]">{demoCode}</p>
-              <p className="text-[11px] text-[#8A8F93]">Gunakan kode ini untuk verifikasi tanpa SMS</p>
+            <div className="mt-3 rounded-[20px] bg-[#FFF8EC] px-3 py-3 ring-1 ring-[#F5C16C]/40 text-center">
+              <p className="text-xs font-medium text-[#7A5F00]">Kode demo untuk percobaan</p>
+              <p className="font-mono text-2xl font-bold tracking-[0.3em] text-[#1D2B29]">{demoCode}</p>
+              <p className="text-xs text-[#33443F]">Gunakan kode ini tanpa SMS</p>
             </div>
           )}
-          <Card className="mt-4 rounded-[24px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm">
-            <CardContent className="p-4 space-y-4">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Kode OTP</Label>
-                <Input value={otp} onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))} placeholder="123456" className="rounded-xl bg-[#FFFCF6] tracking-[0.3em] text-center text-lg" inputMode="numeric" />
-                {otpErr && <p className="text-xs text-[#E57373] text-center">{otpErr}</p>}
-              </div>
-              <Button onClick={handleVerifyOtp} disabled={otpLoading} className="w-full rounded-full bg-[#7AAE9A] hover:bg-[#6B9E8A] py-3.5 text-sm font-semibold">
-                {otpLoading ? "Memeriksa" : "Verifikasi"}
-              </Button>
-              <button onClick={handleRequestOtp} className="w-full text-center text-sm font-medium text-[#7AAE9A] underline underline-offset-4 decoration-[#7AAE9A]/30">
-                Kirim ulang kode
-              </button>
-            </CardContent>
-          </Card>
+          <div className="mt-4 rounded-[24px] bg-[#EAF4F0] p-4 space-y-4">
+            <div className="flex items-center justify-center gap-2">
+              {digits.map((d, i) => (
+                <input
+                  key={i}
+                  ref={(el) => {
+                    boxRefs.current[i] = el
+                  }}
+                  value={d}
+                  onChange={(e) => setDigit(i, e.target.value)}
+                  onKeyDown={(e) => handleBoxKey(i, e)}
+                  onPaste={handleBoxPaste}
+                  inputMode="numeric"
+                  maxLength={1}
+                  aria-label={`Digit ${i + 1}`}
+                  className={`size-11 rounded-[14px] text-center text-xl font-bold outline-none transition ${
+                    d ? "bg-[#FFE2E2] text-[#9D2553]" : "bg-white text-[#1D2B29] ring-1 ring-[#D9E7E2]"
+                  } focus:ring-2 focus:ring-[#4A6E54]`}
+                />
+              ))}
+            </div>
+            {otpErr && <p className="text-xs text-[#E57373] text-center">{otpErr}</p>}
+            <p className="text-center text-xs text-[#33443F]">Kode kedaluwarsa dalam 05 00</p>
+            <Button onClick={handleVerifyOtp} disabled={otpLoading} className="w-full rounded-full bg-[#4A6E54] hover:bg-[#3D5C46] py-3.5 text-sm font-semibold text-white">
+              {otpLoading ? "Memeriksa" : "Verifikasi"}
+            </Button>
+            <button onClick={handleRequestOtp} className="w-full text-center text-sm font-medium text-[#33443F]">
+              Kirim ulang kode
+            </button>
+          </div>
+          <p className="mt-3 text-center text-xs text-[#33443F]">Pastikan nomor aktif untuk hasil akurat</p>
+        </div>
+        <div className="relative mx-auto w-full max-w-[480px]">
+          <img src="/illu/illu-11-florist-2.png" alt="" aria-hidden className="pointer-events-none w-full select-none object-cover" />
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-[100dvh] bg-[#FFFCF6] flex flex-col">
-      <div className="mx-auto w-full max-w-[480px] flex-1 px-4 pb-6 pt-4">
-        <button onClick={onBack} className="size-9 rounded-full bg-white ring-1 ring-[#EAE6E0] grid place-items-center text-[#7AAE9A]">
-          <ChevronRight className="size-4 rotate-180" />
+    <div className="min-h-[100dvh] bg-white flex flex-col">
+      <div className="bg-[#4A6E54] px-6 pb-12 pt-[max(1.75rem,env(safe-area-inset-top))] mx-auto w-full max-w-[480px] rounded-b-[32px]">
+        <div className="flex items-center gap-2.5">
+          <button onClick={onBack} aria-label="Kembali" className="grid size-11 shrink-0 place-items-center rounded-full bg-white text-[#4A6E54]">
+            <ChevronRight className="size-5 rotate-180" />
+          </button>
+          <div className="flex-1">
+            <h1 className="text-lg font-extrabold tracking-tight text-white">Daftar akun baru</h1>
+            <p className="text-xs text-white/90">Langkah 1 dari 2</p>
+          </div>
+        </div>
+      </div>
+      <div className="mx-auto w-full max-w-[480px] flex-1 px-6 pb-6 -mt-6 space-y-3.5">
+        <p className="text-center text-[13px] text-[#33443F]">Isi data kehamilan untuk skrining personal</p>
+
+        <div className="rounded-[24px] bg-[#EAF4F0] p-3.5 space-y-3">
+          <p className="text-sm font-bold text-[#1D2B29]">Data diri ibu</p>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-[#33443F]">Nama lengkap</Label>
+            <Input value={form.nama} onChange={(e) => set("nama", e.target.value)} placeholder="cth Siti Aminah" className="rounded-2xl bg-white" />
+            {errs.nama && <p className="text-xs text-[#E57373]">{errs.nama}</p>}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs text-[#33443F]">Tanggal lahir</Label>
+              <Input type="date" value={form.tanggalLahir} onChange={(e) => set("tanggalLahir", e.target.value)} className="rounded-2xl bg-white" />
+              {errs.tanggalLahir && <p className="text-xs text-[#E57373]">{errs.tanggalLahir}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-[#33443F]">Nomor WhatsApp</Label>
+              <Input value={form.noHp} onChange={(e) => set("noHp", e.target.value)} placeholder="0812xxxxxxx" className="rounded-2xl bg-white" />
+              {errs.noHp && <p className="text-xs text-[#E57373]">{errs.noHp}</p>}
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-[24px] bg-[#EAF4F0] p-3.5 space-y-3">
+          <p className="text-sm font-bold text-[#1D2B29]">Data kehamilan</p>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="space-y-1 rounded-2xl bg-white px-2 py-2.5 text-center">
+              <Label className="text-xs text-[#33443F]">Hamil ke</Label>
+              <Input type="number" value={form.gravida} onChange={(e) => set("gravida", Number(e.target.value))} className="rounded-xl bg-white text-center font-bold" />
+              {errs.gravida && <p className="text-xs text-[#E57373]">{errs.gravida}</p>}
+            </div>
+            <div className="space-y-1 rounded-2xl bg-white px-2 py-2.5 text-center">
+              <Label className="text-xs text-[#33443F]">Lahiran</Label>
+              <Input type="number" value={form.para} onChange={(e) => set("para", Number(e.target.value))} className="rounded-xl bg-white text-center font-bold" />
+              {errs.para && <p className="text-xs text-[#E57373]">{errs.para}</p>}
+            </div>
+            <div className="space-y-1 rounded-2xl bg-white px-2 py-2.5 text-center">
+              <Label className="text-xs text-[#33443F]">Keguguran</Label>
+              <Input type="number" value={form.abortus} onChange={(e) => set("abortus", Number(e.target.value))} className="rounded-xl bg-white text-center font-bold" />
+              {errs.abortus && <p className="text-xs text-[#E57373]">{errs.abortus}</p>}
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-[#4A6E54] px-3.5 py-3">
+            <Label className="text-xs text-white/90">Hari pertama haid terakhir</Label>
+            <Input type="date" value={form.hpht} onChange={(e) => set("hpht", e.target.value)} className="mt-1 rounded-xl bg-white font-bold" />
+            {errs.hpht && <p className="text-xs text-[#FFE2E2]">{errs.hpht}</p>}
+          </div>
+
+          <div className="rounded-2xl bg-[#FFF1E8] px-3.5 py-2.5">
+            <p className="text-xs font-bold text-[#1D2B29]">Usia dan HPL terhitung otomatis</p>
+            <p className="text-xs text-[#33443F]">Terisi setelah tanggal HPHT diisi</p>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs text-[#33443F]">Fasyankes tujuan</Label>
+            <Input value={form.fasyankes} onChange={(e) => set("fasyankes", e.target.value)} placeholder="Puskesmas Cibangkong" className="rounded-2xl bg-white" />
+            {errs.fasyankes && <p className="text-xs text-[#E57373]">{errs.fasyankes}</p>}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs text-[#33443F]">Nama bidan</Label>
+            <Input value={form.namaBidan} onChange={(e) => set("namaBidan", e.target.value)} placeholder="Bidan Wati" className="rounded-2xl bg-white" />
+            {errs.namaBidan && <p className="text-xs text-[#E57373]">{errs.namaBidan}</p>}
+          </div>
+        </div>
+
+        {globalErr && <p className="text-xs text-[#E57373] text-center">{globalErr}</p>}
+
+        <Button onClick={handleRequestOtp} disabled={loading} className="w-full rounded-full bg-[#4A6E54] hover:bg-[#3D5C46] py-3.5 text-sm font-semibold text-white">
+          {loading ? "Mengirim kode" : "Daftar dan lanjut"}
+        </Button>
+
+        <button onClick={onToLogin} className="w-full rounded-full bg-white py-3 text-center text-sm font-medium text-[#33443F] ring-2 ring-[#FFCFCF]">
+          Sudah punya akun? Masuk
         </button>
-
-        <h1 className="mt-4 text-[20px] font-semibold text-[#1E2326] leading-tight">Daftar Akun Bunda</h1>
-        <p className="mt-1 text-sm text-[#8A8F93] leading-relaxed">Isi data dengan benar. Usia kehamilan dan perkiraan lahir akan dihitung otomatis.</p>
-
-        <Card className="mt-4 rounded-[24px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm">
-          <CardContent className="p-4 space-y-4">
-            <div className="space-y-1.5">
-              <Label className="text-xs">Nama lengkap</Label>
-              <Input value={form.nama} onChange={(e) => set("nama", e.target.value)} placeholder="Nama Bunda" className="rounded-xl bg-[#FFFCF6]" />
-              {errs.nama && <p className="text-xs text-[#E57373]">{errs.nama}</p>}
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Tanggal lahir</Label>
-                <Input type="date" value={form.tanggalLahir} onChange={(e) => set("tanggalLahir", e.target.value)} className="rounded-xl bg-[#FFFCF6]" />
-                {errs.tanggalLahir && <p className="text-xs text-[#E57373]">{errs.tanggalLahir}</p>}
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Nomor HP</Label>
-                <Input value={form.noHp} onChange={(e) => set("noHp", e.target.value)} placeholder="08xxxxxxxxxx" className="rounded-xl bg-[#FFFCF6]" />
-                {errs.noHp && <p className="text-xs text-[#E57373]">{errs.noHp}</p>}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Hamil ke</Label>
-                <Input type="number" value={form.gravida} onChange={(e) => set("gravida", Number(e.target.value))} className="rounded-xl bg-[#FFFCF6]" />
-                {errs.gravida && <p className="text-xs text-[#E57373]">{errs.gravida}</p>}
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Jumlah lahir</Label>
-                <Input type="number" value={form.para} onChange={(e) => set("para", Number(e.target.value))} className="rounded-xl bg-[#FFFCF6]" />
-                {errs.para && <p className="text-xs text-[#E57373]">{errs.para}</p>}
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Keguguran</Label>
-                <Input type="number" value={form.abortus} onChange={(e) => set("abortus", Number(e.target.value))} className="rounded-xl bg-[#FFFCF6]" />
-                {errs.abortus && <p className="text-xs text-[#E57373]">{errs.abortus}</p>}
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs">Hari pertama haid terakhir</Label>
-              <Input type="date" value={form.hpht} onChange={(e) => set("hpht", e.target.value)} className="rounded-xl bg-[#FFFCF6]" />
-              {errs.hpht && <p className="text-xs text-[#E57373]">{errs.hpht}</p>}
-              <p className="text-[11px] text-[#9AA3A6]">Dipakai untuk hitung usia kehamilan dan perkiraan lahir</p>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs">Fasyankes</Label>
-              <Input value={form.fasyankes} onChange={(e) => set("fasyankes", e.target.value)} placeholder="Puskesmas atau klinik" className="rounded-xl bg-[#FFFCF6]" />
-              {errs.fasyankes && <p className="text-xs text-[#E57373]">{errs.fasyankes}</p>}
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs">Nama bidan</Label>
-              <Input value={form.namaBidan} onChange={(e) => set("namaBidan", e.target.value)} placeholder="Nama bidan pendamping" className="rounded-xl bg-[#FFFCF6]" />
-              {errs.namaBidan && <p className="text-xs text-[#E57373]">{errs.namaBidan}</p>}
-            </div>
-
-            {globalErr && <p className="text-xs text-[#E57373] text-center">{globalErr}</p>}
-
-            <Button onClick={handleRequestOtp} disabled={loading} className="w-full rounded-full bg-[#7AAE9A] hover:bg-[#6B9E8A] py-3.5 text-sm font-semibold">
-              {loading ? "Mengirim kode" : "Daftar"}
-            </Button>
-
-            <button onClick={onToLogin} className="w-full text-center text-sm font-medium text-[#7AAE9A] underline underline-offset-4 decoration-[#7AAE9A]/30">
-              Sudah punya akun? Masuk di sini
-            </button>
-          </CardContent>
-        </Card>
+        <p className="text-center text-xs text-[#33443F]">Data tersimpan aman di HP dan cloud</p>
+      </div>
+      <div className="relative mx-auto w-full max-w-[480px]">
+        <img src="/illu/illu-11-florist-2.png" alt="" aria-hidden className="pointer-events-none w-full select-none object-cover" />
       </div>
     </div>
   )
