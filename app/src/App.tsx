@@ -29,13 +29,22 @@ export default function App() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session?.user) setOnboarding("app")
+      if (data.session?.user) {
+        try { localStorage.removeItem("siaga_logged_out") } catch {}
+        setOnboarding("app")
+      }
     })
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session?.user) setOnboarding("app")
-      if (event === "SIGNED_OUT") setOnboarding("splash")
+      if (session?.user) {
+        try { localStorage.removeItem("siaga_logged_out") } catch {}
+        setOnboarding("app")
+      }
+      if (event === "SIGNED_OUT") {
+        try { localStorage.setItem("siaga_logged_out", "true") } catch {}
+        setOnboarding("splash")
+      }
     })
     return () => subscription.unsubscribe()
   }, [])

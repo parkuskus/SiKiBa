@@ -24,6 +24,12 @@ export default function SplashScreen({ onDaftar, onMasuk, onAutoMasuk }: Props) 
 
     const timer = setTimeout(async () => {
       if (cancelled) return
+      let loggedOut = false
+      try { loggedOut = localStorage.getItem("siaga_logged_out") === "true" } catch {}
+      if (loggedOut) {
+        setPhase("action")
+        return
+      }
       try {
         const count = await db.profiles.count()
         if (count > 0 && !cancelled) {
@@ -44,7 +50,7 @@ export default function SplashScreen({ onDaftar, onMasuk, onAutoMasuk }: Props) 
   }, [onAutoMasuk])
 
   return (
-    <div className="min-h-[100dvh] bg-white flex flex-col">
+    <div className="min-h-[100dvh] bg-[#FFFCF6] flex flex-col">
       <div className="rounded-b-[32px] bg-[#4A6E54] px-6 pb-8 pt-[max(1.75rem,env(safe-area-inset-top))] mx-auto w-full max-w-[480px]">
         <div className="mx-auto flex w-full max-w-[480px] items-center justify-center gap-2">
           <img src="/logo-siaga-bunda.png" alt="SIAGA Bunda" className="size-9 rounded-xl bg-white p-1 object-contain" />
@@ -87,7 +93,7 @@ export default function SplashScreen({ onDaftar, onMasuk, onAutoMasuk }: Props) 
         </div>
       </div>
 
-      <div className="relative mx-auto w-full max-w-[480px]">
+      <div className="relative mx-auto mt-auto w-full max-w-[480px]">
         <img src="/illu/illu-11-florist-2.png" alt="" aria-hidden className="pointer-events-none w-full select-none object-cover" />
         <p className="absolute inset-x-0 bottom-4 left-4 text-center text-[8px] text-[#33443F]">Versi 1.0.0 Penelitian Poltekkes Bandung 2026</p>
       </div>

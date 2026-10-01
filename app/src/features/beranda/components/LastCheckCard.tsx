@@ -18,13 +18,13 @@ export default function LastCheckCard({ label, dateLabel, kategori, onLihat }: P
         : { card: "bg-[#EDF6EF] ring-[#7ACB8A]/25", iconBg: "bg-[#7ACB8A]", icon: <ShieldCheck className="size-5 text-white" /> }
   return (
     <Card className={`rounded-[24px] border-0 ${tone.card} ring-1 shadow-sm overflow-hidden`}>
-      <CardContent className="p-4 flex gap-3 items-center">
+      <CardContent className="flex gap-3 items-center">
         <div className={`size-11 rounded-full ${tone.iconBg} grid place-items-center shrink-0`}>
           {tone.icon}
         </div>
         <button onClick={onLihat} className="min-w-0 flex-1 text-left">
           <p className="text-sm font-bold text-[#1D2B29] leading-tight truncate">{label}</p>
-          <p className="text-xs text-[#33443F]">{dateLabel}</p>
+          <p className="text-xs text-[#33443F]">Tanggal terakhir skrining: {dateLabel}</p>
         </button>
         <ChevronRight className="size-5 text-[#1D2B29] shrink-0" />
       </CardContent>

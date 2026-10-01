@@ -25,6 +25,9 @@
 - [x] Supabase migrations aman no-overwrite: `supabase/migrations/001_init_siaga_bunda.sql` (8 tabel `IF NOT EXISTS`) + `002_chat_rag.sql` — policy RLS via cek `pg_policies` dulu (tanpa `DROP`), `003_chat_grants.sql` grant-only
 
 ## In Progress — sesi Figma-first redesign (2026-10-01, lihat `AGENTS.md`)
+- [x] S-01 OTP Login 2026-10-01: layar verifikasi enam kotak + DemoCard, stage, tombol, dan footer mengikuti referensi OTP Figma `21:1036`.
+- [x] S-01b Login 2026-10-01: layar input nomor mengikuti frame Figma `23:1071` — stage sapaan, awalan +62, tombol OTP, trust row, dan floral footer.
+- [x] Fix Keluar 2026-10-01: Splash tidak auto-masuk kembali dari profil Dexie setelah logout; penanda logout tersimpan sampai sesi baru dibuat.
 - [x] Figma eksplorasi bebas S-00 s.d. S-03g (semua A+) — file `Project SIAGA Bunda`, token `primary #7AAE9A` / `primary-dark #4A6E54`, pink sekunder. Status per layar: `SCREENS.md`
 - [x] FE ikut Figma: S-00 (hero `illu-01-hero`, florist `illu-11-florist-2`), S-01 + OTP 6 kotak, S-02 Beranda (hero `illu-12-hero-2`, tanpa AppHeader & kartu Pekan). `index.css`: blok global `h1/h2` dihapus
 - [ ] Lanjut: Figma S-04 (Nifas) lalu FE-nya — pola stage + sheet + BottomNav pil (lihat `DESIGN.md`)

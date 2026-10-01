@@ -76,7 +76,7 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
   const countdown = profile ? Math.max(0, Math.ceil((new Date(hpl).getTime() - new Date().getTime()) / 86400000)) : countdownProp
   const gpa = profile ? `G${profile.gravida}P${profile.para}A${profile.abortus}` : "G2P1A0"
   const nama = profile?.nama ? profile.nama.split(" ")[0] : "Siti"
-  const lastLabel = last ? `${last.kategori === "HIJAU" ? "Kondisi aman" : last.kategori === "KUNING" ? "Skrining terakhir Waspada" : "Skrining terakhir Bahaya"}` : "Belum ada skrining"
+  const lastLabel = last ? `${last.kategori === "HIJAU" ? "Kondisi aman" : last.kategori === "KUNING" ? "Skrining Terakhir (Waspada)" : "Skrining Terakhir (Bahaya)"}` : "Belum ada skrining"
   const lastDate = last ? new Date(last.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short" }) : "Lakukan skrining pertama"
 
   return (
@@ -90,12 +90,16 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
         <div className="mt-4 flex items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="text-[17px] text-white/90">{hariIniLabel()}</p>
-            <h1 className="text-[80px] font-extrabold tracking-tight leading-none" style={{ color: "#fff", margin: 0, marginTop: 10 }}>Halo, {nama}</h1>
-            <p className="text-[17px] leading-relaxed text-white/90" style={{ margin: 0, marginTop: 12 }}>Yuk, jaga kesehatan diri dan si kecil di setiap tahap kehamilan</p>
+            <h1 className="text-[50px] font-extrabold tracking-tight leading-none" style={{ color: "#fff", margin: 0, marginTop: 10 }}>Halo, {nama}</h1>
+            <p className="text-[14px] leading-relaxed text-white/90" style={{ margin: 0, marginTop: 15}}>Yuk, jaga kesehatan diri dan si kecil di setiap tahap kehamilan</p>
           </div>
           <img src="/illu/illu-12-hero-2.png" alt="Bunda hamil" className="h-[170px] w-[130px] shrink-0 rounded-[20px] object-cover" />
         </div>
-        <div className="mt-4">
+        
+      </div>
+
+      <div className="space-y-3.5 pb-6 pt-5">
+        <div className="mt-1">
           <ProfileCard
             isPostpartum={isPostpartum}
             uk={uk}
@@ -111,21 +115,19 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
             }}
           />
         </div>
-      </div>
-
-      <div className="space-y-3.5 px-5 pb-6 pt-5">
         <QuickActionGrid
           onSkrining={() => setTab("skrining")}
           onCatatBB={() => setTab("tracker")}
           onReminder={() => setTab("tracker")}
           onEdukasi={() => setTab("edukasi")}
         />
+        <p className="text-[15px] font-bold py-2 text-[#1D2B29]">Skrining & Pengigat</p>
         <LastCheckCard label={lastLabel} dateLabel={lastDate} kategori={last?.kategori} onLihat={() => setTab("skrining")} />
         <button onClick={() => setTab("tracker")} className="flex w-full items-center gap-3 rounded-[24px] bg-white p-4 text-left ring-2 ring-[#FFCFCF] active:scale-[0.99] transition">
           <span className="grid size-12 shrink-0 place-items-center rounded-full bg-[#FFE2E2] text-[#DB2777]"><Smile className="size-7" /></span>
           <span className="min-w-0 flex-1">
-            <span className="block text-sm font-bold text-[#1D2B29]">Cek Mood Mama</span>
-            <span className="block text-xs text-[#33443F]">Biar dapat insightnya</span>
+            <span className="block text-sm font-bold text-[#1D2B29]">Cek Kesehatan Mental</span>
+            <span className="block text-xs text-[#33443F]">Lakukan cek ini untuk mencegah depresi!</span>
           </span>
           <ChevronRight className="size-5 shrink-0 text-[#1D2B29]" />
         </button>

@@ -202,7 +202,7 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
 
   if (step === "otp") {
     return (
-      <div className="min-h-[100dvh] bg-white flex flex-col">
+      <div className="min-h-[100dvh] bg-[#FFFCF6] flex flex-col">
         <div className="bg-[#4A6E54] px-6 pb-12 pt-[max(1.75rem,env(safe-area-inset-top))] mx-auto w-full max-w-[480px] rounded-b-[32px]">
           <div className="flex items-center gap-2.5">
             <button onClick={() => setStep("form")} aria-label="Kembali" className="grid size-11 shrink-0 place-items-center rounded-full bg-white text-[#4A6E54]">
@@ -258,7 +258,7 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
           </div>
           <p className="mt-3 text-center text-xs text-[#33443F]">Pastikan nomor aktif untuk hasil akurat</p>
         </div>
-        <div className="relative mx-auto w-full max-w-[480px]">
+        <div className="relative mx-auto mt-auto w-full max-w-[480px]">
           <img src="/illu/illu-11-florist-2.png" alt="" aria-hidden className="pointer-events-none w-full select-none object-cover" />
         </div>
       </div>
@@ -266,7 +266,7 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
   }
 
   return (
-    <div className="min-h-[100dvh] bg-white flex flex-col">
+    <div className="min-h-[100dvh] bg-[#FFFCF6] flex flex-col">
       <div className="bg-[#4A6E54] px-6 pb-12 pt-[max(1.75rem,env(safe-area-inset-top))] mx-auto w-full max-w-[480px] rounded-b-[32px]">
         <div className="flex items-center gap-2.5">
           <button onClick={onBack} aria-label="Kembali" className="grid size-11 shrink-0 place-items-center rounded-full bg-white text-[#4A6E54]">
@@ -358,7 +358,7 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
         </button>
         <p className="text-center text-xs text-[#33443F]">Data tersimpan aman di HP dan cloud</p>
       </div>
-      <div className="relative mx-auto w-full max-w-[480px]">
+      <div className="relative mx-auto mt-auto w-full max-w-[480px]">
         <img src="/illu/illu-11-florist-2.png" alt="" aria-hidden className="pointer-events-none w-full select-none object-cover" />
       </div>
     </div>

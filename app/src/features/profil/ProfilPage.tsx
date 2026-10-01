@@ -90,8 +90,11 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
   const handleLogout = async () => {
     if (!window.confirm("Keluar dari akun? Data lokal tetap tersimpan di ponsel.")) return
     try {
-      await supabase.auth.signOut()
-    } catch {}
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+    } catch {
+      alert("Gagal keluar. Periksa koneksi, lalu coba lagi.")
+    }
   }
 
   const handleDeleteAccount = async () => {

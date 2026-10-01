@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { ChevronRight } from "lucide-react"
+import { useRef, useState } from "react"
+import { ChevronLeft, ChevronRight, LogIn, MessageCircle, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -20,6 +20,25 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
   const [otpLoading, setOtpLoading] = useState(false)
   const [phoneForOtp, setPhoneForOtp] = useState("")
   const [demoCode, setDemoCode] = useState<string | null>(null)
+  const otpRefs = useRef<(HTMLInputElement | null)[]>([])
+
+  const updateOtpDigit = (index: number, value: string) => {
+    const digit = value.replace(/[^0-9]/g, "").slice(-1)
+    setOtp((current) => {
+      const next = current.padEnd(6, " ").split("")
+      next[index] = digit
+      return next.join("").trimEnd()
+    })
+    if (digit && index < 5) otpRefs.current[index + 1]?.focus()
+  }
+
+  const pasteOtp = (event: React.ClipboardEvent<HTMLInputElement>) => {
+    const pasted = event.clipboardData.getData("text").replace(/[^0-9]/g, "").slice(0, 6)
+    if (!pasted) return
+    event.preventDefault()
+    setOtp(pasted)
+    otpRefs.current[Math.min(pasted.length, 5)]?.focus()
+  }
 
   const handleRequestOtp = async () => {
     setErr(null)
@@ -107,68 +126,108 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
 
   if (step === "otp") {
     return (
-      <div className="min-h-[100dvh] bg-[#FFFCF6] flex flex-col">
-        <div className="mx-auto w-full max-w-[480px] flex-1 px-4 pb-6 pt-4">
-          <button onClick={() => setStep("form")} className="size-9 rounded-full bg-white ring-1 ring-[#EAE6E0] grid place-items-center text-[#7AAE9A]">
-            <ChevronRight className="size-4 rotate-180" />
+      <div className="min-h-[100dvh] bg-white flex flex-col">
+        <div className="mx-auto flex h-[128px] w-full max-w-[480px] shrink-0 items-center gap-2.5 rounded-b-[32px] bg-[#4A6E54] px-6 pb-[30px] pt-7">
+          <button onClick={() => setStep("form")} aria-label="Kembali" className="grid size-11 shrink-0 place-items-center rounded-full bg-white/95 text-[#DB2777]">
+            <ChevronLeft className="size-5" />
           </button>
-          <h1 className="mt-4 text-[20px] font-semibold text-[#1E2326] leading-tight">Masukkan kode OTP</h1>
-          <p className="mt-1 text-sm text-[#8A8F93] leading-relaxed">Kode 6 digit dikirim ke {phoneForOtp.includes("@") ? "email" : "WhatsApp"} {phoneForOtp}.</p>
+          <div className="min-w-0 flex-1 text-white">
+            <h1 className="text-lg font-bold leading-normal">Masukkan kode OTP</h1>
+            <p className="text-xs leading-normal">Langkah 2 dari 2</p>
+          </div>
+          <span className="grid size-[52px] shrink-0 place-items-center rounded-[26px] bg-white/95 text-[#DB2777]">
+            <MessageCircle className="size-7" />
+          </span>
+        </div>
+        <div className="mx-auto w-full max-w-[480px] flex-1 space-y-3.5 px-6 pb-6 pt-6">
+          <p className="text-[13px] leading-normal text-[#33443F]">Kode 6 digit dikirim ke {phoneForOtp.includes("@") ? "email" : "WhatsApp"} {phoneForOtp}.</p>
           {demoCode && (
-            <div className="mt-3 rounded-2xl bg-[#FFF8EC] px-3 py-2.5 ring-1 ring-[#F5C16C]/20 text-center">
-              <p className="text-xs font-medium text-[#8A6D00]">Kode demo untuk percobaan</p>
-              <p className="font-mono text-lg font-bold tracking-[0.3em] text-[#1E2326]">{demoCode}</p>
-              <p className="text-[11px] text-[#8A8F93]">Gunakan kode ini untuk verifikasi tanpa SMS</p>
+            <div className="space-y-1 rounded-[20px] border border-[#F5C16C] bg-[#FFF8EC] px-3.5 py-3 text-[#33443F]">
+              <p className="text-xs font-bold leading-normal text-[#7A5F00]">Kode demo untuk percobaan</p>
+              <p className="text-2xl font-bold leading-normal text-[#1D2B29]">{demoCode}</p>
+              <p className="text-xs leading-normal">Gunakan kode ini tanpa SMS</p>
             </div>
           )}
-          <Card className="mt-4 rounded-[24px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm">
-            <CardContent className="p-4 space-y-4">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Kode OTP</Label>
-                <Input value={otp} onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))} placeholder="123456" className="rounded-xl bg-[#FFFCF6] tracking-[0.3em] text-center text-lg" inputMode="numeric" />
-                {otpErr && <p className="text-xs text-[#E57373] text-center">{otpErr}</p>}
-              </div>
-              <Button onClick={handleVerifyOtp} disabled={otpLoading} className="w-full rounded-full bg-[#7AAE9A] hover:bg-[#6B9E8A] py-3.5 text-sm font-semibold">
-                {otpLoading ? "Memeriksa" : "Verifikasi"}
-              </Button>
-              <button onClick={handleRequestOtp} className="w-full text-center text-sm font-medium text-[#7AAE9A] underline underline-offset-4 decoration-[#7AAE9A]/30">
-                Kirim ulang kode
-              </button>
-            </CardContent>
-          </Card>
+          <div className="flex items-center justify-center gap-2">
+            {Array.from({ length: 6 }, (_, index) => {
+              const digit = otp[index] ?? ""
+              const filled = Boolean(digit)
+              return (
+                <input
+                  key={index}
+                  ref={(element) => { otpRefs.current[index] = element }}
+                  value={digit}
+                  onChange={(event) => updateOtpDigit(index, event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Backspace" && !digit && index > 0) otpRefs.current[index - 1]?.focus()
+                  }}
+                  onPaste={pasteOtp}
+                  inputMode="numeric"
+                  maxLength={1}
+                  aria-label={`Digit ${index + 1}`}
+                  className={`h-[52px] w-11 rounded-[14px] border text-center text-xl font-bold outline-none transition-colors focus:ring-2 focus:ring-[#4A6E54] ${filled ? "border-[#7AAE9A] bg-[#DFF0EA] text-[#4A6E54]" : "border-[#D9E7E2] bg-white text-[#33443F]"}`}
+                />
+              )
+            })}
+          </div>
+          {otpErr && <p className="text-center text-xs text-[#E57373]">{otpErr}</p>}
+          <p className="text-xs leading-normal text-[#33443F]">Kode kedaluwarsa dalam 04:59</p>
+          <Button onClick={handleVerifyOtp} disabled={otpLoading} className="w-full rounded-full bg-[#4A6E54] px-4 py-5 mt-3 text-base font-bold text-white hover:bg-[#3D5C46]">
+            {otpLoading ? "Memeriksa" : "Verifikasi"}
+          </Button>
+          <button onClick={handleRequestOtp} className="w-full text-center text-sm font-medium leading-normal text-[#33443F]">
+            Kirim ulang kode
+          </button>
+        </div>
+        <div className="relative mx-auto mt-auto w-full max-w-[480px]">
+          <img src="/illu/illu-11-florist-2.png" alt="" aria-hidden className="pointer-events-none w-full select-none object-cover" />
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-[100dvh] bg-[#FFFCF6] flex flex-col">
-      <div className="mx-auto w-full max-w-[480px] flex-1 px-4 pb-6 pt-4">
-        <button onClick={onBack} className="size-9 rounded-full bg-white ring-1 ring-[#EAE6E0] grid place-items-center text-[#7AAE9A]">
-          <ChevronRight className="size-4 rotate-180" />
+    <div className="min-h-[100dvh] bg-white flex flex-col">
+      <div className="mx-auto flex w-full max-w-[480px] items-center gap-2.5 rounded-b-[32px] bg-[#4A6E54] px-6 pb-12 pt-[max(1.75rem,env(safe-area-inset-top))]">
+        <button onClick={onBack} aria-label="Kembali" className="grid size-11 shrink-0 place-items-center rounded-full bg-white/95 text-[#DB2777]">
+          <ChevronLeft className="size-5" />
         </button>
+        <div className="min-w-0 flex-1 text-white">
+          <h1 className="text-lg font-bold leading-normal">Masuk Akun</h1>
+          <p className="text-xs leading-normal">Lanjut pantau Bunda</p>
+        </div>
+        <span className="grid size-[52px] shrink-0 place-items-center rounded-[26px] bg-white/95 text-[#DB2777]">
+          <LogIn className="size-[26px]" />
+        </span>
+      </div>
 
-        <h1 className="mt-4 text-[20px] font-semibold text-[#1E2326] leading-tight">Masuk Akun</h1>
-        <p className="mt-1 text-sm text-[#8A8F93] leading-relaxed">Masukkan nomor HP yang dipakai saat daftar. Kode OTP akan dikirim untuk verifikasi.</p>
-
-        <Card className="mt-4 rounded-[24px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm">
-          <CardContent className="p-4 space-y-4">
-            <div className="space-y-1.5">
-              <Label className="text-xs">Nomor HP</Label>
-              <Input value={noHp} onChange={(e) => setNoHp(e.target.value)} placeholder="08xxxxxxxxxx" className="rounded-xl bg-[#FFFCF6]" />
+      <div className="mx-auto w-full max-w-[480px] px-6 pb-6 pt-6">
+        <Card className="rounded-[24px] border-0 bg-[#EAF4F0] shadow-none">
+          <CardContent className="space-y-2.5 p-3.5">
+            <p className="text-[13px] leading-normal text-[#33443F]">Masukkan nomor HP saat daftar</p>
+            <div className="flex items-center gap-2 rounded-2xl border border-[#D9E7E2] bg-white px-3.5 py-3">
+              <span className="rounded-[10px] bg-[#FFE2E2] px-2 py-1 text-[13px] font-bold leading-normal text-[#9D2553]">+62</span>
+              <Input value={noHp} onChange={(e) => setNoHp(e.target.value)} placeholder="8xxxxxxxxxx" aria-label="Nomor HP" inputMode="tel" className="h-auto min-w-0 flex-1 border-0 bg-transparent p-0 text-sm leading-normal text-[#1D2B29] shadow-none placeholder:text-[#8A8F93] focus-visible:ring-0" />
             </div>
 
             {err && <p className="text-xs text-[#E57373] text-center">{err}</p>}
 
-            <Button onClick={handleRequestOtp} disabled={loading} className="w-full rounded-full bg-[#7AAE9A] hover:bg-[#6B9E8A] py-3.5 text-sm font-semibold">
+            <Button onClick={handleRequestOtp} disabled={loading} className="w-full rounded-full bg-[#4A6E54] px-4 py-3.5 text-base font-bold text-white hover:bg-[#3D5C46]">
               {loading ? "Mengirim kode" : "Kirim kode OTP"}
             </Button>
 
-            <button onClick={onToRegister} className="w-full text-center text-sm font-medium text-[#7AAE9A] underline underline-offset-4 decoration-[#7AAE9A]/30">
-              Belum punya akun? Daftar di sini
+            <button onClick={onToRegister} className="w-full text-center text-sm font-medium leading-normal text-[#33443F]">
+              Belum punya akun? <span className="underline underline-offset-2">Daftar di sini</span>
             </button>
           </CardContent>
         </Card>
+        <div className="mt-3.5 flex items-center justify-center gap-2 text-[#33443F]">
+          <ShieldCheck className="size-[18px] shrink-0 text-[#138A7A]" />
+          <p className="text-xs leading-normal">Kode 6 digit ke WhatsApp terdaftar</p>
+        </div>
+      </div>
+      <div className="relative mx-auto mt-auto w-full max-w-[480px]">
+        <img src="/illu/illu-11-florist-2.png" alt="" aria-hidden className="pointer-events-none w-full select-none object-cover" />
       </div>
     </div>
   )

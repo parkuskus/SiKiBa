@@ -52,8 +52,8 @@ export default function ProfileCard({ isPostpartum, uk, progress, countdown, hpl
     <>
       <div className="w-full rounded-[24px] bg-[#EAF4F0] p-4">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-bold text-[#1D2B29]">Hamil pekan ke {uk}</p>
-          <p className="text-xs font-bold text-[#9D2553]">Trimester {trimester}</p>
+          <p className="text-sm font-bold text-[#1D2B29]">Hamil Pekan Ke-{uk}</p>
+          <p className="text-xs font-bold text-[#9D2553]">Trimester Ke-{trimester}</p>
         </div>
         <div className="mt-2.5 h-2.5 w-full overflow-hidden rounded-full bg-white">
           <div className="h-full rounded-full bg-[#4A6E54]" style={{ width: `${progress}%` }} />

@@ -42,6 +42,7 @@ PWA skrining kesehatan ibu hamil/nifas/bayi (React 19 + Vite 6 + Tailwind v4 + D
 ## Figma workflow (figma-cli lives OUTSIDE repo at `C:\Users\aufar\figma-cli`)
 
 - Run as `node src/index.js <cmd>` from that dir. If commands fail with fetch/connection errors: `daemon start`, then `status` must show the file + daemon running.
+- `connect` often LOOKS stuck (no output within 30s) but is actually already connected — abort it and run `status` to confirm instead of waiting/retrying.
 - Never pass JSX inline through PowerShell (it splits args). Write JSX to a file, render via a small `.mjs` using `execFileSync('node', [CLI, 'render', jsx])`.
 - `roundedTL/TR/BL/BR` props are accepted but silently ignored (upstream bug) — set corner radii afterward via `eval`.
 - White small text only on `primary-dark` (`#4A6E54`); text ≥12px; targets ≥44px; audit must be A before coding a screen.
