@@ -112,7 +112,7 @@ export default function App() {
           )}
           {tab === "skrining" && <SkriningPage setTab={setTab} setShowBirth={setShowBirth} isPostpartum={isPostpartum} setShowBottomNav={setShowBottomNav} />}
           {tab === "edukasi" && <EdukasiPage />}
-          {tab === "tracker" && <PengingatPage />}
+          {tab === "tracker" && <PengingatPage setShowBottomNav={setShowBottomNav} />}
           {tab === "profil" && <ProfilPage uk={uk} hplLabel={hplLabel} />}
         </div>
       </main>

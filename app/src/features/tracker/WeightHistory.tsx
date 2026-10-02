@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react"
-import { ArrowLeft, Check } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
+import { Check, ChevronLeft, Scale } from "lucide-react"
 import type { WeightEntry } from "@/data/db"
 
 type Props = {
@@ -65,65 +64,63 @@ export default function WeightHistory({ entries, onBack, onEdit }: Props) {
   const jamOf = (e: WeightEntry) => e.createdAt?.slice(11, 16) || ""
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3 px-1">
-        <button onClick={onBack} aria-label="Kembali" className="grid size-9 place-items-center rounded-full bg-white ring-1 ring-[#EAE6E0] text-[#6C757D] active:scale-[0.98] transition">
-          <ArrowLeft className="size-4" />
-        </button>
-        <h1 className="!m-0 text-[16px] font-bold tracking-tight text-[#1E2326]">Riwayat Berat</h1>
-      </div>
+    <div className="-mx-4 -mt-5">
+      <header className="rounded-b-[32px] bg-[#4A6E54] px-6 pb-6 pt-[max(1.75rem,env(safe-area-inset-top))] text-white">
+        <div className="flex items-center gap-2.5">
+          <button onClick={onBack} aria-label="Kembali" className="grid size-11 shrink-0 place-items-center rounded-full bg-white/95 text-[#DB2777] transition-transform active:scale-95"><ChevronLeft className="size-5" /></button>
+          <div>
+            <h1 className="!m-0 text-lg font-bold leading-tight">Riwayat Berat</h1>
+            <p className="mt-0.5 text-xs text-white/90">{entries.length} catatan tersimpan</p>
+          </div>
+        </div>
+      </header>
 
-      <div className="grid grid-cols-2 gap-0 overflow-hidden rounded-full bg-white p-1 ring-1 ring-[#EAE6E0]">
-        {(["minggu", "bulan"] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`flex items-center justify-center gap-1.5 rounded-full py-2 text-sm font-semibold transition-colors ${tab === t ? "bg-[#7AAE9A] text-white" : "text-[#8A8F93]"}`}
-          >
-            {tab === t && <Check className="size-4" strokeWidth={3} />}
-            {t === "minggu" ? "Minggu" : "Bulan"}
-          </button>
-        ))}
-      </div>
+      <div className="space-y-4 px-4 pb-6 pt-5">
+        <div className="grid grid-cols-2 gap-2 rounded-[20px] bg-[#EAF4F0] p-1.5">
+          {(["minggu", "bulan"] as const).map((period) => (
+            <button key={period} onClick={() => setTab(period)} aria-pressed={tab === period} className={`flex min-h-11 items-center justify-center gap-1.5 rounded-[16px] text-sm font-semibold transition-colors ${tab === period ? "bg-[#4A6E54] text-white" : "text-[#33443F] hover:bg-white/70"}`}>
+              {tab === period && <Check className="size-4" strokeWidth={3} />}
+              {period === "minggu" ? "Minggu" : "Bulan"}
+            </button>
+          ))}
+        </div>
 
-      {groups.length ? (
-        groups.map((g) => {
-          const vals = g.items.map((e) => e.beratKg)
-          const avg = Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10
-          return (
-            <section key={g.title} className="space-y-2">
-              <div className="px-1">
-                <p className="text-[15px] font-bold tracking-tight text-[#1E2326]">{g.title}</p>
-                <p className="text-xs text-[#8A8F93]">{g.items.length} entri · Rata-rata {avg} kg · {Math.min(...vals)}–{Math.max(...vals)} kg</p>
-              </div>
-              <Card className="rounded-[24px] border-0 bg-white ring-1 ring-black/[0.05] overflow-hidden shadow-sm">
-                <CardContent className="p-0">
-                  <div className="divide-y divide-[#F0F0F0]">
-                    {g.items.map((e) => {
-                      const delta = deltaOf.get(e.id)
-                      return (
-                        <button key={e.id} onClick={() => onEdit(e)} className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-[#FFFCF6] transition-colors">
-                          <span className="min-w-0 flex-1">
-                            <span className="block text-xs text-[#6C757D]">{fmtDay(e.tanggal)}{jamOf(e) ? ` ${jamOf(e)}` : ""}</span>
-                            <span className="mt-0.5 block text-[17px] font-bold tracking-tight text-[#1E2326]">{e.beratKg} kg</span>
-                          </span>
-                          {delta !== null && delta !== undefined && (
-                            <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ring-1 ${delta > 0 ? "bg-[#EDF6EF] text-[#2E7D32] ring-[#7ACB8A]/20" : delta < 0 ? "bg-[#FFF8EC] text-[#8A6D00] ring-[#F5C16C]/25" : "bg-[#F1EFE9] text-[#8A8F93] ring-[#EAE6E0]"}`}>
-                              {delta > 0 ? `+${delta}` : delta < 0 ? `${delta}` : "±0"} kg
-                            </span>
-                          )}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            </section>
-          )
-        })
-      ) : (
-        <p className="p-6 text-center text-sm text-[#8A8F93]">Belum ada data berat.</p>
-      )}
+        {groups.length ? (
+          groups.map((group) => {
+            const values = group.items.map((entry) => entry.beratKg)
+            const average = Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 10) / 10
+            return (
+              <section key={group.title} className="space-y-2.5">
+                <div className="px-1">
+                  <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">{group.title}</h2>
+                  <p className="mt-0.5 text-xs text-[#536961]">{group.items.length} entri. Rata-rata {average} kg. Rentang {Math.min(...values)} sampai {Math.max(...values)} kg</p>
+                </div>
+                <div className="space-y-2 rounded-[24px] bg-[#EAF4F0] p-2.5">
+                  {group.items.map((entry) => {
+                    const delta = deltaOf.get(entry.id)
+                    return (
+                      <button key={entry.id} onClick={() => onEdit(entry)} className="flex min-h-[64px] w-full items-center gap-3 rounded-[18px] bg-white px-3.5 py-2.5 text-left transition-colors hover:bg-[#F9FCFA] active:scale-[0.99]">
+                        <span className="grid size-10 shrink-0 place-items-center rounded-[14px] bg-[#EAF4F0] text-[#4A6E54]"><Scale className="size-[18px]" /></span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-xs text-[#536961]">{fmtDay(entry.tanggal)}{jamOf(entry) ? `, ${jamOf(entry)}` : ""}</span>
+                          <span className="mt-0.5 block text-[15px] font-bold text-[#1D2B29]">{entry.beratKg} kg</span>
+                        </span>
+                        {delta !== null && delta !== undefined && <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${delta > 0 ? "bg-[#EDF6EF] text-[#2E7D32]" : delta < 0 ? "bg-[#FFF8EC] text-[#8A6D00]" : "bg-[#F1EFE9] text-[#6C757D]"}`}>{delta > 0 ? `+${delta}` : delta < 0 ? `${delta}` : "±0"} kg</span>}
+                      </button>
+                    )
+                  })}
+                </div>
+              </section>
+            )
+          })
+        ) : (
+          <section className="rounded-[24px] bg-[#EAF4F0] px-5 py-8 text-center">
+            <span className="mx-auto grid size-12 place-items-center rounded-full bg-white text-[#4A6E54]"><Scale className="size-5" /></span>
+            <p className="mt-3 text-sm font-bold text-[#1D2B29]">Belum ada catatan berat</p>
+            <p className="mt-1 text-xs leading-relaxed text-[#536961]">Tambahkan pengukuran berat dari halaman Ingat untuk melihat perubahannya.</p>
+          </section>
+        )}
+      </div>
     </div>
   )
 }

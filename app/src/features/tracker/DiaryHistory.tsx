@@ -1,41 +1,44 @@
-import { ArrowLeft } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
+import { BookOpen, ChevronLeft } from "lucide-react"
 import type { DiaryEntry } from "@/data/db"
 
 // S-07c: riwayat diary — judul jadi judul card
 export default function DiaryHistory({ entries, onBack }: { entries: DiaryEntry[]; onBack: () => void }) {
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3 px-1">
-        <button onClick={onBack} aria-label="Kembali" className="grid size-9 place-items-center rounded-full bg-white ring-1 ring-[#EAE6E0] text-[#6C757D] active:scale-[0.98] transition">
-          <ArrowLeft className="size-4" />
-        </button>
-        <div>
-          <h1 className="!m-0 text-[15px] font-bold tracking-tight text-[#1E2326]">Riwayat Diary</h1>
-          <p className="text-xs text-[#8A8F93]">{entries.length} entri tersimpan</p>
+    <div className="-mx-4 -mt-5">
+      <header className="rounded-b-[32px] bg-[#4A6E54] px-6 pb-6 pt-[max(1.75rem,env(safe-area-inset-top))] text-white">
+        <div className="flex items-center gap-2.5">
+          <button onClick={onBack} aria-label="Kembali" className="grid size-11 shrink-0 place-items-center rounded-full bg-white/95 text-[#DB2777] transition-transform active:scale-95"><ChevronLeft className="size-5" /></button>
+          <div>
+            <h1 className="!m-0 text-lg font-bold leading-tight">Riwayat Diary</h1>
+            <p className="mt-0.5 text-xs text-white/90">{entries.length} catatan tersimpan</p>
+          </div>
         </div>
-      </div>
+      </header>
 
-      {entries.length ? (
-        <div className="space-y-3">
-          {entries.map((e) => (
-            <Card key={e.id} className="rounded-[20px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm overflow-hidden">
-              <CardContent className="p-4">
+      <div className="space-y-3.5 px-4 pb-6 pt-5">
+        {entries.length ? (
+          <div className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-2.5">
+            {entries.map((entry) => (
+              <article key={entry.id} className="rounded-[18px] bg-white p-3.5">
                 <div className="flex items-center gap-2.5">
-                  <span className={`grid size-7 shrink-0 place-items-center rounded-full text-xs font-bold text-white ${e.mood <= 2 ? "bg-[#E57373]" : e.mood === 3 ? "bg-[#F5C16C]" : "bg-[#7AAE9A]"}`}>{e.mood}</span>
+                  <span className={`grid size-9 shrink-0 place-items-center rounded-full text-xs font-bold text-white ${entry.mood <= 2 ? "bg-[#C62828]" : entry.mood === 3 ? "bg-[#B7791F]" : "bg-[#4A6E54]"}`} aria-label={`Suasana hati ${entry.mood} dari 5`}>{entry.mood}</span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold tracking-tight text-[#1E2326]">{e.judul || "Tanpa judul"}</p>
-                    <p className="text-[11px] text-[#8A8F93]">{new Date(`${e.tanggal}T00:00:00`).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</p>
+                    <p className="truncate text-sm font-bold text-[#1D2B29]">{entry.judul || "Tanpa judul"}</p>
+                    <p className="text-xs text-[#536961]">{new Date(`${entry.tanggal}T00:00:00`).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</p>
                   </div>
                 </div>
-                <p className="mt-2 text-sm leading-relaxed text-[#2E3436]">{e.teks}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <p className="p-6 text-center text-sm text-[#8A8F93]">Belum ada diary. Tulis yang pertama di menu Reminder.</p>
-      )}
+                <p className="mt-2.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-[#33443F]">{entry.teks}</p>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <section className="rounded-[24px] bg-[#EAF4F0] px-5 py-8 text-center">
+            <span className="mx-auto grid size-12 place-items-center rounded-full bg-white text-[#4A6E54]"><BookOpen className="size-5" /></span>
+            <p className="mt-3 text-sm font-bold text-[#1D2B29]">Belum ada catatan diary</p>
+            <p className="mt-1 text-xs leading-relaxed text-[#536961]">Catatan yang Bunda simpan di Ingat akan muncul di sini.</p>
+          </section>
+        )}
+      </div>
     </div>
   )
 }

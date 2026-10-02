@@ -25,6 +25,9 @@
 - [x] Supabase migrations aman no-overwrite: `supabase/migrations/001_init_siaga_bunda.sql` (8 tabel `IF NOT EXISTS`) + `002_chat_rag.sql` — policy RLS via cek `pg_policies` dulu (tanpa `DROP`), `003_chat_grants.sql` grant-only
 
 ## In Progress — sesi Figma-first redesign (2026-10-01, lihat `AGENTS.md`)
+- [x] Judul section Ingat 2026-10-01: Berat Badan, Jadwal Periksa, dan Diary Harian dipindah ke atas, di luar masing-masing panel seperti Pengingat Obat.
+- [x] Riwayat Berat/Diary Ingat 2026-10-01: header sage, tab dan entri panel mint/putih; edit berat dan isi catatan tetap tersedia.
+- [x] Form Tambah Obat 2026-10-01: informasi dan jadwal dipisah ke panel sage/mint, selector sheet diperbarui, navigasi bawah disembunyikan selama sublayar penuh.
 - [x] FE section Ingat 2026-10-01: timeline difokuskan ke minggu/trimester/HPL dan tonggak terdekat; grid 40 kotak dan kutipan acak dihapus, warna tracker diseragamkan.
 - [x] FE Pengaturan Notifikasi/Penyimpanan 2026-10-01: kedua halaman memakai stage sage dan panel mint; status izin/penyimpanan serta aksi tetap dinamis.
 - [x] FE Edit Profil 2026-10-01: header sage, panel Data Diri/Data Kehamilan/Pendamping, input tanggal DD/MM/YYYY, dan tombol Simpan konsisten dengan gaya terbaru.

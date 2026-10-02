@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { CalendarDays, Check, Clock3, Scale } from "lucide-react"
+import { CalendarDays, Check } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -35,7 +35,7 @@ const SUPLEMEN_DEFAULT = [
   { id: "Ca", nama: "Kalsium", jam: "12.00" },
 ]
 
-export default function PengingatPage() {
+export default function PengingatPage({ setShowBottomNav }: { setShowBottomNav: (visible: boolean) => void }) {
   const [weights, setWeights] = useState<WeightEntry[]>([])
   const [anc, setAnc] = useState<ANCVisit[]>([])
   const [uid, setUid] = useState<string>("demo-siti")
@@ -175,6 +175,12 @@ export default function PengingatPage() {
 
   const [showMedForm, setShowMedForm] = useState(false)
 
+  useEffect(() => {
+    setShowBottomNav(!showMedForm && !showDiaryHistory && !showWeightHistory)
+  }, [showMedForm, showDiaryHistory, showWeightHistory, setShowBottomNav])
+
+  useEffect(() => () => setShowBottomNav(true), [setShowBottomNav])
+
   const tl = getTimeline(hpht)
   const hplLabel = new Date(tl.hpl).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })
   const currentWeek = Number.isFinite(tl.uk) ? Math.min(40, Math.max(0, tl.uk)) : 0
@@ -294,16 +300,14 @@ export default function PengingatPage() {
         <SupplementSection onAdd={() => setShowMedForm(true)} />
 
         <div className="grid gap-4">
-          <Card className="rounded-[24px] border-0 bg-[#EAF4F0] ring-0 shadow-none">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-2">
-              <div className="size-9 rounded-[14px] bg-white grid place-items-center text-[#4A6E54] ring-1 ring-[#D9E7E2]">
-                <Scale className="size-4" />
-              </div>
-              <p className="text-sm font-semibold text-[#1E2326] pt-1.5">Berat badan</p>
-              <button onClick={() => setShowWeightHistory(true)} className="ml-auto mt-1 min-h-10 rounded-full bg-white px-3 text-xs font-semibold text-[#4A6E54] ring-1 ring-[#D9E7E2] active:scale-[0.98] transition">Riwayat</button>
+          <section className="space-y-2.5">
+            <div className="flex items-center justify-between gap-3 px-1">
+              <h2 className="!m-0 text-[15px] font-bold text-[#1D2B29]">Berat badan</h2>
+              <button onClick={() => setShowWeightHistory(true)} className="min-h-10 rounded-full bg-white px-3 text-xs font-semibold text-[#4A6E54] ring-1 ring-[#D9E7E2] active:scale-[0.98] transition">Riwayat</button>
             </div>
-            <div className="mt-4 -mx-4">
+          <Card className="rounded-[24px] border-0 bg-[#EAF4F0] ring-0 shadow-none">
+            <CardContent className="p-4">
+            <div className="mt-1 -mx-4">
               <WeightChart entries={weightBars} targetAbs={targetAbs} />
             </div>
             {startInfo && <p className="mt-1 text-center text-[11px] text-[#8A8F93]">{startInfo}</p>}
@@ -332,39 +336,40 @@ export default function PengingatPage() {
             <Button className="mt-3 min-h-12 w-full rounded-full bg-[#4A6E54] text-sm font-bold text-white hover:bg-[#3D5C46]" onClick={() => setShowWeightSheet(true)}>
               Tambah berat
             </Button>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+          </section>
 
-        <Card className="rounded-[24px] border-0 bg-[#EAF4F0] ring-0 shadow-none">
-          <CardContent className="p-4">
-            <p className="text-sm font-semibold text-[#1E2326] flex items-center gap-2">
-              <CalendarDays className="size-4 text-[#4A6E54]" /> Jadwal periksa
-            </p>
-            <p className="text-xs text-[#8A8F93]">
-              {nextAnc ? `Selanjutnya ${nextAnc.tanggalTerjadwal} (${ancCountdown(nextAnc.tanggalTerjadwal)})` : "Semua selesai"} {doneAnc}/{anc.length} selesai
-            </p>
-            {!anc.length ? (
-              <p className="mt-3 text-center text-xs text-[#8A8F93]">Memuat jadwal</p>
-            ) : (
-              <ANCCalendar
-                anc={anc}
-                onToggle={(id, done) => void handleToggleAnc(id, done)}
-                onSaveNote={(id, done, note) => void handleSaveAncNote(id, done, note)}
-              />
-            )}
-          </CardContent>
-        </Card>
+          <section className="space-y-2.5">
+            <h2 className="px-1 text-[15px] font-bold text-[#1D2B29]">Jadwal periksa</h2>
+            <Card className="rounded-[24px] border-0 bg-[#EAF4F0] ring-0 shadow-none">
+              <CardContent className="p-4">
+                <p className="text-xs text-[#536961]">
+                  {nextAnc ? `Selanjutnya ${nextAnc.tanggalTerjadwal} (${ancCountdown(nextAnc.tanggalTerjadwal)})` : "Semua jadwal selesai"} {doneAnc}/{anc.length} selesai
+                </p>
+                {!anc.length ? (
+                  <p className="mt-3 text-center text-xs text-[#536961]">Memuat jadwal</p>
+                ) : (
+                  <ANCCalendar
+                    anc={anc}
+                    onToggle={(id, done) => void handleToggleAnc(id, done)}
+                    onSaveNote={(id, done, note) => void handleSaveAncNote(id, done, note)}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          </section>
 
-        <Card className="rounded-[24px] border-0 bg-[#EAF4F0] ring-0 shadow-none">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
+          <section className="space-y-2.5">
+            <div className="flex items-center justify-between gap-3 px-1">
               <div>
-                <p className="text-sm font-semibold text-[#1E2326]">Diary harian</p>
-                <p className="text-xs text-[#8A8F93]">Tulis diary baru di sini</p>
+                <h2 className="!m-0 text-[15px] font-bold text-[#1D2B29]">Diary harian</h2>
+                <p className="mt-0.5 text-xs text-[#536961]">Tulis catatan untuk hari ini</p>
               </div>
               <button onClick={() => setShowDiaryHistory(true)} className="min-h-10 rounded-full bg-white px-3.5 text-xs font-semibold text-[#4A6E54] ring-1 ring-[#D9E7E2] active:scale-[0.98] transition">Riwayat</button>
             </div>
-            <div className="mt-3 space-y-2">
+            <Card className="rounded-[24px] border-0 bg-[#EAF4F0] ring-0 shadow-none">
+              <CardContent className="space-y-2 p-4">
               <Input value={diaryTitle} onChange={(e) => setDiaryTitle(e.target.value)} placeholder="Judul diary" className="h-11 rounded-[14px] border-[#D9E7E2] bg-white px-4 placeholder:text-xs" />
               <textarea value={diaryText} onChange={(e) => setDiaryText(e.target.value)} placeholder="Tulis isi diary Bunda hari ini" className="min-h-[88px] w-full rounded-[14px] bg-white p-3 text-sm ring-1 ring-[#D9E7E2] placeholder:text-[#6C757D] focus:outline-none focus:ring-2 focus:ring-[#7AAE9A]/40" />
               <div className="flex gap-1.5">
@@ -379,9 +384,9 @@ export default function PengingatPage() {
               <Button className="min-h-11 w-full rounded-full bg-[#4A6E54] font-semibold text-white hover:bg-[#3D5C46]" onClick={() => void handleDiary()}>
                 Simpan diary
               </Button>
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </section>
 
       </div>
 
