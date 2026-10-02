@@ -32,6 +32,9 @@ function hariIniLabel(): string {
 // S-02 Beranda — stage sage + hero illu-12 + sheet (ikut Figma 23:1098)
 export default function BerandaPage({ uk: ukProp, progress: progressProp, countdown: countdownProp, isPostpartum, setIsPostpartum, setShowBirth, setTab }: Props) {
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [hariNifas, setHariNifas] = useState(1)
+  const [beratLahir, setBeratLahir] = useState<number | null>(null)
+  const [panjangLahir, setPanjangLahir] = useState<number | null>(null)
   const [last, setLast] = useState<ScreeningResult | null>(null)
   const [meds, setMeds] = useState<{ nama: string; waktu: string }[]>([])
   const [nextAncLabel, setNextAncLabel] = useState<string | null>(null)
@@ -41,6 +44,17 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
       const p = await getCurrentProfile()
       if (p) setProfile(p)
       const uid = p?.id ?? (await getCurrentUserId())
+      const birth = await db.bblProfiles.get(uid)
+      if (birth?.dataLahir) {
+        const elapsed = Math.floor((Date.now() - new Date(birth.dataLahir).getTime()) / 86400000)
+        if (Number.isFinite(elapsed)) setHariNifas(Math.min(42, Math.max(1, elapsed + 1)))
+      }
+      const birthEntry = (await db.nifasScreenings.where("userId").equals(uid).toArray())
+        .filter((entry) => entry.status === "lahir")
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0]
+      const birthValues = birthEntry?.parameterVital
+      if (typeof birthValues?.bb === "number") setBeratLahir(birthValues.bb)
+      if (typeof birthValues?.pb === "number") setPanjangLahir(birthValues.pb)
       const all = await db.screeningResults.where("userId").equals(uid).toArray()
       // ponytail: entri timbangan (tipe weight) bukan skrining — jangan tampil sebagai Cek Terakhir
       const skr = all.filter((r) => r.tipe !== "weight")
@@ -102,6 +116,9 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
         <div className="mt-1">
           <ProfileCard
             isPostpartum={isPostpartum}
+            hariNifas={hariNifas}
+            beratLahir={beratLahir}
+            panjangLahir={panjangLahir}
             uk={uk}
             progress={progress}
             countdown={countdown}

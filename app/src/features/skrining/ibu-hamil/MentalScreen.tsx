@@ -1,8 +1,8 @@
 import { useState } from "react"
 import { getCurrentUserId } from "@/data/currentUser"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { submitMental } from "@/features/skrining/ibu-hamil/mentalForm"
+import SkriningFormShell from "@/features/skrining/components/SkriningFormShell"
 
 // Tabel 1 S-03f (Cox et al. 1987, final Diva) — urutan opsi = skor 0-3
 const QUESTIONS: { q: string; options: [string, string, string, string] }[] = [
@@ -40,53 +40,55 @@ export default function MentalScreen({ onBack, onSuccess }: { onBack: () => void
   }
 
   return (
-    <div className="space-y-4">
-      <div className="px-1">
-        <div className="mb-2">
-        <h2 className="text-2xl font-bold tracking-tight text-[#1E2326]">Kesehatan Mental (EPDS)</h2>
-        </div>
-        <p className="mt-1 text-xs leading-relaxed text-[#8A8F93]">Jawab sesuai yang Bunda rasakan dalam 7 hari terakhir</p>
-        <p className="mt-1 text-xs leading-relaxed text-[#8A8F93]">{answered} dari 10 terjawab</p>
-        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[#EAE6E0]">
-          <div className="h-full rounded-full bg-[#1E2326] transition-all" style={{ width: `${answered * 10}%` }} />
-        </div>
-      </div>
-
-      {QUESTIONS.map((item, idx) => (
-        <Card key={idx} className="rounded-[24px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm">
-          <CardContent className="space-y-3 p-5">
+    <SkriningFormShell title="Kesehatan Mental" subtitle="Kuesioner EPDS" onBack={onBack}>
+      <div className="space-y-3.5">
+        <section className="space-y-2 rounded-[24px] bg-[#EAF4F0] p-3.5">
+          <div className="flex items-end justify-between gap-2">
             <div>
-              <p className="text-[11px] font-bold tracking-[0.08em] text-[#8A8F93]">PERTANYAAN {idx + 1}</p>
-              <p className="mt-1 text-[15px] font-bold leading-snug tracking-tight text-[#1E2326]">{item.q}</p>
+              <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Suasana hati Bunda</h2>
+              <p className="mt-1 text-xs leading-relaxed text-[#33443F]">Jawab sesuai yang Bunda rasakan dalam 7 hari terakhir</p>
+            </div>
+            <span className="shrink-0 text-xs font-bold text-[#9D2553]">{answered}/10</span>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-[#FFE2E2]">
+            <div className="h-full rounded-full bg-[#4A6E54] transition-all" style={{ width: `${answered * 10}%` }} />
+          </div>
+        </section>
+
+        {QUESTIONS.map((item, idx) => (
+          <section key={idx} className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
+            <div className="flex items-start gap-2.5">
+              <span className="grid size-7 shrink-0 place-items-center rounded-full bg-white text-xs font-bold text-[#4A6E54] ring-1 ring-[#D9E7E2]">{idx + 1}</span>
+              <p className="pt-1 text-[13px] font-bold leading-snug text-[#1D2B29]">{item.q}</p>
             </div>
             <div className="space-y-2">
-              {item.options.map((opt, v) => {
-                const selected = answers[idx] === v
+              {item.options.map((option, value) => {
+                const selected = answers[idx] === value
                 return (
                   <button
-                    key={v}
+                    key={value}
                     type="button"
-                    onClick={() => setAnswers((a) => { const n = [...a]; n[idx] = v; return n })}
-                    className={`w-full rounded-2xl px-4 py-3 text-left text-sm ring-1 transition-colors active:scale-[0.99] ${selected ? "bg-[#7AAE9A] font-semibold text-white ring-[#7AAE9A]" : "bg-white text-[#1E2326] ring-[#EAE6E0] hover:bg-[#FFFCF6]"}`}
+                    aria-pressed={selected}
+                    onClick={() => setAnswers((current) => { const next = [...current]; next[idx] = value; return next })}
+                    className={`flex min-h-11 w-full items-center gap-2.5 rounded-[16px] px-3 text-left text-xs leading-snug transition-colors active:scale-[0.99] ${selected ? "bg-[#4A6E54] font-semibold text-white" : "bg-white text-[#33443F] ring-1 ring-[#D9E7E2] hover:bg-[#FFFCF6]"}`}
                   >
-                    {opt}
+                    <span className={`grid size-4 shrink-0 place-items-center rounded-full ring-1 ${selected ? "bg-white ring-white" : "bg-white ring-[#B8C9C1]"}`}>
+                      {selected && <span className="size-2 rounded-full bg-[#4A6E54]" />}
+                    </span>
+                    {option}
                   </button>
                 )
               })}
             </div>
-            {idx === 9 && <p className="text-[11px] leading-relaxed text-[#C62828]">Bila pernah terlintas pikiran menyakiti diri, segera hubungi bidan atau layanan konseling.</p>}
-          </CardContent>
-        </Card>
-      ))}
+            {idx === 9 && <p className="rounded-[14px] bg-[#FDECEC] p-2.5 text-xs leading-relaxed text-[#8E1F1F]">Bila pernah terlintas pikiran menyakiti diri, segera hubungi bidan atau layanan konseling.</p>}
+          </section>
+        ))}
 
-      {error && <p className="text-center text-xs text-[#E57373]">{error}</p>}
-
-      <div className="flex gap-2">
-        <Button variant="outline" className="flex-1 rounded-full" onClick={onBack}>Batal</Button>
-        <Button className="flex-1 rounded-full bg-[#7AAE9A] hover:bg-[#6B9E8A]" disabled={loading} onClick={handle}>
+        {error && <p role="alert" className="text-center text-xs text-[#C62828]">{error}</p>}
+        <Button className="min-h-12 w-full rounded-full bg-[#4A6E54] text-base font-bold text-white hover:bg-[#3D5C46]" disabled={loading} onClick={handle}>
           {loading ? "Menyimpan" : "Lihat hasil"}
         </Button>
       </div>
-    </div>
+    </SkriningFormShell>
   )
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react"
-import { MessageCircleHeart, X } from "lucide-react"
+import { MessageCircleHeart } from "lucide-react"
 import BottomNav from "@/shared/components/layout/BottomNav"
 import BirthDialog from "@/shared/components/layout/BirthDialog"
 import BerandaPage from "@/features/beranda/BerandaPage"
@@ -8,6 +8,7 @@ import EdukasiPage from "@/features/edukasi/EdukasiPage"
 import PengingatPage from "@/features/tracker/PengingatPage"
 import ProfilPage from "@/features/profil/ProfilPage"
 import ChatbotPage from "@/features/chatbot/ChatbotPage"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 import SplashScreen from "@/features/onboarding/SplashScreen"
 import RegisterScreen from "@/features/onboarding/RegisterScreen"
 import LoginScreen from "@/features/onboarding/LoginScreen"
@@ -129,24 +130,11 @@ export default function App() {
         </button>
       )}
 
-      {showChat && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={() => setShowChat(false)}>
-          <div className="w-full max-w-[480px] px-4 pb-[calc(1rem+env(safe-area-inset-bottom))]" onClick={(e) => e.stopPropagation()}>
-            <div className="rounded-3xl bg-[#FFFCF6] p-3 shadow-xl">
-              <div className="flex justify-end">
-                <button
-                  aria-label="Tutup chat"
-                  onClick={() => setShowChat(false)}
-                  className="grid min-h-[44px] min-w-[44px] place-items-center rounded-full text-[#6C757D] hover:bg-[#F7F2EB]"
-                >
-                  <X className="size-5" />
-                </button>
-              </div>
-              <ChatbotPage />
-            </div>
-          </div>
-        </div>
-      )}
+      <Dialog open={showChat} onOpenChange={setShowChat}>
+        <DialogContent showCloseButton={false} className="fixed inset-x-auto bottom-0 left-1/2 top-auto flex h-[min(88dvh,760px)] min-h-[420px] w-full max-w-[480px] -translate-x-1/2 translate-y-0 flex-col gap-0 overflow-hidden rounded-t-[28px] rounded-b-none border-0 bg-[#FFFCF6] p-0 ring-0 sm:max-w-[480px]">
+          <ChatbotPage onClose={() => setShowChat(false)} />
+        </DialogContent>
+      </Dialog>
 
       <BirthDialog
         open={showBirth}

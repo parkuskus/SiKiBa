@@ -12,13 +12,15 @@ function jawabOffline(pesan: string): string {
   return JAWABAN_BINGUNG
 }
 
+const perluEskalasi = (jawaban: string) => /fasyankes atau bidan sekarang/i.test(jawaban)
+
 export async function tanyaChatbot(pesan: string): Promise<ChatReply> {
   const teks = pesan.trim()
   if (!teks) throw new Error("pesan kosong")
   // offline -> FAQ lokal, tidak pernah gagal
   if (typeof navigator !== "undefined" && !navigator.onLine) {
     const j = jawabOffline(teks)
-    return { answer: j, sources: [], escalate: /fasyankes atau bidan sekarang/i.test(j), offline: true }
+    return { answer: j, sources: [], escalate: perluEskalasi(j), offline: true }
   }
   try {
     const { data, error } = await supabase.functions.invoke("chat", { body: { message: teks } })
@@ -28,6 +30,6 @@ export async function tanyaChatbot(pesan: string): Promise<ChatReply> {
     // online gagal (Edge Function belum deploy / belum login) -> fallback lokal biar UX tidak mati
     console.warn("[siba] invoke chat gagal, pakai FAQ lokal:", e)
     const j = jawabOffline(teks)
-    return { answer: j, sources: [], escalate: false, offline: true }
+    return { answer: j, sources: [], escalate: perluEskalasi(j), offline: true }
   }
 }

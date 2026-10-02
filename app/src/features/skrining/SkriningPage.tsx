@@ -272,7 +272,6 @@ export default function SkriningPage({
         urgensiLabel={activeResult.urgensiLabel}
         waktuISO={activeResult.waktuISO}
         mapsQuery={fasyankes ?? undefined}
-        onBack={() => setActiveResult(null)}
         onUlangi={() => {
           const k = activeResult.tipeKey as ActiveForm
           setActiveResult(null)

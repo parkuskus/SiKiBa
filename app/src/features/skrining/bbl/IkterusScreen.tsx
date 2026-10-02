@@ -1,12 +1,13 @@
 import { useState } from "react"
 import { getCurrentUserId } from "@/data/currentUser"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { submitIkterus } from "@/features/skrining/bbl/ikterusForm"
+import SkriningFormShell from "@/features/skrining/components/SkriningFormShell"
 
 type Result = { status: string; kategori: "HIJAU" | "KUNING" | "MERAH"; warna: string; faktorRisiko: string[]; faktorAman: string[] }
+
+const choiceClass = (selected: boolean) => `min-h-11 rounded-[14px] px-2.5 text-xs font-semibold transition-colors ${selected ? "bg-[#4A6E54] text-white" : "bg-white text-[#33443F] ring-1 ring-[#D9E7E2]"}`
 
 export default function IkterusScreen({
   onBack,
@@ -48,72 +49,64 @@ export default function IkterusScreen({
   }
 
   return (
-    <Card className="rounded-[24px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm">
-      <CardContent className="p-4 space-y-4">
-        <div>
-          <div>
-            <p className="text-sm font-semibold text-[#1E2326] leading-none">Skrining Ikterus Neonatal</p>
-            <p className="text-xs text-[#8A8F93]">Cek kuning pada bayi dengan zona Kramer</p>
+    <SkriningFormShell title="Ikterus Neonatal" subtitle="Cek kuning pada bayi" onBack={onBack}>
+      <div className="space-y-3.5">
+        <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
+          <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Waktu dan usia bayi</h2>
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
+              <label className="block text-xs text-[#33443F]">Usia bayi hari</label>
+              <Input type="number" aria-label="Usia bayi hari" value={form.usiaBayiHari} onChange={(event) => setForm((current) => ({ ...current, usiaBayiHari: Number(event.target.value) }))} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
+            </div>
+            <div className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
+              <label className="block text-xs text-[#33443F]">Kuning muncul jam ke</label>
+              <Input type="number" aria-label="Kuning muncul pada jam ke" value={form.onsetJam} onChange={(event) => setForm((current) => ({ ...current, onsetJam: Number(event.target.value) }))} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
+            </div>
           </div>
-        </div>
+        </section>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label className="text-xs">Usia bayi hari</Label>
-            <Input type="number" value={form.usiaBayiHari} onChange={(e) => setForm((s) => ({ ...s, usiaBayiHari: Number(e.target.value) }))} className="rounded-xl bg-[#FFFCF6]" />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Kuning muncul jam ke</Label>
-            <Input type="number" value={form.onsetJam} onChange={(e) => setForm((s) => ({ ...s, onsetJam: Number(e.target.value) }))} className="rounded-xl bg-[#FFFCF6]" placeholder="<24 patologis" />
-          </div>
-        </div>
-
-        <div className="space-y-1.5">
-          <Label className="text-xs">Zona Kramer</Label>
-          <div className="flex gap-1.5">
-            {([1, 2, 3, 4, 5] as const).map((v) => (
-              <button key={v} onClick={() => setForm((s) => ({ ...s, zona: v }))} className={`flex-1 rounded-full py-2 text-xs font-semibold ring-1 transition-colors ${form.zona === v ? "bg-[#7AAE9A] text-white ring-[#7AAE9A]" : "bg-white text-[#8A8F93] ring-[#EAE6E0]"}`}>
-                {v}
+        <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
+          <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Zona Kramer</h2>
+          <div className="grid grid-cols-5 gap-2">
+            {([1, 2, 3, 4, 5] as const).map((zone) => (
+              <button key={zone} type="button" aria-pressed={form.zona === zone} onClick={() => setForm((current) => ({ ...current, zona: zone }))} className={choiceClass(form.zona === zone)}>
+                {zone}
               </button>
             ))}
           </div>
-          <p className="text-[11px] text-[#8A8F93] leading-tight">1 kepala leher 2 dada 3 perut 4 tangan kaki 5 telapak</p>
-        </div>
+          <p className="text-xs leading-relaxed text-[#33443F]">1 kepala dan leher, 2 dada, 3 perut, 4 tangan dan kaki, 5 telapak</p>
+        </section>
 
-        <div className="space-y-1.5">
-          <Label className="text-xs">Aktivitas bayi</Label>
-          <div className="flex gap-1.5">
-            {(["aktif", "mengantuk", "tidak mau minum"] as const).map((v) => (
-              <button key={v} onClick={() => setForm((s) => ({ ...s, aktivitas: v }))} className={`flex-1 rounded-full py-2 text-[11px] font-semibold ring-1 transition-colors ${form.aktivitas === v ? "bg-[#7AAE9A] text-white ring-[#7AAE9A]" : "bg-white text-[#8A8F93] ring-[#EAE6E0]"}`}>
-                {v === "aktif" ? "Aktif" : v === "mengantuk" ? "Mengantuk" : "Tidak mau minum"}
+        <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
+          <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Kondisi bayi</h2>
+          <div className="grid grid-cols-3 gap-2">
+            {(["aktif", "mengantuk", "tidak mau minum"] as const).map((activity) => (
+              <button key={activity} type="button" aria-pressed={form.aktivitas === activity} onClick={() => setForm((current) => ({ ...current, aktivitas: activity }))} className={choiceClass(form.aktivitas === activity)}>
+                {activity === "aktif" ? "Aktif" : activity === "mengantuk" ? "Mengantuk" : "Tidak mau minum"}
               </button>
             ))}
           </div>
-        </div>
+          {[
+            { key: "fesesDempul", label: "Feses pucat dempul" },
+            { key: "prematur", label: "Bayi prematur" },
+          ].map((item) => {
+            const checked = form[item.key as "fesesDempul" | "prematur"]
+            return (
+              <button key={item.key} type="button" aria-pressed={checked} onClick={() => setForm((current) => ({ ...current, [item.key]: !checked }))} className={`flex min-h-11 w-full items-center gap-3 rounded-[16px] px-3 text-left text-[13px] transition-colors ${checked ? "bg-[#4A6E54] font-semibold text-white" : "bg-white text-[#1D2B29] ring-1 ring-[#D9E7E2]"}`}>
+                <span className={`grid size-5 shrink-0 place-items-center rounded-[6px] ring-1 ${checked ? "bg-white ring-white" : "bg-white ring-[#C2C8CB]"}`}>
+                  {checked && <span className="size-2.5 rounded-[3px] bg-[#4A6E54]" />}
+                </span>
+                {item.label}
+              </button>
+            )
+          })}
+        </section>
 
-        <div className="space-y-2">
-          <Label className="text-xs">Keluhan lain</Label>
-          <label className="flex items-center justify-between rounded-2xl bg-[#FFFCF6] px-3 py-3 ring-1 ring-[#EAE6E0] cursor-pointer">
-            <span className="text-sm text-[#1E2326] leading-tight">Feses pucat dempul</span>
-            <input type="checkbox" checked={form.fesesDempul} onChange={(e) => setForm((s) => ({ ...s, fesesDempul: e.target.checked }))} className="size-5 accent-[#7AAE9A]" />
-          </label>
-          <label className="flex items-center justify-between rounded-2xl bg-[#FFFCF6] px-3 py-3 ring-1 ring-[#EAE6E0] cursor-pointer">
-            <span className="text-sm text-[#1E2326] leading-tight">Bayi prematur</span>
-            <input type="checkbox" checked={form.prematur} onChange={(e) => setForm((s) => ({ ...s, prematur: e.target.checked }))} className="size-5 accent-[#7AAE9A]" />
-          </label>
-        </div>
-
-        {err && <p className="text-xs text-[#E57373] text-center">{err}</p>}
-
-        <div className="flex gap-2">
-          <Button variant="outline" className="flex-1 rounded-full" onClick={onBack}>
-            Batal
-          </Button>
-          <Button className="flex-1 rounded-full bg-[#7AAE9A] hover:bg-[#6B9E8A] text-white" disabled={loading} onClick={handle}>
-            {loading ? "Menyimpan" : "Lihat hasil"}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+        {err && <p role="alert" className="text-center text-xs text-[#C62828]">{err}</p>}
+        <Button className="min-h-12 w-full rounded-full bg-[#4A6E54] text-base font-bold text-white hover:bg-[#3D5C46]" disabled={loading} onClick={handle}>
+          {loading ? "Menyimpan" : "Lihat hasil"}
+        </Button>
+      </div>
+    </SkriningFormShell>
   )
 }

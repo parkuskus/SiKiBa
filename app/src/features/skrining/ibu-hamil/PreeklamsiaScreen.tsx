@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react"
+import { Activity } from "lucide-react"
 import { getCurrentProfile, getCurrentUserId } from "@/data/currentUser"
 import { weeksFromHpht } from "@/clinical-rules/ukHpl"
+import { calcMAP, kategoriMAP } from "@/clinical-rules/mapCalculator"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { submitPreeklamsia } from "@/features/skrining/ibu-hamil/preeklamsiaForm"
+import SkriningFormShell from "@/features/skrining/components/SkriningFormShell"
 
 type PECheck = "pe" | "ht" | "ginjal" | "dm" | "autoimun" | "keluarga"
 
@@ -13,8 +15,8 @@ function CheckRow({ checked, label, onToggle }: { checked: boolean; label: strin
     <button
       type="button"
       onClick={onToggle}
-      className={`flex w-full items-center gap-3 rounded-full px-4 py-3 text-left text-sm ring-1 transition-colors active:scale-[0.99] ${
-        checked ? "bg-[#7AAE9A] font-semibold text-white ring-[#7AAE9A]" : "bg-white text-[#1E2326] ring-[#EAE6E0] hover:bg-[#FFFCF6]"
+      className={`flex min-h-11 w-full items-center gap-3 rounded-[16px] px-3 text-left text-sm ring-1 transition-colors active:scale-[0.99] ${
+        checked ? "bg-[#4A6E54] font-semibold text-white ring-[#4A6E54]" : "bg-white text-[#1D2B29] ring-[#D9E7E2] hover:bg-[#FFFCF6]"
       }`}
     >
       <span className={`grid size-4 shrink-0 place-items-center rounded-[5px] ring-1 ${checked ? "bg-white ring-white" : "bg-white ring-[#C2C8CB]"}`}>
@@ -34,8 +36,8 @@ function RadioRow({ selected, label, onClick }: { selected: boolean; label: stri
     <button
       type="button"
       onClick={onClick}
-      className={`flex w-full items-center gap-3 rounded-full px-4 py-3 text-left text-sm ring-1 transition-colors active:scale-[0.99] ${
-        selected ? "bg-[#7AAE9A] font-semibold text-white ring-[#7AAE9A]" : "bg-white text-[#1E2326] ring-[#EAE6E0] hover:bg-[#FFFCF6]"
+      className={`flex min-h-11 w-full items-center gap-3 rounded-[16px] px-3 text-left text-sm ring-1 transition-colors active:scale-[0.99] ${
+        selected ? "bg-[#4A6E54] font-semibold text-white ring-[#4A6E54]" : "bg-white text-[#1D2B29] ring-[#D9E7E2] hover:bg-[#FFFCF6]"
       }`}
     >
       <span className={`grid size-4 shrink-0 place-items-center rounded-full ring-1 ${selected ? "bg-white ring-white" : "bg-white ring-[#C2C8CB]"}`}>
@@ -130,105 +132,100 @@ export default function PreeklamsiaScreen({ onBack, onSuccess }: { onBack: () =>
   }
 
   const pct = step === 1 ? 50 : 100
+  const validBP = Number(sistolik) >= 70 && Number(sistolik) <= 250 && Number(diastolik) >= 40 && Number(diastolik) <= 150
+  const map = validBP ? calcMAP(Number(sistolik), Number(diastolik)) : null
+  const mapKat = map === null ? null : kategoriMAP(map)
+  const back = () => step === 1 ? onBack() : setStep(1)
 
   return (
-    <div className="space-y-3">
-      <div className="px-1">
-        <div className="flex items-center justify-between text-xs text-[#6C757D]">
-          <span>Langkah {step} dari 2</span>
-          <span>{pct}%</span>
+    <SkriningFormShell title="Preeklamsia" subtitle="Tekanan darah dan faktor risiko" onBack={back}>
+      <div className="space-y-3.5">
+        <div className="px-1">
+          <div className="flex items-center justify-between text-xs text-[#33443F]">
+            <span>Langkah {step} dari 2</span>
+            <span className="font-semibold text-[#DB2777]">{pct} persen</span>
+          </div>
+          <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-[#FFE2E2]">
+            <div className="h-full rounded-full bg-[#4A6E54] transition-all" style={{ width: `${pct}%` }} />
+          </div>
         </div>
-        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-[#EAE6E0]">
-          <div className="h-full rounded-full bg-[#1E2326] transition-all" style={{ width: `${pct}%` }} />
+
+        {step === 1 ? (
+          <div className="space-y-3.5">
+            <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
+              <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Tekanan Darah & Data Kehamilan</h2>
+              <div className="grid grid-cols-2 gap-2.5">
+                {[
+                  { label: "Sistolik mmHg", value: sistolik, set: setSistolik },
+                  { label: "Diastolik mmHg", value: diastolik, set: setDiastolik },
+                  { label: "UK pekan", value: ukMinggu, set: setUkMinggu },
+                  { label: "Usia ibu", value: usia, set: setUsia },
+                  { label: "IMT pra-hamil", value: imtPre, set: setImtPre },
+                  { label: "Jarak hamil lalu, tahun", value: jarak, set: setJarak },
+                ].map((field) => (
+                  <div key={field.label} className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
+                    <label className="block text-xs text-[#33443F]">{field.label}</label>
+                    <Input type="number" aria-label={field.label} value={field.value} onChange={(event) => field.set(event.target.value)} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
+                    {(field.label === "UK pekan" || field.label === "Usia ibu") && <span className="text-[11px] text-[#33443F]">Otomatis dari profil</span>}
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {map !== null && mapKat && (
+              <section className="flex min-h-[72px] items-center gap-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
+                <span className="grid size-12 shrink-0 place-items-center rounded-[16px] bg-white text-[#4A6E54]"><Activity className="size-6" /></span>
+                <div>
+                  <p className="text-[13px] font-bold text-[#1D2B29]">MAP {map} mmHg</p>
+                  <p className="text-xs text-[#33443F]">{mapKat === "HIJAU" ? "Normal" : mapKat === "KUNING" ? "Waspada" : "Risiko tinggi"}</p>
+                </div>
+              </section>
+            )}
+
+            <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
+              <h2 className="!m-0 text-[13px] font-bold text-[#1D2B29]">Protein urine positif (dipstik)</h2>
+              {[true, false].map((choice) => (
+                <RadioRow key={String(choice)} selected={proteinuria === choice} label={choice ? "Ya" : "Tidak"} onClick={() => setProteinuria(choice)} />
+              ))}
+            </section>
+          </div>
+        ) : (
+          <div className="space-y-3.5">
+            <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
+              <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Riwayat dan penyakit penyerta</h2>
+              <CheckRow checked={riwayat.includes("pe")} label="Pernah preeklamsia sebelumnya" onToggle={() => toggleRiwayat("pe")} />
+              <CheckRow checked={riwayat.includes("ht")} label="Hipertensi kronik" onToggle={() => toggleRiwayat("ht")} />
+              <CheckRow checked={riwayat.includes("ginjal")} label="Penyakit ginjal" onToggle={() => toggleRiwayat("ginjal")} />
+              <CheckRow checked={riwayat.includes("dm")} label="Diabetes melitus" onToggle={() => toggleRiwayat("dm")} />
+              <CheckRow checked={riwayat.includes("autoimun")} label="Autoimun (APS/SLE)" onToggle={() => toggleRiwayat("autoimun")} />
+              <CheckRow checked={riwayat.includes("keluarga")} label="Keluarga ada preeklamsia" onToggle={() => toggleRiwayat("keluarga")} />
+            </section>
+            <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
+              <h2 className="!m-0 text-[13px] font-bold text-[#1D2B29]">Kondisi kehamilan ini</h2>
+              <CheckRow checked={gemeli} label="Hamil kembar" onToggle={() => setGemeli((value) => !value)} />
+              <CheckRow checked={anakPertama} label="Anak pertama (nullipara)" onToggle={() => setAnakPertama((value) => !value)} />
+            </section>
+          </div>
+        )}
+
+        {Object.keys(fieldErrs).length > 0 && <p role="alert" className="text-center text-xs text-[#C62828]">{Object.values(fieldErrs)[0]}</p>}
+        {err && <p role="alert" className="text-center text-xs text-[#C62828]">{err}</p>}
+        <div className="flex gap-2">
+          {step === 1 ? (
+            <>
+              <Button variant="outline" className="min-h-[46px] flex-1 rounded-full border-[#D9E7E2] bg-white text-[#33443F]" onClick={onBack}>Batal</Button>
+              <Button className="min-h-[46px] flex-1 rounded-full bg-[#4A6E54] font-bold text-white hover:bg-[#3D5C46]" onClick={nextFrom1}>Lanjut</Button>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" className="min-h-[46px] flex-1 rounded-full border-[#D9E7E2] bg-white text-[#33443F]" onClick={() => setStep(1)}>Kembali</Button>
+              <Button className="min-h-[46px] flex-1 rounded-full bg-[#4A6E54] font-bold text-white hover:bg-[#3D5C46]" disabled={loading} onClick={handle}>
+                {loading ? "Menyimpan" : "Lihat hasil"}
+              </Button>
+            </>
+          )}
         </div>
       </div>
-
-      <Card className="rounded-[24px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm">
-        <CardContent className="space-y-6 p-5">
-          {step === 1 && (
-            <>
-              <h2 className="!m-0 text-[20px] font-bold tracking-tight text-[#1E2326]">Tekanan Darah & Data Kehamilan</h2>
-              <div className="grid mt-3 grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <p className="text-sm font-medium text-[#1E2326]">TD Sistolik (mmHg)</p>
-                  <Input type="number" value={sistolik} onChange={(e) => setSistolik(e.target.value)} className="rounded-full bg-white px-4" />
-                </div>
-                <div className="space-y-1.5">
-                  <p className="text-sm font-medium text-[#1E2326]">TD Diastolik (mmHg)</p>
-                  <Input type="number" value={diastolik} onChange={(e) => setDiastolik(e.target.value)} className="rounded-full bg-white px-4" />
-                </div>
-                <div className="space-y-1.5">
-                  <p className="text-sm font-semibold text-[#1E2326]">Usia kehamilan (minggu)</p>
-                  <Input type="number" value={ukMinggu} onChange={(e) => setUkMinggu(e.target.value)} className="rounded-full bg-white px-4" />
-                  <p className="text-[11px] text-[#8A8F93]">Otomatis dari HPHT</p>
-                </div>
-                <div className="space-y-1.5">
-                  <p className="text-sm font-semibold text-[#1E2326]">Usia ibu (tahun)</p>
-                  <Input type="number" value={usia} onChange={(e) => setUsia(e.target.value)} className="rounded-full bg-white px-4 placeholder:text-[11px]" placeholder="Opsional" />
-                  <p className="text-[11px] text-[#8A8F93]">Otomatis dari tanggal lahir</p>
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <p className="text-sm font-semibold text-[#1E2326]">IMT pra-hamil</p>
-                <Input type="number" value={imtPre} onChange={(e) => setImtPre(e.target.value)} className="rounded-full bg-white px-4 placeholder:text-[11px]" placeholder="Opsional" />
-              </div>
-
-              <div className="space-y-1.5">
-                <p className="text-sm font-semibold text-[#1E2326]">Jarak dengan kehamilan lalu (tahun)</p>
-                <Input type="number" value={jarak} onChange={(e) => setJarak(e.target.value)} className="rounded-full bg-white px-4 placeholder:text-[11px]" placeholder="Opsional" />
-              </div>
-
-              <div className="space-y-3">
-                <p className="text-sm font-medium text-[#1E2326]">Protein urine positif (dipstik)</p>
-                <RadioRow selected={proteinuria === true} label="Ya" onClick={() => setProteinuria(true)} />
-                <RadioRow selected={proteinuria === false} label="Tidak" onClick={() => setProteinuria(false)} />
-              </div>
-            </>
-          )}
-
-          {step === 2 && (
-            <>
-              <h2 className="!m-0 text-[20px] font-bold tracking-tight text-[#1E2326]">Faktor Risiko</h2>
-              <div className="space-y-3 mt-2">
-                <p className="text-sm font-medium text-[#1E2326]">Riwayat dan penyakit penyerta</p>
-                <CheckRow checked={riwayat.includes("pe")} label="Pernah preeklamsia sebelumnya" onToggle={() => toggleRiwayat("pe")} />
-                <CheckRow checked={riwayat.includes("ht")} label="Hipertensi kronik" onToggle={() => toggleRiwayat("ht")} />
-                <CheckRow checked={riwayat.includes("ginjal")} label="Penyakit ginjal" onToggle={() => toggleRiwayat("ginjal")} />
-                <CheckRow checked={riwayat.includes("dm")} label="Diabetes melitus" onToggle={() => toggleRiwayat("dm")} />
-                <CheckRow checked={riwayat.includes("autoimun")} label="Autoimun (APS/SLE)" onToggle={() => toggleRiwayat("autoimun")} />
-                <CheckRow checked={riwayat.includes("keluarga")} label="Keluarga ada preeklamsia" onToggle={() => toggleRiwayat("keluarga")} />
-              </div>
-
-              <div className="space-y-3">
-                <p className="text-sm font-medium text-[#1E2326]">Kondisi kehamilan ini</p>
-                <CheckRow checked={gemeli} label="Hamil kembar" onToggle={() => setGemeli((v) => !v)} />
-                <CheckRow checked={anakPertama} label="Anak pertama (nullipara)" onToggle={() => setAnakPertama((v) => !v)} />
-              </div>
-
-              {Object.keys(fieldErrs).length > 0 && <p className="text-center text-xs text-[#E57373]">{Object.values(fieldErrs)[0]}</p>}
-            </>
-          )}
-
-          {err && <p className="text-center text-xs text-[#E57373]">{err}</p>}
-
-          <div className="flex gap-2 pt-1">
-            {step === 1 ? (
-              <>
-                <Button variant="outline" className="flex-1 rounded-full" onClick={onBack}>Batal</Button>
-                <Button className="flex-1 rounded-full bg-[#7AAE9A] hover:bg-[#6B9E8A]" onClick={nextFrom1}>Lanjut</Button>
-              </>
-            ) : (
-              <>
-                <Button variant="outline" className="flex-1 rounded-full" onClick={() => setStep(1)}>Kembali</Button>
-                <Button className="flex-1 rounded-full bg-[#7AAE9A] hover:bg-[#6B9E8A]" disabled={loading} onClick={handle}>
-                  {loading ? "Menyimpan" : "Lihat hasil"}
-                </Button>
-              </>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    </SkriningFormShell>
   )
 }

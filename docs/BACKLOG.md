@@ -25,6 +25,13 @@
 - [x] Supabase migrations aman no-overwrite: `supabase/migrations/001_init_siaga_bunda.sql` (8 tabel `IF NOT EXISTS`) + `002_chat_rag.sql` — policy RLS via cek `pg_policies` dulu (tanpa `DROP`), `003_chat_grants.sql` grant-only
 
 ## In Progress — sesi Figma-first redesign (2026-10-01, lihat `AGENTS.md`)
+- [x] FE S-05a/b Bayi 2026-10-01: Ikterus Neonatal dan Hipotiroid Kongenital memakai shell sage/mint, pengelompokan input, pilihan dan CTA terbaru.
+- [x] FE S-04a Laktasi 2026-10-01: pola menyusu, kondisi ibu, dan kecukupan ASI dikelompokkan dalam shell form sage/mint terbaru.
+- [x] FE S-04 Nifas 2026-10-01: form pemantauan disusun ke panel vital, ASI, suasana hati, dan keluhan dengan shell sage/mint terbaru.
+- [x] Chatbot S-09 2026-10-01: header/status, pesan, topik cepat, composer, new chat, offline badge, emergency alert dengan tautan peta dan berbagi bidan.
+- [x] Kartu Masa Nifas Beranda 2026-10-01: disamakan dengan kartu mint Beranda; hari nifas, sisa hari, BB/PB bayi memakai data tersimpan.
+- [x] FE S-03d/e/f 2026-10-01: Preeklamsia, Diabetes Gestasional, dan Kesehatan Mental diseragamkan ke shell form sage/mint, kontrol dan CTA terbaru.
+- [x] FE S-03g hasil 2026-10-01: layout stage badge, faktor, langkah, aksi, floral footer; state HIJAU/KUNING/MERAH mencakup empty-factor fallback dan panel darurat MERAH.
 - [x] FE S-03a/b/c 2026-10-01: form Faktor Risiko tiga langkah, Status Gizi, dan Tanda Bahaya memakai shell header/isi/floral sesuai Figma; BottomNav dan Siba disembunyikan selama form terbuka.
 - [x] S-03 state nifas/bayi terkunci 2026-10-01: dua frame Figma dibuat dari pola menu skrining dengan ilustrasi `illu-06-nifas` dan `illu-07-bayi`; node `126:2`, `126:126`.
 - [x] Format tanggal form 2026-10-01: seluruh input tanggal menampilkan `DD/MM/YYYY` melalui komponen bersama, nilai tersimpan tetap `YYYY-MM-DD`; lock dicatat di `DESIGN.md`.

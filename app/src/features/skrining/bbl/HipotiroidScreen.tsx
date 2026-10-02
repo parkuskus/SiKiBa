@@ -1,12 +1,13 @@
 import { useState } from "react"
 import { getCurrentUserId } from "@/data/currentUser"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { submitHipotiroid } from "@/features/skrining/bbl/hipotiroidForm"
+import SkriningFormShell from "@/features/skrining/components/SkriningFormShell"
 
 type Result = { kategori: "HIJAU" | "KUNING" | "MERAH"; warna: string; faktorRisiko: string[]; faktorAman: string[] }
+
+const choiceClass = (selected: boolean) => `min-h-11 rounded-[14px] px-3 text-xs font-semibold transition-colors ${selected ? "bg-[#4A6E54] text-white" : "bg-white text-[#33443F] ring-1 ring-[#D9E7E2]"}`
 
 export default function HipotiroidScreen({
   onBack,
@@ -48,73 +49,52 @@ export default function HipotiroidScreen({
   }
 
   return (
-    <Card className="rounded-[24px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm">
-      <CardContent className="p-4 space-y-4">
-        <div>
-          <div>
-            <p className="text-sm font-semibold text-[#1E2326] leading-none">Skrining Hipotiroid Kongenital</p>
-            <p className="text-xs text-[#8A8F93]">Cek TSH dan gejala hipotiroid pada bayi</p>
-          </div>
-        </div>
-
-        <div className="space-y-1.5">
-          <Label className="text-xs">Sudah tes TSH</Label>
-          <div className="flex gap-1.5">
-            {([
-              { v: true, l: "Sudah" },
-              { v: false, l: "Belum" },
-            ] as const).map((it) => (
-              <button
-                key={String(it.v)}
-                onClick={() => setForm((s) => ({ ...s, sudahTSH: it.v }))}
-                className={`flex-1 rounded-full py-2 text-xs font-semibold ring-1 transition-colors ${form.sudahTSH === it.v ? "bg-[#7AAE9A] text-white ring-[#7AAE9A]" : "bg-white text-[#8A8F93] ring-[#EAE6E0]"}`}
-              >
-                {it.l}
+    <SkriningFormShell title="Hipotiroid Kongenital" subtitle="Cek TSH dan gejala pada bayi" onBack={onBack}>
+      <div className="space-y-3.5">
+        <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
+          <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Pemeriksaan TSH</h2>
+          <p className="text-xs leading-relaxed text-[#33443F]">Tes skrining bayi baru lahir ideal dilakukan pada usia 2 sampai 3 hari.</p>
+          <div className="grid grid-cols-2 gap-2">
+            {[{ value: true, label: "Sudah" }, { value: false, label: "Belum" }].map((option) => (
+              <button key={String(option.value)} type="button" aria-pressed={form.sudahTSH === option.value} onClick={() => setForm((current) => ({ ...current, sudahTSH: option.value }))} className={choiceClass(form.sudahTSH === option.value)}>
+                {option.label}
               </button>
             ))}
           </div>
-        </div>
+          {!form.sudahTSH && (
+            <div className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
+              <label className="block text-xs text-[#33443F]">Usia bayi hari</label>
+              <Input type="number" aria-label="Usia bayi dalam hari" value={form.usiaBayiHari} onChange={(event) => setForm((current) => ({ ...current, usiaBayiHari: Number(event.target.value) }))} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
+            </div>
+          )}
+        </section>
 
-        {!form.sudahTSH && (
-          <div className="space-y-1.5">
-            <Label className="text-xs">Usia bayi hari</Label>
-            <Input type="number" value={form.usiaBayiHari} onChange={(e) => setForm((s) => ({ ...s, usiaBayiHari: Number(e.target.value) }))} className="rounded-xl bg-[#FFFCF6]" />
-            <p className="text-[11px] text-[#8A8F93]">Ideal 2 sampai 3 hari 48 sampai 72 jam</p>
-          </div>
-        )}
-
-        <div className="space-y-2">
-          <Label className="text-xs">Gejala yang mungkin ada</Label>
+        <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
+          <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Gejala yang mungkin ada</h2>
           {[
-            { k: "ikterusLama", l: "Kuning lama lebih dari 2 minggu" },
-            { k: "konstipasi", l: "Sembelit" },
-            { k: "tangisanSerak", l: "Tangisan serak" },
-            { k: "aktivitasKurang", l: "Aktivitas kurang" },
-            { k: "lidahBesar", l: "Lidah besar" },
-          ].map((it) => (
-            <label key={it.k} className="flex items-center justify-between rounded-2xl bg-[#FFFCF6] px-3 py-3 ring-1 ring-[#EAE6E0] cursor-pointer">
-              <span className="text-sm text-[#1E2326] leading-tight pr-3">{it.l}</span>
-              <input
-                type="checkbox"
-                checked={form.gejala[it.k as keyof typeof form.gejala]}
-                onChange={(e) => setForm((s) => ({ ...s, gejala: { ...s.gejala, [it.k]: e.target.checked } }))}
-                className="size-5 accent-[#7AAE9A] shrink-0"
-              />
-            </label>
-          ))}
-        </div>
+            { key: "ikterusLama", label: "Kuning lebih dari 2 minggu" },
+            { key: "konstipasi", label: "Sembelit" },
+            { key: "tangisanSerak", label: "Tangisan serak" },
+            { key: "aktivitasKurang", label: "Aktivitas kurang" },
+            { key: "lidahBesar", label: "Lidah besar" },
+          ].map((item) => {
+            const checked = form.gejala[item.key as keyof typeof form.gejala]
+            return (
+              <button key={item.key} type="button" aria-pressed={checked} onClick={() => setForm((current) => ({ ...current, gejala: { ...current.gejala, [item.key]: !checked } }))} className={`flex min-h-11 w-full items-center gap-3 rounded-[16px] px-3 text-left text-[13px] transition-colors ${checked ? "bg-[#4A6E54] font-semibold text-white" : "bg-white text-[#1D2B29] ring-1 ring-[#D9E7E2]"}`}>
+                <span className={`grid size-5 shrink-0 place-items-center rounded-[6px] ring-1 ${checked ? "bg-white ring-white" : "bg-white ring-[#C2C8CB]"}`}>
+                  {checked && <span className="size-2.5 rounded-[3px] bg-[#4A6E54]" />}
+                </span>
+                <span className="min-w-0 flex-1 leading-snug">{item.label}</span>
+              </button>
+            )
+          })}
+        </section>
 
-        {err && <p className="text-xs text-[#E57373] text-center">{err}</p>}
-
-        <div className="flex gap-2">
-          <Button variant="outline" className="flex-1 rounded-full" onClick={onBack}>
-            Batal
-          </Button>
-          <Button className="flex-1 rounded-full bg-[#7AAE9A] hover:bg-[#6B9E8A] text-white" disabled={loading} onClick={handle}>
-            {loading ? "Menyimpan" : "Lihat hasil"}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+        {err && <p role="alert" className="text-center text-xs text-[#C62828]">{err}</p>}
+        <Button className="min-h-12 w-full rounded-full bg-[#4A6E54] text-base font-bold text-white hover:bg-[#3D5C46]" disabled={loading} onClick={handle}>
+          {loading ? "Menyimpan" : "Lihat hasil"}
+        </Button>
+      </div>
+    </SkriningFormShell>
   )
 }

@@ -1,10 +1,9 @@
 import { useState } from "react"
 import { getCurrentUserId } from "@/data/currentUser"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { submitNifas } from "@/features/skrining/nifas/nifasForm"
+import SkriningFormShell from "@/features/skrining/components/SkriningFormShell"
 
 type NifasResult = { kategori: "HIJAU" | "KUNING" | "MERAH"; warna: string; meows: string; faktorRisiko: string[]; faktorAman: string[] }
 
@@ -66,122 +65,85 @@ export default function NifasScreen({
   }
 
   return (
-    <Card className="rounded-[24px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm">
-      <CardContent className="space-y-5 p-5">
-        <div>
-          <p className="text-[16px] font-bold tracking-tight text-[#1E2326]">Skrining Masa Nifas</p>
-          <p className="mt-1 text-xs leading-relaxed text-[#8A8F93]">Cek harian 0 sampai 42 hari setelah lahiran</p>
-        </div>
+    <SkriningFormShell title="Masa Nifas" subtitle="Cek kesehatan ibu setelah melahirkan" onBack={onBack}>
+      <div className="space-y-3.5">
+        <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
+          <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Pemantauan ibu</h2>
+          <div className="grid grid-cols-2 gap-2.5">
+            {[
+              { key: "hariKe", label: "Hari nifas", value: form.hariKe },
+              { key: "suhu", label: "Suhu tubuh °C", value: form.suhu, step: "0.1" },
+              { key: "sistolik", label: "Sistolik mmHg", value: form.sistolik },
+              { key: "diastolik", label: "Diastolik mmHg", value: form.diastolik },
+              { key: "nadi", label: "Nadi per menit", value: form.nadi },
+              { key: "spo2", label: "SpO2 persen", value: form.spo2 },
+              { key: "perdarahanMl", label: "Perdarahan ml", value: form.perdarahanMl },
+              { key: "nyeriSkala", label: "Nyeri skala 0–10", value: form.nyeriSkala },
+            ].map((field) => (
+              <div key={field.key} className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
+                <label className="block text-xs text-[#33443F]">{field.label}</label>
+                <Input
+                  type="number"
+                  step={"step" in field ? field.step : undefined}
+                  aria-label={field.label}
+                  value={field.value}
+                  onChange={(event) => setForm((current) => ({ ...current, [field.key]: Number(event.target.value) }))}
+                  className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0"
+                />
+                {fieldErrs[field.key] && <p className="text-[11px] text-[#C62828]">{fieldErrs[field.key]}</p>}
+                {["nadi", "spo2"].includes(field.key) && <span className="text-[11px] text-[#6C757D]">Opsional</span>}
+              </div>
+            ))}
+          </div>
+        </section>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label className="text-xs">Hari ke nifas</Label>
-            <Input type="number" value={form.hariKe} onChange={(e) => setForm((s) => ({ ...s, hariKe: Number(e.target.value) }))} className="rounded-full bg-white px-4" />
-            {fieldErrs.hariKe && <p className="text-xs text-[#E57373]">{fieldErrs.hariKe}</p>}
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Suhu tubuh derajat</Label>
-            <Input type="number" step="0.1" value={form.suhu} onChange={(e) => setForm((s) => ({ ...s, suhu: Number(e.target.value) }))} className="rounded-full bg-white px-4" />
-            {fieldErrs.suhu && <p className="text-xs text-[#E57373]">{fieldErrs.suhu}</p>}
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Sistolik mmHg</Label>
-            <Input type="number" value={form.sistolik} onChange={(e) => setForm((s) => ({ ...s, sistolik: Number(e.target.value) }))} className="rounded-full bg-white px-4" />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Diastolik mmHg</Label>
-            <Input type="number" value={form.diastolik} onChange={(e) => setForm((s) => ({ ...s, diastolik: Number(e.target.value) }))} className="rounded-full bg-white px-4" />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Nadi per menit</Label>
-            <Input type="number" value={form.nadi} onChange={(e) => setForm((s) => ({ ...s, nadi: Number(e.target.value) }))} className="rounded-full bg-white px-4" placeholder="Opsional" />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">SpO2 persen</Label>
-            <Input type="number" value={form.spo2} onChange={(e) => setForm((s) => ({ ...s, spo2: Number(e.target.value) }))} className="rounded-full bg-white px-4" placeholder="Opsional" />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Perdarahan ml</Label>
-            <Input type="number" value={form.perdarahanMl} onChange={(e) => setForm((s) => ({ ...s, perdarahanMl: Number(e.target.value) }))} className="rounded-full bg-white px-4" />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs">Skala nyeri 0–10</Label>
-            <Input type="number" value={form.nyeriSkala} onChange={(e) => setForm((s) => ({ ...s, nyeriSkala: Number(e.target.value) }))} className="rounded-full bg-white px-4" />
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <p className="text-sm font-semibold text-[#1E2326]">Produksi ASI</p>
-          <div className="flex gap-1.5">
-            {(["ada", "sedikit", "tidak"] as const).map((v) => (
-              <button
-                key={v}
-                type="button"
-                onClick={() => setForm((s) => ({ ...s, produksiASI: v }))}
-                className={`flex-1 rounded-full py-2 text-xs font-semibold ring-1 transition-colors ${form.produksiASI === v ? "bg-[#7AAE9A] text-white ring-[#7AAE9A]" : "bg-white text-[#8A8F93] ring-[#EAE6E0]"}`}
-              >
-                {v === "ada" ? "Ada" : v === "sedikit" ? "Sedikit" : "Tidak ada"}
+        <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
+          <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Produksi ASI</h2>
+          <div className="grid grid-cols-3 gap-2">
+            {(["ada", "sedikit", "tidak"] as const).map((value) => (
+              <button key={value} type="button" aria-pressed={form.produksiASI === value} onClick={() => setForm((current) => ({ ...current, produksiASI: value }))} className={`min-h-11 rounded-[14px] px-2 text-xs font-semibold transition-colors ${form.produksiASI === value ? "bg-[#4A6E54] text-white" : "bg-white text-[#33443F] ring-1 ring-[#D9E7E2]"}`}>
+                {value === "ada" ? "Ada" : value === "sedikit" ? "Sedikit" : "Tidak ada"}
               </button>
             ))}
           </div>
-        </div>
+        </section>
 
-        <div className="space-y-3">
-          <p className="text-sm font-semibold text-[#1E2326]">Suasana hati hari ini</p>
-          <div className="grid grid-cols-5 gap-1.5">
-            {[1, 2, 3, 4, 5].map((v) => (
-              <button
-                key={v}
-                type="button"
-                onClick={() => setForm((s) => ({ ...s, mood: v }))}
-                className={`rounded-full py-2 text-sm font-semibold ring-1 transition-colors ${form.mood === v ? "bg-[#7AAE9A] text-white ring-[#7AAE9A]" : "bg-white text-[#8A8F93] ring-[#EAE6E0]"}`}
-              >
-                {v}
+        <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
+          <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Suasana hati hari ini</h2>
+          <div className="grid grid-cols-5 gap-2">
+            {[1, 2, 3, 4, 5].map((value) => (
+              <button key={value} type="button" aria-label={`Suasana hati ${value}`} aria-pressed={form.mood === value} onClick={() => setForm((current) => ({ ...current, mood: value }))} className={`min-h-11 rounded-[14px] text-sm font-bold transition-colors ${form.mood === value ? "bg-[#4A6E54] text-white" : "bg-white text-[#33443F] ring-1 ring-[#D9E7E2]"}`}>
+                {value}
               </button>
             ))}
           </div>
-          <p className="text-[11px] text-[#8A8F93]">1 sangat buruk sampai 5 sangat baik</p>
-        </div>
+          <div className="flex justify-between text-[11px] text-[#33443F]"><span>Sangat buruk</span><span>Sangat baik</span></div>
+        </section>
 
-        <div className="space-y-3">
-          <p className="text-sm font-semibold text-[#1E2326]">Keluhan lain</p>
+        <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
+          <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Keluhan lain</h2>
           {[
-            { k: "lochiaBau", l: "Cairan nifas berbau tidak sedap" },
-            { k: "nyeriUterus", l: "Nyeri tekan di perut bawah" },
-            { k: "lukaBengkak", l: "Luka perineum atau bekas operasi bengkak atau bernanah" },
-          ].map((it) => {
-            const checked = form[it.k as keyof typeof form] as boolean
+            { key: "lochiaBau", label: "Cairan nifas berbau tidak sedap" },
+            { key: "nyeriUterus", label: "Nyeri tekan di perut bawah" },
+            { key: "lukaBengkak", label: "Luka perineum atau bekas operasi bengkak atau bernanah" },
+          ].map((item) => {
+            const checked = form[item.key as keyof typeof form] as boolean
             return (
-              <button
-                key={it.k}
-                type="button"
-                onClick={() => setForm((s) => ({ ...s, [it.k]: !checked }))}
-                className={`flex w-full items-center gap-3 rounded-full px-4 py-3 text-left text-sm ring-1 transition-colors active:scale-[0.99] ${checked ? "bg-[#7AAE9A] font-semibold text-white ring-[#7AAE9A]" : "bg-white text-[#1E2326] ring-[#EAE6E0] hover:bg-[#FFFCF6]"}`}
-              >
-                <span className={`grid size-4 shrink-0 place-items-center rounded-[5px] ring-1 ${checked ? "bg-white ring-white" : "bg-white ring-[#C2C8CB]"}`}>
-                  {checked && (
-                    <svg viewBox="0 0 10 8" className="size-2.5 fill-none stroke-[#1E2326] stroke-2">
-                      <path d="M1 4l2.5 2.5L9 1" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  )}
+              <button key={item.key} type="button" aria-pressed={checked} onClick={() => setForm((current) => ({ ...current, [item.key]: !checked }))} className={`flex min-h-11 w-full items-center gap-3 rounded-[16px] px-3 text-left text-[13px] transition-colors ${checked ? "bg-[#4A6E54] font-semibold text-white" : "bg-white text-[#1D2B29] ring-1 ring-[#D9E7E2]"}`}>
+                <span className={`grid size-5 shrink-0 place-items-center rounded-[6px] ring-1 ${checked ? "bg-white ring-white" : "bg-white ring-[#C2C8CB]"}`}>
+                  {checked && <span className="size-2.5 rounded-[3px] bg-[#4A6E54]" />}
                 </span>
-                <span className="leading-tight">{it.l}</span>
+                <span className="min-w-0 flex-1 leading-snug">{item.label}</span>
               </button>
             )
           })}
-        </div>
+        </section>
 
-        {err && <p className="text-center text-xs text-[#E57373]">{err}</p>}
-
-        <div className="flex gap-2">
-          <Button variant="outline" className="flex-1 rounded-full" onClick={onBack}>
-            Batal
-          </Button>
-          <Button className="flex-1 rounded-full bg-[#7AAE9A] hover:bg-[#6B9E8A] text-white" disabled={loading} onClick={handle}>
-            {loading ? "Menyimpan" : "Lihat hasil"}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+        {err && <p role="alert" className="text-center text-xs text-[#C62828]">{err}</p>}
+        <Button className="min-h-12 w-full rounded-full bg-[#4A6E54] text-base font-bold text-white hover:bg-[#3D5C46]" disabled={loading} onClick={handle}>
+          {loading ? "Menyimpan" : "Lihat hasil"}
+        </Button>
+      </div>
+    </SkriningFormShell>
   )
 }
