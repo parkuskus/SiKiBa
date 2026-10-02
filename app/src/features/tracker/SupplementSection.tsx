@@ -20,9 +20,9 @@ type Dose = { med: SupplementReminder; waktu: string; status: DoseLog["status"] 
 
 // satu gambar obat untuk semua bentuk sediaan — status lewat warna ring
 function MedImage({ status }: { status: DoseLog["status"] }) {
-  const ring = status === "taken" ? "ring-[#7ACB8A]" : status === "skip" ? "ring-[#E57373]" : "ring-[#EAE6E0]"
+  const ring = status === "taken" ? "ring-[#7ACB8A]" : status === "skip" ? "ring-[#E57373]" : "ring-[#D9E7E2]"
   return (
-    <span className={`grid size-12 shrink-0 place-items-center overflow-hidden rounded-2xl bg-[#EAF2EC] ring-2 ${ring}`}>
+    <span className={`grid size-12 shrink-0 place-items-center overflow-hidden rounded-[16px] bg-white ring-2 ${ring}`}>
       <img src="/illu/illu-obat.svg" alt="Obat" className="size-9 object-contain" />
     </span>
   )
@@ -93,17 +93,17 @@ export default function SupplementSection({ onAdd }: { onAdd: () => void }) {
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between px-1">
-        <h2 className="!m-0 text-[15px] font-bold tracking-tight text-[#1E2326]">Pengingat Obat</h2>
+        <h2 className="!m-0 text-[15px] font-bold tracking-tight text-[#1D2B29]">Pengingat Obat</h2>
       </div>
 
-      <Card className="rounded-[24px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm overflow-hidden">
+      <Card className="rounded-[24px] border-0 bg-[#EAF4F0] ring-0 shadow-none overflow-hidden">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
-            <p className="text-[15px] font-bold tracking-tight text-[#1E2326]">{title}</p>
+            <p className="text-[15px] font-bold tracking-tight text-[#1D2B29]">{title}</p>
             <div className="flex gap-1">
-              <button onClick={() => setWeekOffset((o) => o - 1)} aria-label="Minggu lalu" className="grid size-8 place-items-center rounded-full bg-[#F7F2EB] text-[#6C757D]">‹</button>
-              <button onClick={() => { setWeekOffset(0); setSelected(todayISO) }} className="rounded-full bg-[#F7F2EB] px-3 text-xs font-semibold text-[#6C757D]">Hari ini</button>
-              <button onClick={() => setWeekOffset((o) => o + 1)} aria-label="Minggu depan" className="grid size-8 place-items-center rounded-full bg-[#F7F2EB] text-[#6C757D]">›</button>
+              <button onClick={() => setWeekOffset((o) => o - 1)} aria-label="Minggu lalu" className="grid size-9 place-items-center rounded-full bg-white text-[#4A6E54] ring-1 ring-[#D9E7E2]">‹</button>
+              <button onClick={() => { setWeekOffset(0); setSelected(todayISO) }} className="min-h-9 rounded-full bg-white px-3 text-xs font-semibold text-[#4A6E54] ring-1 ring-[#D9E7E2]">Hari ini</button>
+              <button onClick={() => setWeekOffset((o) => o + 1)} aria-label="Minggu depan" className="grid size-9 place-items-center rounded-full bg-white text-[#4A6E54] ring-1 ring-[#D9E7E2]">›</button>
             </div>
           </div>
 
@@ -116,7 +116,7 @@ export default function SupplementSection({ onAdd }: { onAdd: () => void }) {
                 <button
                   key={iso}
                   onClick={() => setSelected(iso)}
-                  className={`flex flex-col items-center gap-1 rounded-2xl py-2 transition-colors ${active ? "bg-[#7AAE9A] text-white" : "text-[#1E2326] hover:bg-[#FFFCF6]"}`}
+                  className={`flex min-h-11 flex-col items-center justify-center gap-1 rounded-[16px] py-1.5 transition-colors ${active ? "bg-[#4A6E54] text-white" : "text-[#1D2B29] hover:bg-white"}`}
                 >
                   <span className={`text-[10px] ${active ? "text-white/85" : "text-[#8A8F93]"}`}>{HARI_PENDEK[i]}</span>
                   <span className={`text-sm font-bold leading-none ${isToday && !active ? "text-[#7AAE9A]" : ""}`}>{d.getDate()}</span>
@@ -129,13 +129,13 @@ export default function SupplementSection({ onAdd }: { onAdd: () => void }) {
             {doses.length ? (
               doses.map((dose) => (
                 <div key={`${dose.med.id}|${dose.waktu}`}>
-                  <p className="flex items-center gap-1.5 px-1 text-xs font-bold text-[#7AAE9A]">
+                  <p className="flex items-center gap-1.5 px-1 text-xs font-bold text-[#4A6E54]">
                     <Bell className="size-3.5" /> {dose.waktu}
                   </p>
-                  <button onClick={() => setSheetDose(dose)} className="mt-1.5 flex w-full items-center gap-3 rounded-2xl bg-white px-3 py-3 text-left ring-1 ring-[#EAE6E0] shadow-sm active:scale-[0.99] transition">
+                  <button onClick={() => setSheetDose(dose)} className="mt-1.5 flex w-full items-center gap-3 rounded-[18px] bg-white px-3 py-3 text-left ring-1 ring-[#D9E7E2] active:scale-[0.99] transition">
                     <MedImage status={dose.status} />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-bold text-[#1E2326]">{dose.med.namaSuplemen}</span>
+                      <span className="block truncate text-sm font-bold text-[#1D2B29]">{dose.med.namaSuplemen}</span>
                       <span className="mt-0.5 block text-xs text-[#8A8F93]">
                         {frekLabel(dose.med)} · {dose.med.dosis ?? dose.med.bentuk ?? "Tablet"}
                         {dose.status === "taken" ? " · Sudah diminum" : dose.status === "skip" ? " · Terlewat" : ""}
@@ -146,12 +146,12 @@ export default function SupplementSection({ onAdd }: { onAdd: () => void }) {
               ))
             ) : (
               <div className="flex flex-col items-center px-4 py-8 text-center">
-                <span className="grid size-14 place-items-center rounded-full bg-[#F0F5F1] text-[#7AAE9A]">
+                <span className="grid size-14 place-items-center rounded-full bg-white text-[#4A6E54] ring-1 ring-[#D9E7E2]">
                   <Bell className="size-6" />
                 </span>
-                <p className="mt-3 text-sm font-bold text-[#1E2326]">Belum ada pengingat</p>
+                <p className="mt-3 text-sm font-bold text-[#1D2B29]">Belum ada pengingat</p>
                 <p className="mt-1 max-w-[26ch] text-xs leading-relaxed text-[#8A8F93]">Tambah obat agar tidak lupa minum sesuai jadwal.</p>
-                <button onClick={onAdd} className="mt-4 rounded-full bg-[#7AAE9A] px-6 py-2.5 text-sm font-semibold text-white active:scale-[0.98] transition">
+                <button onClick={onAdd} className="mt-4 min-h-11 rounded-full bg-[#4A6E54] px-6 text-sm font-semibold text-white active:scale-[0.98] transition">
                   Tambah pengingat
                 </button>
               </div>
@@ -163,7 +163,7 @@ export default function SupplementSection({ onAdd }: { onAdd: () => void }) {
               <button
                 onClick={onAdd}
                 aria-label="Tambah obat"
-                className="flex items-center gap-1.5 rounded-full bg-[#7AAE9A] py-2.5 pl-4 pr-5 text-sm font-bold text-white shadow-sm active:scale-[0.97] transition"
+                className="flex min-h-11 items-center gap-1.5 rounded-full bg-[#4A6E54] pl-4 pr-5 text-sm font-bold text-white active:scale-[0.97] transition"
               >
                 <Plus className="size-4" strokeWidth={3} /> Tambah
               </button>
@@ -175,19 +175,19 @@ export default function SupplementSection({ onAdd }: { onAdd: () => void }) {
       {sheetDose && (
         <div className="fixed inset-0 z-40" role="dialog" aria-modal="true">
           <div className="absolute inset-0 bg-black/40" onClick={() => setSheetDose(null)} />
-          <div className="absolute inset-x-0 bottom-0 mx-auto w-full max-w-[480px] rounded-t-[24px] bg-white p-5 pb-8 shadow-xl">
-            <p className="text-[15px] font-bold text-[#1E2326]">Ubah status {sheetDose.med.namaSuplemen}</p>
+          <div className="absolute inset-x-0 bottom-0 mx-auto w-full max-w-[480px] rounded-t-[24px] bg-[#FFFCF6] p-5 pb-8 shadow-xl">
+              <p className="text-[15px] font-bold text-[#1D2B29]">Ubah status {sheetDose.med.namaSuplemen}</p>
             <p className="mt-0.5 text-xs text-[#8A8F93]">{sheetDose.waktu} · ketuk untuk menandai</p>
             <div className="mt-4 grid grid-cols-3 gap-3">
-              <button onClick={() => void handleStatus("taken")} className="flex flex-col items-center gap-2 rounded-2xl bg-[#F7F2EB] py-4 active:scale-[0.97] transition">
+              <button onClick={() => void handleStatus("taken")} className="flex min-h-24 flex-col items-center justify-center gap-2 rounded-[18px] bg-[#EAF4F0] py-3 active:scale-[0.97] transition">
                 <span className="grid size-11 place-items-center rounded-2xl bg-[#DFF0E4] text-[#2E7D32]"><Check className="size-5" strokeWidth={3} /></span>
                 <span className="text-xs font-semibold text-[#1E2326]">Sudah minum</span>
               </button>
-              <button onClick={() => void handleStatus("skip")} className="flex flex-col items-center gap-2 rounded-2xl bg-[#F7F2EB] py-4 active:scale-[0.97] transition">
+              <button onClick={() => void handleStatus("skip")} className="flex min-h-24 flex-col items-center justify-center gap-2 rounded-[18px] bg-[#FDECEC] py-3 active:scale-[0.97] transition">
                 <span className="grid size-11 place-items-center rounded-2xl bg-[#F8D9D9] text-[#C62828]"><X className="size-5" strokeWidth={3} /></span>
                 <span className="text-xs font-semibold text-[#1E2326]">Lewat</span>
               </button>
-              <button onClick={() => void handleStatus("none")} className="flex flex-col items-center gap-2 rounded-2xl bg-[#F7F2EB] py-4 active:scale-[0.97] transition">
+              <button onClick={() => void handleStatus("none")} className="flex min-h-24 flex-col items-center justify-center gap-2 rounded-[18px] bg-white py-3 ring-1 ring-[#D9E7E2] active:scale-[0.97] transition">
                 <span className="grid size-11 place-items-center rounded-2xl bg-[#EDEBE4] text-[#8A8F93]"><span className="text-xl font-bold leading-none">?</span></span>
                 <span className="text-xs font-semibold text-[#1E2326]">Tanpa status</span>
               </button>

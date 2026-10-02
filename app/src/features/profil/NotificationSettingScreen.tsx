@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react"
-import { ArrowLeft, Bell } from "lucide-react"
+import { Bell, ChevronLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 
 export default function NotificationSettingScreen({ onBack }: { onBack: () => void }) {
   const [notifPerm, setNotifPerm] = useState<string>(typeof Notification !== "undefined" ? Notification.permission : "unsupported")
@@ -17,36 +16,49 @@ export default function NotificationSettingScreen({ onBack }: { onBack: () => vo
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3 px-1">
-        <button onClick={onBack} aria-label="Kembali" className="grid size-9 place-items-center rounded-full bg-white ring-1 ring-[#EAE6E0] text-[#6C757D] active:scale-[0.98] transition">
-          <ArrowLeft className="size-4" />
-        </button>
-        <h1 className="!m-0 text-[16px] font-bold tracking-tight text-[#1E2326]">Notifikasi</h1>
-      </div>
+    <div className="-mx-4 -mt-5">
+      <header className="rounded-b-[32px] bg-[#4A6E54] px-6 pb-6 pt-[max(1.75rem,env(safe-area-inset-top))] text-white">
+        <div className="flex items-center gap-2.5">
+          <button onClick={onBack} aria-label="Kembali" className="grid size-11 shrink-0 place-items-center rounded-full bg-white/95 text-[#DB2777] transition-transform active:scale-95">
+            <ChevronLeft className="size-5" />
+          </button>
+          <div>
+            <h1 className="!m-0 text-lg font-bold leading-tight">Notifikasi</h1>
+            <p className="mt-0.5 text-xs text-white/90">Pengingat suplemen dan ANC</p>
+          </div>
+        </div>
+      </header>
 
-      <Card className="rounded-[20px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm">
-        <CardContent className="p-4">
+      <div className="space-y-3.5 px-4 pb-6 pt-5">
+        <section className="space-y-3 rounded-[24px] bg-[#EAF4F0] p-3.5">
           <div className="flex items-center gap-3">
-            <div className="size-8 rounded-xl bg-[#EAF2EC] grid place-items-center text-[#7AAE9A] ring-1 ring-[#7AAE9A]/15">
-              <Bell className="size-4" />
+            <span className="grid size-11 shrink-0 place-items-center rounded-[15px] bg-white text-[#4A6E54] ring-1 ring-[#D9E7E2]"><Bell className="size-5" /></span>
+            <div className="min-w-0 flex-1">
+              <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Izin perangkat</h2>
+              <p className="mt-0.5 text-xs text-[#33443F]">Pengingat suplemen dan jadwal periksa</p>
             </div>
-            <div>
-              <p className="text-sm font-semibold leading-snug text-[#1E2326]">Pengingat suplemen dan ANC</p>
-              <p className="mt-1 text-xs text-[#8A8F93]">Status izin perangkat ini</p>
-            </div>
-            <span className={`ml-auto rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${notifPerm === "granted" ? "bg-[#EDF6EF] text-[#2E7D32] ring-[#7ACB8A]/20" : notifPerm === "denied" ? "bg-[#FDECEC] text-[#C62828] ring-[#E57373]/20" : "bg-white text-[#8A8F93] ring-[#EAE6E0]"}`}>
-              {notifPerm === "granted" ? "Diizinkan" : notifPerm === "denied" ? "Ditolak" : notifPerm === "unsupported" ? "Tidak didukung" : "Belum"}
+            <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${notifPerm === "granted" ? "bg-[#EDF6EF] text-[#2E7D32]" : notifPerm === "denied" ? "bg-[#FDECEC] text-[#C62828]" : "bg-white text-[#536961]"}`}>
+              {notifPerm === "granted" ? "Aktif" : notifPerm === "denied" ? "Ditolak" : notifPerm === "unsupported" ? "Tidak didukung" : "Belum aktif"}
             </span>
           </div>
-          <p className="mt-8 text-xs leading-relaxed text-[#6C757D]">Notifikasi membantu Bunda tidak lupa minum vitamin dan jadwal periksa. Di iOS perlu install ke layar utama dulu.</p>
-          {notifPerm !== "granted" && notifPerm !== "unsupported" && (
-            <Button size="sm" className="mt-4 w-full rounded-full bg-[#7AAE9A] hover:bg-[#6B9E8A] text-white py-5" onClick={() => void handleNotif()}>
-              Minta izin notifikasi
+
+          <p className="rounded-[16px] bg-white p-3 text-xs leading-relaxed text-[#33443F]">
+            {notifPerm === "granted"
+              ? "Izin notifikasi aktif di perangkat ini."
+              : notifPerm === "denied"
+                ? "Izin ditolak. Ubah izin SIAGA Bunda melalui pengaturan browser perangkat."
+                : notifPerm === "unsupported"
+                  ? "Browser ini belum mendukung notifikasi. Bunda tetap dapat melihat jadwal di halaman Pengingat."
+                  : "Izinkan notifikasi agar Bunda mendapat pengingat minum suplemen dan jadwal periksa. Di iOS, pasang aplikasi ke layar utama terlebih dahulu."}
+          </p>
+
+          {notifPerm !== "granted" && notifPerm !== "denied" && notifPerm !== "unsupported" && (
+            <Button className="min-h-12 w-full rounded-full bg-[#4A6E54] text-sm font-bold text-white hover:bg-[#3D5C46]" onClick={() => void handleNotif()}>
+              Aktifkan notifikasi
             </Button>
           )}
-        </CardContent>
-      </Card>
+        </section>
+      </div>
     </div>
   )
 }

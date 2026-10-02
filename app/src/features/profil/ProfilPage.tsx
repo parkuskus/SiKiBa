@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react"
-import { ChevronRight, ClipboardList, Share2, Bell, Database, CircleHelp, Pencil, FileDown } from "lucide-react"
+import { ChevronRight, ClipboardList, Share2, Bell, Database, CircleHelp, Pencil, FileDown, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { db } from "@/data/db"
 import { supabase } from "@/data/supabase"
 import { getCurrentProfile, getCurrentUserId } from "@/data/currentUser"
@@ -20,10 +19,10 @@ const DEMO_HPHT = "2026-02-12"
 
 function MenuRow({ icon, label, onClick, last }: { icon: React.ReactNode; label: string; onClick: () => void; last?: boolean }) {
   return (
-    <button onClick={onClick} className={`flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left active:bg-[#FFFCF6] transition-colors ${last ? "" : "border-b border-[#F7F2EB]"}`}>
-      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-[#F0F5F1] text-[#5A8A7A]">{icon}</span>
-      <span className="flex-1 text-sm font-medium text-[#1E2326]">{label}</span>
-      <ChevronRight className="size-4 shrink-0 text-[#C2C8CB]" />
+    <button onClick={onClick} className={`flex min-h-[56px] w-full items-center gap-3 px-4 text-left transition-colors hover:bg-[#F7FAF8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#7AAE9A] active:bg-[#EAF4F0] ${last ? "" : "border-b border-[#E8EFEB]"}`}>
+      <span className="grid size-10 shrink-0 place-items-center rounded-[14px] bg-[#EAF4F0] text-[#4A6E54]">{icon}</span>
+      <span className="flex-1 text-sm font-semibold text-[#1D2B29]">{label}</span>
+      <ChevronRight className="size-4 shrink-0 text-[#789087]" />
     </button>
   )
 }
@@ -131,78 +130,70 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
     )
 
   return (
-    <div className="space-y-4">
-      {/* Kartu profil: Nama — GPA — No HP + pensil */}
-      <Card className="rounded-[20px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm overflow-hidden">
-        <CardContent className="flex items-center gap-3 p-4">
-          <span className="grid size-12 shrink-0 place-items-center rounded-full bg-[#EAF2EC] text-[18px] font-bold text-[#5A8A7A] ring-1 ring-[#7AAE9A]/15">
-            {inisial}
-          </span>
+    <div className="-mx-4 -mt-5">
+      <header className="rounded-b-[32px] bg-[#4A6E54] px-6 pb-6 pt-7 text-white">
+        <h1 className="!m-0 text-xl font-bold leading-tight">Profil Saya</h1>
+        <p className="mt-1 text-xs text-white/90">Data dan pengaturan akun Bunda</p>
+      </header>
+
+      <div className="space-y-5 px-4 pb-6 pt-5">
+        <section className="flex items-center gap-3 rounded-[24px] bg-[#EAF4F0] p-4">
+          <span className="grid size-14 shrink-0 place-items-center rounded-full bg-white text-xl font-bold text-[#4A6E54] ring-1 ring-[#D9E7E2]">{inisial}</span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[17px] font-extrabold tracking-tight text-[#1E2326]">{nama}</p>
-            <p className="text-[13px] leading-snug text-[#6C757D]">{gpa}</p>
-            <p className="text-[13px] leading-snug text-[#6C757D]">{profile?.noHp ?? "-"}</p>
+            <p className="truncate text-base font-bold text-[#1D2B29]">{nama}</p>
+            <p className="truncate text-xs text-[#33443F]">{profile?.noHp ?? "Nomor HP belum diisi"}</p>
+            <p className="mt-1 text-xs font-semibold text-[#4A6E54]">{gpa}</p>
           </div>
-          <button onClick={() => profile && setShowDetail(true)} aria-label="Lihat profil lengkap" className="grid size-9 shrink-0 place-items-center rounded-full text-[#6C757D] hover:bg-[#FFFCF6] active:scale-[0.95] transition">
+          <button onClick={() => profile && setShowDetail(true)} aria-label="Ubah profil" className="grid size-11 shrink-0 place-items-center rounded-full bg-white text-[#4A6E54] ring-1 ring-[#D9E7E2] transition-colors hover:bg-[#F7FAF8] active:scale-95">
             <Pencil className="size-4" />
           </button>
-        </CardContent>
-      </Card>
+        </section>
 
-      {/* Menu: Data Saya */}
-      <section className="space-y-10">
-        <p className="px-1 text-[15px] font-bold text-[#3C4245]">Data Saya</p>
-        <Card className="rounded-[20px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm overflow-hidden">
-          <CardContent className="p-0">
-            <MenuRow icon={<ClipboardList className="size-4" />} label={`Riwayat skrining${history.length ? ` (${history.length})` : ""}`} onClick={() => setShowHistory(true)} />
-            <MenuRow icon={<Share2 className="size-4" />} label="Bagikan ke bidan" onClick={() => setShowExport((v) => !v)} last />
+        <section className="space-y-2.5">
+          <h2 className="px-1 text-sm font-bold text-[#1D2B29]">Data Saya</h2>
+          <div className="overflow-hidden rounded-[24px] bg-white ring-1 ring-[#D9E7E2]">
+            <MenuRow icon={<ClipboardList className="size-[18px]" />} label={`Riwayat skrining${history.length ? ` (${history.length})` : ""}`} onClick={() => setShowHistory(true)} />
+            <MenuRow icon={<Share2 className="size-[18px]" />} label="Bagikan ke bidan" onClick={() => setShowExport((value) => !value)} last />
             {showExport && (
-              <div className="grid grid-cols-2 gap-2 border-t border-[#F7F2EB] p-3">
-                <Button variant="outline" className="rounded-full text-xs" disabled={exporting} onClick={() => void handleExport(false)}>
+              <div className="grid grid-cols-2 gap-2 border-t border-[#E8EFEB] bg-[#FFFCF6] p-3">
+                <Button variant="outline" className="min-h-11 rounded-full border-[#D9E7E2] bg-white text-xs text-[#33443F]" disabled={exporting} onClick={() => void handleExport(false)}>
                   <FileDown className="size-3.5" /> {exporting ? "Memproses" : "Unduh PDF"}
                 </Button>
-                <Button className="rounded-full bg-[#7AAE9A] hover:bg-[#6B9E8A] text-white text-xs" disabled={exporting} onClick={() => void handleExport(true)}>
-                  Bagikan WA
+                <Button className="min-h-11 rounded-full bg-[#4A6E54] text-xs font-semibold text-white hover:bg-[#3D5C46]" disabled={exporting} onClick={() => void handleExport(true)}>
+                  <Share2 className="size-3.5" /> Bagikan WA
                 </Button>
               </div>
             )}
-          </CardContent>
-        </Card>
-      </section>
+          </div>
+        </section>
 
-      {/* Menu: Pengaturan — list seperti Data Saya, tiap baris ke halamannya */}
-      <section className="space-y-4">
-        <p className="px-1 text-[13px] font-bold text-[#3C4245]">Pengaturan</p>
-        <Card className="rounded-[20px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm overflow-hidden">
-          <CardContent className="p-0">
-            <MenuRow icon={<Bell className="size-4" />} label="Notifikasi" onClick={() => setShowNotif(true)} />
-            <MenuRow icon={<Database className="size-4" />} label="Penyimpanan lokal" onClick={() => setShowStorage(true)} last />
-          </CardContent>
-        </Card>
-      </section>
+        <section className="space-y-2.5">
+          <h2 className="px-1 text-sm font-bold text-[#1D2B29]">Pengaturan</h2>
+          <div className="overflow-hidden rounded-[24px] bg-white ring-1 ring-[#D9E7E2]">
+            <MenuRow icon={<Bell className="size-[18px]" />} label="Notifikasi" onClick={() => setShowNotif(true)} />
+            <MenuRow icon={<Database className="size-[18px]" />} label="Penyimpanan lokal" onClick={() => setShowStorage(true)} last />
+          </div>
+        </section>
 
-      {/* Menu: Lainnya */}
-      <section className="space-y-4">
-        <p className="px-1 text-[15px] font-bold text-[#3C4245]">Lainnya</p>
-        <Card className="rounded-[20px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm overflow-hidden">
-          <CardContent className="p-0">
-            <MenuRow icon={<CircleHelp className="size-4" />} label="Butuh bantuan" onClick={() => setShowHelp((v) => !v)} last />
+        <section className="space-y-2.5">
+          <h2 className="px-1 text-sm font-bold text-[#1D2B29]">Bantuan</h2>
+          <div className="overflow-hidden rounded-[24px] bg-white ring-1 ring-[#D9E7E2]">
+            <MenuRow icon={<CircleHelp className="size-[18px]" />} label="Bidan pendamping" onClick={() => setShowHelp((value) => !value)} last={!showHelp} />
             {showHelp && (
-              <div className="border-t border-[#F7F2EB] p-4">
-                <p className="text-sm font-semibold text-[#1E2326]">Bidan pendamping</p>
-                <p className="mt-1 text-sm text-[#6C757D]">{profile?.nama_bidan || "Belum diisi"} {profile?.fasyankes ? `· ${profile.fasyankes}` : ""}</p>
-                <p className="mt-2 text-xs leading-relaxed text-[#8A8F93]">Ubah data bidan lewat ikon pensil di kartu profil.</p>
+              <div className="border-t border-[#E8EFEB] bg-[#FFFCF6] px-4 py-3">
+                <p className="text-sm font-semibold text-[#1D2B29]">{profile?.nama_bidan || "Nama bidan belum diisi"}</p>
+                <p className="mt-0.5 text-xs text-[#33443F]">{profile?.fasyankes || "Fasilitas kesehatan belum diisi"}</p>
+                <button onClick={() => profile && setShowDetail(true)} className="mt-2 min-h-11 text-xs font-semibold text-[#4A6E54]">Ubah informasi pendamping</button>
               </div>
             )}
-          </CardContent>
-        </Card>
-      </section>
+          </div>
+        </section>
 
-      {/* Keluar */}
-      <button onClick={() => void handleLogout()} className="w-full rounded-full border border-[#E57373] py-3 text-sm font-bold text-[#C62828] active:scale-[0.99] transition">
-        Keluar
-      </button>
-      <p className="text-center text-[11px] leading-relaxed text-[#9AA3A6]">Versi 0.1.0 · Data tersimpan aman di ponsel</p>
+        <button onClick={() => void handleLogout()} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#FDECEC] text-sm font-bold text-[#C62828] transition-colors hover:bg-[#FADDDD] active:scale-[0.99]">
+          <LogOut className="size-4" /> Keluar
+        </button>
+        <p className="text-center text-xs text-[#6C757D]">Versi 0.1.0 · Data tersimpan aman di ponsel</p>
+      </div>
     </div>
   )
 }

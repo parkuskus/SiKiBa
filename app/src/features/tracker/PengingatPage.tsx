@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { CalendarDays, Scale } from "lucide-react"
+import { CalendarDays, Check, Clock3, Scale } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -26,16 +26,6 @@ const MILESTONES = [
   { w: 28, t: "Masuk trimester 3" },
   { w: 37, t: "Cukup bulan" },
   { w: 40, t: "Hari perkiraan lahir" },
-]
-
-const QUOTES = [
-  "Setiap minggu membawa Bunda lebih dekat dengan si kecil.",
-  "Tubuh Bunda sedang melakukan hal luar biasa.",
-  "Istirahat cukup, makan bergizi, hati tenang.",
-  "Si kecil tumbuh sehat karena Bunda peduli.",
-  "Satu hari lagi penuh berkah untuk Bunda dan buah hati.",
-  "Jaga kontrol rutin, jangan lewatkan jadwal ANC.",
-  "Kasih sayang Bunda adalah awal terbaik si kecil.",
 ]
 
 const DEMO_HPHT = "2026-02-12"
@@ -187,7 +177,13 @@ export default function PengingatPage() {
 
   const tl = getTimeline(hpht)
   const hplLabel = new Date(tl.hpl).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })
-  const quote = QUOTES[Math.floor(Date.now() / 86400000) % QUOTES.length]
+  const currentWeek = Number.isFinite(tl.uk) ? Math.min(40, Math.max(0, tl.uk)) : 0
+  const progress = Math.min(100, Math.max(0, currentWeek / 40 * 100))
+  const nextMilestoneIndex = MILESTONES.findIndex((milestone) => milestone.w >= currentWeek)
+  const milestoneAnchor = nextMilestoneIndex < 0 ? MILESTONES.length - 2 : nextMilestoneIndex
+  const milestoneStart = Math.max(0, milestoneAnchor - 1)
+  const visibleMilestones = MILESTONES.slice(milestoneStart, milestoneStart + 3)
+  const trimesterLabel = `Trimester ${tl.trimester}`
 
   // layar tambah obat penuh (bukan bagian section)
   if (showMedForm) {
@@ -226,66 +222,86 @@ export default function PengingatPage() {
   }
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="text-[18px] font-semibold text-[#1E2326]">Pengingat</h2>
-        <p className="text-sm text-[#8A8F93]">Pengingat suplemen dan jadwal periksa</p>
-      </div>
+    <div className="-mx-4 -mt-5">
+      <header className="rounded-b-[32px] bg-[#4A6E54] px-6 pb-6 pt-7 text-white">
+        <h1 className="!m-0 text-xl font-bold leading-tight">Ingat</h1>
+        <p className="mt-1 text-xs leading-relaxed text-white/90">Perjalanan kehamilan, jadwal, dan catatan Bunda</p>
+      </header>
 
-      {/* S-07d Timeline kehamilan */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between px-1">
-          <h2 className="!m-0 text-[15px] font-bold tracking-tight text-[#1E2326]">Timeline Kehamilan</h2>
-        </div>
-        <Card className="rounded-[24px] border-0 bg-[#F0F5F1] ring-1 ring-[#EAE6E0] overflow-hidden">
-          <CardContent className="p-4">
-            <div className="flex items-end gap-2">
-              <p className="text-[32px] font-extrabold leading-none tracking-tight text-[#1E2326]">{tl.hariTersisa}</p>
-              <p className="pb-1 text-xs font-medium leading-tight text-[#3C4245]">hari menuju<br />perkiraan lahir</p>
-              <p className="ml-auto pb-1 text-right text-xs font-medium text-[#3C4245]">{hplLabel}<br />Minggu ke-{tl.uk} · T{tl.trimester}</p>
+      <div className="space-y-5 px-4 pb-6 pt-5">
+        <section className="space-y-3">
+          <div className="flex items-center justify-between gap-3 px-1">
+            <div>
+              <h2 className="!m-0 text-[15px] font-bold text-[#1D2B29]">Perjalanan kehamilan</h2>
+              <p className="mt-0.5 text-xs text-[#536961]">Minggu berjalan dan tonggak terdekat</p>
             </div>
-            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-white ring-1 ring-black/5">
-              <div className="h-full rounded-full bg-[#7AAE9A]" style={{ width: `${tl.progress}%` }} />
+            <span className="shrink-0 rounded-full bg-[#EAF4F0] px-3 py-1.5 text-xs font-bold text-[#4A6E54]">{trimesterLabel}</span>
+          </div>
+
+          <div className="rounded-[24px] bg-[#EAF4F0] p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-medium text-[#536961]">Usia kehamilan</p>
+                <p className="mt-1 text-[24px] font-bold leading-tight tracking-tight text-[#1D2B29]">Minggu ke-{currentWeek}</p>
+              </div>
+              <span className="rounded-[14px] bg-white px-3 py-2 text-right ring-1 ring-[#D9E7E2]">
+                <span className="block text-[11px] text-[#536961]">Menuju HPL</span>
+                <span className="block text-sm font-bold text-[#4A6E54]">{tl.hariTersisa} hari</span>
+              </span>
             </div>
-            <p className="mt-2 text-center text-xs italic leading-relaxed text-[#6C757D]">“{quote}”</p>
-            <div className="mt-3 grid grid-cols-10 gap-1">
-              {tl.calendar40.map((c) => (
-                <div
-                  key={c.minggu}
-                  title={`Minggu ${c.minggu}`}
-                  className={`grid h-7 place-items-center rounded-lg text-[9px] font-semibold ${c.isCurrent ? "bg-[#1E2326] text-white ring-1 ring-[#1E2326]" : c.minggu < tl.uk ? "bg-[#7AAE9A] text-white" : "bg-white text-[#8A8F93] ring-1 ring-[#EAE6E0]"}`}
-                >
-                  {c.minggu}
-                </div>
-              ))}
+
+            <div className="mt-3">
+              <div className="mb-1.5 flex items-center justify-between text-xs text-[#33443F]">
+                <span>Perjalanan 40 minggu</span>
+                <span className="font-semibold">{Math.round(progress)} persen</span>
+              </div>
+              <div className="h-2.5 overflow-hidden rounded-full bg-white">
+                <div className="h-full rounded-full bg-[#4A6E54] transition-[width]" style={{ width: `${progress}%` }} />
+              </div>
             </div>
-            <div className="mt-3 space-y-1.5">
-              {MILESTONES.map((m) => {
-                const done = m.w < tl.uk
-                const current = m.w === tl.uk
+
+            <div className="mt-3 flex items-center gap-2 border-t border-[#D9E7E2] pt-3 text-sm">
+              <CalendarDays className="size-4 shrink-0 text-[#4A6E54]" />
+              <span className="text-xs text-[#536961]">Perkiraan lahir</span>
+              <span className="ml-auto text-sm font-semibold text-[#1D2B29]">{hplLabel}</span>
+            </div>
+          </div>
+
+          <div className="rounded-[24px] bg-white p-4 ring-1 ring-[#D9E7E2]">
+            <h3 className="!m-0 text-sm font-bold text-[#1D2B29]">Tonggak perjalanan</h3>
+            <div className="mt-2 divide-y divide-[#E8EFEB]">
+              {visibleMilestones.map((milestone, index) => {
+                const passed = milestone.w < currentWeek
+                const current = milestone.w === currentWeek
+                const next = !passed && !current && !visibleMilestones.slice(0, index).some((item) => item.w >= currentWeek)
                 return (
-                  <div key={m.w} className="flex items-center gap-2.5">
-                    <span className={`size-2 shrink-0 rounded-full ${done ? "bg-[#7AAE9A]" : current ? "bg-[#1E2326]" : "bg-[#EAE6E0]"}`} />
-                    <p className={`text-xs ${done || current ? "font-semibold text-[#1E2326]" : "text-[#8A8F93]"}`}>Minggu {m.w} — {m.t}</p>
+                  <div key={milestone.w} className="flex items-center gap-3 py-2.5 first:pt-1 last:pb-1">
+                    <span className={`grid size-8 shrink-0 place-items-center rounded-full ${passed ? "bg-[#EDF6EF] text-[#2E7D32]" : current ? "bg-[#4A6E54] text-white" : "bg-[#F7FAF8] text-[#789087] ring-1 ring-[#D9E7E2]"}`}>
+                      {passed ? <Check className="size-4" strokeWidth={2.5} /> : <span className="text-xs font-bold">{milestone.w}</span>}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold text-[#1D2B29]">Minggu {milestone.w}</p>
+                      <p className="text-xs leading-snug text-[#536961]">{milestone.t}</p>
+                    </div>
+                    {(current || next) && <span className="shrink-0 text-[11px] font-semibold text-[#4A6E54]">{current ? "Sekarang" : "Berikutnya"}</span>}
                   </div>
                 )
               })}
             </div>
-          </CardContent>
-        </Card>
-      </section>
+          </div>
+        </section>
 
-      <SupplementSection onAdd={() => setShowMedForm(true)} />
+        <SupplementSection onAdd={() => setShowMedForm(true)} />
 
-      <div className="grid gap-4">
-        <Card className="rounded-[24px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm">
+        <div className="grid gap-4">
+          <Card className="rounded-[24px] border-0 bg-[#EAF4F0] ring-0 shadow-none">
           <CardContent className="p-4">
             <div className="flex items-start gap-2">
-              <div className="size-8 rounded-xl bg-[#EAF2EC] grid place-items-center text-[#7AAE9A] ring-1 ring-[#7AAE9A]/15">
+              <div className="size-9 rounded-[14px] bg-white grid place-items-center text-[#4A6E54] ring-1 ring-[#D9E7E2]">
                 <Scale className="size-4" />
               </div>
               <p className="text-sm font-semibold text-[#1E2326] pt-1.5">Berat badan</p>
-              <button onClick={() => setShowWeightHistory(true)} className="ml-auto mt-1 rounded-full bg-[#F7F2EB] px-2.5 py-1 text-xs font-semibold text-[#7AAE9A] ring-1 ring-[#EAE6E0] active:scale-[0.98] transition">Riwayat</button>
+              <button onClick={() => setShowWeightHistory(true)} className="ml-auto mt-1 min-h-10 rounded-full bg-white px-3 text-xs font-semibold text-[#4A6E54] ring-1 ring-[#D9E7E2] active:scale-[0.98] transition">Riwayat</button>
             </div>
             <div className="mt-4 -mx-4">
               <WeightChart entries={weightBars} targetAbs={targetAbs} />
@@ -303,26 +319,26 @@ export default function PengingatPage() {
             <div className="mt-3">
               {editingTarget ? (
                 <div className="flex gap-2">
-                  <Input type="number" value={targetDraft} onChange={(e) => setTargetDraft(e.target.value)} placeholder="Target kg" className="h-12 flex-1 rounded-2xl bg-[#FFFCF6] px-4" />
-                  <Button className="rounded-full bg-[#7AAE9A] hover:bg-[#6B9E8A] text-white px-6" onClick={handleSaveTarget}>Simpan</Button>
+                  <Input type="number" value={targetDraft} onChange={(e) => setTargetDraft(e.target.value)} placeholder="Target kg" className="h-12 flex-1 rounded-[14px] border-[#D9E7E2] bg-white px-4" />
+                  <Button className="min-h-11 rounded-full bg-[#4A6E54] px-6 text-white hover:bg-[#3D5C46]" onClick={handleSaveTarget}>Simpan</Button>
                 </div>
               ) : (
-                <div className="flex items-center justify-between rounded-2xl bg-[#FFFCF6] px-4 py-3 ring-1 ring-[#EAE6E0]">
-                  <p className="text-xs text-[#6C757D]">Target {targetManual !== null ? "manual" : "otomatis IOM"}: <span className="font-bold text-[#1E2326]">{targetAbs !== null ? `${targetAbs} kg` : "-"}</span></p>
-                  <button onClick={() => { setTargetDraft(targetManual !== null ? String(targetManual) : targetAbs !== null ? String(targetAbs) : ""); setEditingTarget(true) }} className="text-xs font-semibold text-[#7AAE9A]">Ubah</button>
+                <div className="flex items-center justify-between rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
+                  <p className="text-xs text-[#536961]">Target {targetManual !== null ? "manual" : "IOM"} <span className="font-bold text-[#1D2B29]">{targetAbs !== null ? `${targetAbs} kg` : "-"}</span></p>
+                  <button onClick={() => { setTargetDraft(targetManual !== null ? String(targetManual) : targetAbs !== null ? String(targetAbs) : ""); setEditingTarget(true) }} className="min-h-10 px-2 text-xs font-semibold text-[#4A6E54]">Ubah</button>
                 </div>
               )}
             </div>
-            <Button className="mt-3 w-full rounded-full bg-[#7AAE9A] hover:bg-[#6B9E8A] text-white py-6 text-sm font-semibold" onClick={() => setShowWeightSheet(true)}>
+            <Button className="mt-3 min-h-12 w-full rounded-full bg-[#4A6E54] text-sm font-bold text-white hover:bg-[#3D5C46]" onClick={() => setShowWeightSheet(true)}>
               Tambah berat
             </Button>
           </CardContent>
         </Card>
 
-        <Card className="rounded-[24px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm">
+        <Card className="rounded-[24px] border-0 bg-[#EAF4F0] ring-0 shadow-none">
           <CardContent className="p-4">
             <p className="text-sm font-semibold text-[#1E2326] flex items-center gap-2">
-              <CalendarDays className="size-4 text-[#7AAE9A]" /> Jadwal periksa
+              <CalendarDays className="size-4 text-[#4A6E54]" /> Jadwal periksa
             </p>
             <p className="text-xs text-[#8A8F93]">
               {nextAnc ? `Selanjutnya ${nextAnc.tanggalTerjadwal} (${ancCountdown(nextAnc.tanggalTerjadwal)})` : "Semua selesai"} {doneAnc}/{anc.length} selesai
@@ -339,28 +355,28 @@ export default function PengingatPage() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-[24px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm">
+        <Card className="rounded-[24px] border-0 bg-[#EAF4F0] ring-0 shadow-none">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-[#1E2326]">Diary harian</p>
                 <p className="text-xs text-[#8A8F93]">Tulis diary baru di sini</p>
               </div>
-              <button onClick={() => setShowDiaryHistory(true)} className="rounded-full bg-[#F7F2EB] px-3.5 py-1.5 text-xs font-semibold text-[#7AAE9A] ring-1 ring-[#EAE6E0] active:scale-[0.98] transition">Riwayat</button>
+              <button onClick={() => setShowDiaryHistory(true)} className="min-h-10 rounded-full bg-white px-3.5 text-xs font-semibold text-[#4A6E54] ring-1 ring-[#D9E7E2] active:scale-[0.98] transition">Riwayat</button>
             </div>
             <div className="mt-3 space-y-2">
-              <Input value={diaryTitle} onChange={(e) => setDiaryTitle(e.target.value)} placeholder="Judul diary" className="h-12 rounded-2xl bg-[#FFFCF6] px-4 placeholder:text-xs" />
-              <textarea value={diaryText} onChange={(e) => setDiaryText(e.target.value)} placeholder="Tulis isi diary Bunda hari ini" className="min-h-[72px] w-full rounded-2xl bg-[#FFFCF6] p-3 text-sm ring-1 ring-[#EAE6E0] placeholder:text-[#9AA3A6] focus:outline-none focus:ring-[#7AAE9A]/30" />
+              <Input value={diaryTitle} onChange={(e) => setDiaryTitle(e.target.value)} placeholder="Judul diary" className="h-11 rounded-[14px] border-[#D9E7E2] bg-white px-4 placeholder:text-xs" />
+              <textarea value={diaryText} onChange={(e) => setDiaryText(e.target.value)} placeholder="Tulis isi diary Bunda hari ini" className="min-h-[88px] w-full rounded-[14px] bg-white p-3 text-sm ring-1 ring-[#D9E7E2] placeholder:text-[#6C757D] focus:outline-none focus:ring-2 focus:ring-[#7AAE9A]/40" />
               <div className="flex gap-1.5">
                 {([1, 2, 3, 4, 5] as const).map((v) => (
-                  <button key={v} onClick={() => setDiaryMood(v)} className={`flex-1 rounded-full py-2 text-xs font-semibold ring-1 transition-colors ${diaryMood === v ? "bg-[#7AAE9A] text-white ring-[#7AAE9A]" : "bg-white text-[#8A8F93] ring-[#EAE6E0]"}`}>
+                  <button key={v} onClick={() => setDiaryMood(v)} className={`min-h-11 flex-1 rounded-[14px] text-xs font-semibold transition-colors ${diaryMood === v ? "bg-[#4A6E54] text-white" : "bg-white text-[#33443F] ring-1 ring-[#D9E7E2]"}`}>
                     {v}
                   </button>
                 ))}
               </div>
-              <p className="text-[11px] text-[#8A8F93]">1 tidak baik sampai 5 sangat baik</p>
+              <p className="text-[11px] text-[#536961]">1 tidak baik sampai 5 sangat baik</p>
               {diaryMsg && <p className="text-xs text-[#2E7D32] text-center">{diaryMsg}</p>}
-              <Button className="w-full rounded-full bg-[#7AAE9A] hover:bg-[#6B9E8A] text-white" onClick={() => void handleDiary()}>
+              <Button className="min-h-11 w-full rounded-full bg-[#4A6E54] font-semibold text-white hover:bg-[#3D5C46]" onClick={() => void handleDiary()}>
                 Simpan diary
               </Button>
             </div>
@@ -382,6 +398,7 @@ export default function PengingatPage() {
           onDeleted={() => { setShowWeightSheet(false); setEditingWeight(null); void load() }}
         />
       )}
+    </div>
     </div>
   )
 }

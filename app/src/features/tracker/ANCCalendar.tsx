@@ -43,11 +43,11 @@ export default function ANCCalendar({
   return (
     <div className="mt-3 space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-bold text-[#1E2326]">{monthLabel}</p>
+        <p className="text-sm font-bold text-[#1D2B29]">{monthLabel}</p>
         <div className="flex items-center gap-1">
-          <button onClick={() => setCursor((c) => ({ y: c.m === 0 ? c.y - 1 : c.y, m: c.m === 0 ? 11 : c.m - 1 }))} aria-label="Bulan lalu" className="grid size-8 place-items-center rounded-full bg-[#F7F2EB] text-[#6C757D]">‹</button>
-          <button onClick={() => { const t = new Date(); setCursor({ y: t.getFullYear(), m: t.getMonth() }); setSelected(toISO(t)) }} className="rounded-full bg-[#F7F2EB] px-3 py-1.5 text-xs font-semibold text-[#6C757D]">Hari ini</button>
-          <button onClick={() => setCursor((c) => ({ y: c.m === 11 ? c.y + 1 : c.y, m: c.m === 11 ? 0 : c.m + 1 }))} aria-label="Bulan depan" className="grid size-8 place-items-center rounded-full bg-[#F7F2EB] text-[#6C757D]">›</button>
+          <button onClick={() => setCursor((c) => ({ y: c.m === 0 ? c.y - 1 : c.y, m: c.m === 0 ? 11 : c.m - 1 }))} aria-label="Bulan lalu" className="grid size-11 place-items-center rounded-full bg-white text-[#4A6E54] ring-1 ring-[#D9E7E2]">‹</button>
+          <button onClick={() => { const t = new Date(); setCursor({ y: t.getFullYear(), m: t.getMonth() }); setSelected(toISO(t)) }} className="min-h-11 rounded-full bg-white px-3 text-xs font-semibold text-[#4A6E54] ring-1 ring-[#D9E7E2]">Hari ini</button>
+          <button onClick={() => setCursor((c) => ({ y: c.m === 11 ? c.y + 1 : c.y, m: c.m === 11 ? 0 : c.m + 1 }))} aria-label="Bulan depan" className="grid size-11 place-items-center rounded-full bg-white text-[#4A6E54] ring-1 ring-[#D9E7E2]">›</button>
         </div>
       </div>
 
@@ -67,9 +67,9 @@ export default function ANCCalendar({
             <button
               key={iso}
               onClick={() => openDay(iso)}
-              className={`flex flex-col items-center gap-0.5 rounded-xl py-1.5 text-xs transition-colors active:scale-[0.95] ${
+              className={`flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-[14px] py-1 text-xs transition-colors active:scale-[0.95] ${
                 isToday
-                  ? "bg-[#1E2326] font-bold text-white"
+                  ? "bg-[#4A6E54] font-bold text-white"
                   : visit
                     ? visit.statusSelesai
                       ? "bg-[#EDF6EF] font-semibold text-[#2E7D32] ring-1 ring-[#7ACB8A]"
@@ -84,15 +84,15 @@ export default function ANCCalendar({
         })}
       </div>
 
-      <div className="flex items-center gap-3 px-1 text-[11px] text-[#8A8F93]">
-        <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-[#1E2326]" /> Hari ini</span>
+      <div className="flex items-center gap-3 px-1 text-[11px] text-[#536961]">
+        <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-[#4A6E54]" /> Hari ini</span>
         <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-[#F5C16C]" /> Periksa</span>
         <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-[#7ACB8A]" /> Selesai</span>
       </div>
 
       {selected && (
-        <div className="rounded-2xl bg-[#FFFCF6] p-3 ring-1 ring-[#EAE6E0]">
-          <p className="text-xs font-bold text-[#1E2326]">{fmtID(selected)}</p>
+        <div className="rounded-[18px] bg-white p-3 ring-1 ring-[#D9E7E2]">
+          <p className="text-xs font-bold text-[#1D2B29]">{fmtID(selected)}</p>
           {selVisit ? (
             <div className="mt-2 space-y-2">
               <div className="flex items-center gap-2">
@@ -100,17 +100,17 @@ export default function ANCCalendar({
                   {selVisit.statusSelesai ? <Check className="size-4" /> : <Bell className="size-3.5" />}
                 </span>
                 <p className="flex-1 text-xs text-[#6C757D]">{selVisit.statusSelesai ? "Sudah periksa" : "Jadwal kontrol ANC"}{selVisit.catatan ? ` · ${selVisit.catatan}` : ""}</p>
-                <Button size="sm" variant="outline" className="rounded-full bg-white text-xs" onClick={() => onToggle(selVisit.id, selVisit.statusSelesai)}>
+              <Button size="sm" variant="outline" className="min-h-11 rounded-full border-[#D9E7E2] bg-white text-xs text-[#33443F]" onClick={() => onToggle(selVisit.id, selVisit.statusSelesai)}>
                   {selVisit.statusSelesai ? "Batalkan" : "Selesai"}
                 </Button>
               </div>
               {editing ? (
                 <div className="flex gap-2">
-                  <Input value={noteDraft} onChange={(e) => setNoteDraft(e.target.value)} placeholder="Catatan kunjungan" className="h-9 flex-1 rounded-full bg-white px-3 text-xs" />
-                  <Button size="sm" className="rounded-full bg-[#7AAE9A] hover:bg-[#6B9E8A] text-white" onClick={() => { onSaveNote(selVisit.id, selVisit.statusSelesai, noteDraft); setEditing(false) }}>Simpan</Button>
+                  <Input value={noteDraft} onChange={(e) => setNoteDraft(e.target.value)} placeholder="Catatan kunjungan" className="h-11 flex-1 rounded-full border-[#D9E7E2] bg-[#FFFCF6] px-3 text-xs" />
+                  <Button className="min-h-11 rounded-full bg-[#4A6E54] text-white hover:bg-[#3D5C46]" onClick={() => { onSaveNote(selVisit.id, selVisit.statusSelesai, noteDraft); setEditing(false) }}>Simpan</Button>
                 </div>
               ) : (
-                <button onClick={() => { setNoteDraft(selVisit.catatan ?? ""); setEditing(true) }} className="text-xs font-semibold text-[#7AAE9A]">
+                <button onClick={() => { setNoteDraft(selVisit.catatan ?? ""); setEditing(true) }} className="min-h-11 text-xs font-semibold text-[#4A6E54]">
                   {selVisit.catatan ? "Ubah catatan" : "Tambah catatan"}
                 </button>
               )}

@@ -1,17 +1,14 @@
-import { ArrowLeft, CalendarDays, Check, ChevronRight } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
+import { CalendarDays, Check, ChevronLeft, ChevronRight } from "lucide-react"
 import type { Profile } from "@/data/db"
 
 function Row({ label, value, verified }: { label: string; value: string; verified?: boolean }) {
   return (
-    <div className="py-3">
-      <p className="text-xs text-[#8A8F93]">{label}</p>
-      <p className="mt-1 text-[16px] font-semibold leading-snug text-[#1E2326]">{value}</p>
-      {verified && (
-        <p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-[#3D8B5E]">
-          <Check className="size-3.5" strokeWidth={3} /> Terverifikasi
-        </p>
-      )}
+    <div className="border-b border-[#D9E7E2] py-2.5 last:border-0">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs text-[#536961]">{label}</p>
+        {verified && <span className="flex items-center gap-1 text-[11px] font-semibold text-[#2E7D32]"><Check className="size-3.5" strokeWidth={3} /> Terverifikasi</span>}
+      </div>
+      <p className="mt-1 break-words text-[15px] font-semibold leading-snug text-[#1D2B29]">{value || "Belum diisi"}</p>
     </div>
   )
 }
@@ -47,59 +44,63 @@ export default function ProfileDetailScreen({
 }) {
   const usia = hitungUsia(profile.tanggal_lahir)
   const tglLahir = profile.tanggal_lahir
-    ? new Date(`${profile.tanggal_lahir}T00:00:00`).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })
+    ? profile.tanggal_lahir.split("-").reverse().join("/")
     : "-"
+  const hpht = profile.hpht ? profile.hpht.split("-").reverse().join("/") : "-"
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3 px-1">
-        <button onClick={onBack} aria-label="Kembali" className="grid size-9 place-items-center rounded-full text-[#1E2326] active:scale-[0.95] transition">
-          <ArrowLeft className="size-5" />
-        </button>
-        <h1 className="!m-0 text-[17px] font-bold tracking-tight text-[#1E2326]">Profil Saya</h1>
-      </div>
-
-      <Card className="rounded-[20px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm overflow-hidden">
-        <CardContent className="space-y-1 px-5 py-2">
-          <Row label="Nama" value={profile.nama} />
-          <Row label="No. Handphone" value={profile.noHp} verified={verified} />
-          <div className="py-3">
-            <p className="text-xs text-[#8A8F93]">Usia</p>
-            <p className="mt-1 text-[16px] font-semibold leading-snug text-[#1E2326]">{usia ? `${usia} tahun` : "-"}</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="rounded-[20px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm overflow-hidden">
-        <CardContent className="px-5 py-2">
-          <div className="flex items-center justify-between pt-3">
-            <h2 className="!m-0 text-[16px] font-bold tracking-tight text-[#1E2326]">Data Kehamilan</h2>
-            <button onClick={onEdit} className="text-sm font-bold text-[#7AAE9A]">
-              Ubah
-            </button>
-          </div>
-          <Row label="GPA" value={`${gpa} (Gravida ${profile.gravida}, Para ${profile.para}, Abortus ${profile.abortus})`} />
-          <Row label="Tanggal Lahir" value={tglLahir} />
-          <Row label="HPHT" value={profile.hpht} />
-          <div className="py-3">
-            <p className="text-xs text-[#8A8F93]">Usia kehamilan & HPL</p>
-            <p className="mt-1 flex items-center gap-2 text-[16px] font-semibold text-[#1E2326]">
-              <CalendarDays className="size-4 text-[#7AAE9A]" /> Minggu ke-{uk} · {hplLabel}
-            </p>
-          </div>
-          <Row label="Fasyankes" value={profile.fasyankes || "-"} />
-          <Row label="Bidan pendamping" value={profile.nama_bidan || "-"} />
-        </CardContent>
-      </Card>
-
-      <Card className="rounded-[20px] border-0 bg-white ring-1 ring-black/[0.05] shadow-sm overflow-hidden">
-        <CardContent className="p-0">
-          <button onClick={onDeleteAccount} className="flex w-full items-center justify-between px-5 py-4 text-left active:bg-[#FDECEC]/50 transition-colors">
-            <span className="text-[15px] font-bold text-[#C62828]">Hapus Akun</span>
-            <ChevronRight className="size-4 text-[#C2C8CB]" />
+    <div className="-mx-4 -mt-5">
+      <header className="rounded-b-[32px] bg-[#4A6E54] px-6 pb-6 pt-[max(1.75rem,env(safe-area-inset-top))] text-white">
+        <div className="flex items-center gap-2.5">
+          <button onClick={onBack} aria-label="Kembali" className="grid size-11 shrink-0 place-items-center rounded-full bg-white/95 text-[#DB2777] transition-transform active:scale-95">
+            <ChevronLeft className="size-5" />
           </button>
-        </CardContent>
-      </Card>
+          <div>
+            <h1 className="!m-0 text-lg font-bold leading-tight">Profil Saya</h1>
+            <p className="mt-0.5 text-xs text-white/90">Informasi akun dan kehamilan</p>
+          </div>
+        </div>
+      </header>
+
+      <div className="space-y-3.5 px-4 pb-6 pt-5">
+        <section className="rounded-[24px] bg-[#EAF4F0] p-3.5">
+          <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Data diri</h2>
+          <div className="mt-1">
+            <Row label="Nama" value={profile.nama} />
+            <Row label="Nomor HP" value={profile.noHp} verified={verified} />
+            <Row label="Usia" value={usia ? `${usia} tahun` : "-"} />
+          </div>
+        </section>
+
+        <section className="rounded-[24px] bg-[#EAF4F0] p-3.5">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Data kehamilan</h2>
+            <button onClick={onEdit} className="min-h-10 rounded-full bg-white px-4 text-xs font-bold text-[#4A6E54] ring-1 ring-[#D9E7E2] transition-colors hover:bg-[#F7FAF8]">Ubah</button>
+          </div>
+          <div className="mt-1">
+            <Row label="GPA" value={`${gpa} (Gravida ${profile.gravida}, Para ${profile.para}, Abortus ${profile.abortus})`} />
+            <Row label="Tanggal lahir" value={tglLahir} />
+            <Row label="HPHT" value={hpht} />
+          </div>
+          <div className="mt-2 flex items-start gap-2.5 rounded-[16px] bg-white p-3">
+            <CalendarDays className="mt-0.5 size-4 shrink-0 text-[#4A6E54]" />
+            <div className="min-w-0">
+              <p className="text-xs text-[#536961]">Usia kehamilan dan HPL</p>
+              <p className="mt-1 text-[15px] font-semibold leading-snug text-[#1D2B29]">Minggu ke-{uk}</p>
+              <p className="text-sm text-[#33443F]">HPL {hplLabel}</p>
+            </div>
+          </div>
+          <div className="mt-1">
+            <Row label="Fasyankes" value={profile.fasyankes} />
+            <Row label="Bidan pendamping" value={profile.nama_bidan} />
+          </div>
+        </section>
+
+        <button onClick={onDeleteAccount} className="flex min-h-12 w-full items-center justify-between rounded-[18px] bg-[#FDECEC] px-4 text-left transition-colors hover:bg-[#FADDDD]">
+          <span className="text-sm font-bold text-[#C62828]">Hapus akun</span>
+          <ChevronRight className="size-4 text-[#C62828]" />
+        </button>
+      </div>
     </div>
   )
 }
