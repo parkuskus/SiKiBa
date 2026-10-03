@@ -16,7 +16,7 @@ create table if not exists chat_messages (
 create index if not exists idx_chat_user on chat_messages(user_id, created_at desc);
 
 -- 2. guideline_chunks — hasil ingest PDF guideline (scripts/ingest-guideline, jalan sekali)
--- embedding: text-embedding-3-small = 1536 dimensi. Kalau pakai Gemini embedding-001 (768),
+-- embedding: text-embedding-3-small = 1536 dimensi. Kalau pakai Gemini embedding-001 (768)
 -- ganti vector(1536) -> vector(768) SEBELUM ingest pertama (jangan campur dimensi).
 create table if not exists guideline_chunks (
   id uuid primary key default gen_random_uuid(),
