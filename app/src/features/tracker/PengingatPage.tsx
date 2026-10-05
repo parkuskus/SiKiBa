@@ -140,13 +140,6 @@ export default function PengingatPage({ setShowBottomNav }: { setShowBottomNav: 
     await load()
   }
 
-  const ancCountdown = (tgl: string) => {
-    const diff = Math.ceil((new Date(tgl).getTime() - new Date(new Date().toISOString().slice(0, 10)).getTime()) / 86400000)
-    if (diff < 0) return "terlewat"
-    if (diff === 0) return "hari ini"
-    return `${diff} hari lagi`
-  }
-
   const handleDiary = async () => {
     if (!diaryText.trim()) return
     await submitDiary({ userId: uid, teks: diaryText.trim(), mood: diaryMood, judul: diaryTitle.trim() || undefined })
@@ -171,7 +164,9 @@ export default function PengingatPage({ setShowBottomNav }: { setShowBottomNav: 
     }
   })()
   const nextAnc = anc.find((a) => !a.statusSelesai)
-  const doneAnc = anc.filter((a) => a.statusSelesai).length
+  const nextAncLabel = nextAnc
+    ? new Date(`${nextAnc.tanggalTerjadwal}T00:00:00`).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })
+    : "Semua jadwal selesai"
 
   const [showMedForm, setShowMedForm] = useState(false)
 
@@ -344,9 +339,7 @@ export default function PengingatPage({ setShowBottomNav }: { setShowBottomNav: 
             <h2 className="px-1 text-[15px] font-bold text-[#1D2B29]">Jadwal periksa</h2>
             <Card className="rounded-[24px] border-0 bg-[#EAF4F0] ring-0 shadow-none">
               <CardContent className="p-4">
-                <p className="text-xs text-[#536961]">
-                  {nextAnc ? `Selanjutnya ${nextAnc.tanggalTerjadwal} (${ancCountdown(nextAnc.tanggalTerjadwal)})` : "Semua jadwal selesai"} {doneAnc}/{anc.length} selesai
-                </p>
+                <p className="text-xs text-[#536961]">{nextAncLabel}</p>
                 {!anc.length ? (
                   <p className="mt-3 text-center text-xs text-[#536961]">Memuat jadwal</p>
                 ) : (
