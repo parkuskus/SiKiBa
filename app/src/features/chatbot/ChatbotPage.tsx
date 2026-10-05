@@ -42,6 +42,7 @@ export default function ChatbotPage({ onClose }: { onClose: () => void }) {
   const [emergency, setEmergency] = useState(false)
   const [shareError, setShareError] = useState(false)
   const messagesEnd = useRef<HTMLDivElement>(null)
+  const composer = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     const update = () => setOnline(navigator.onLine)
@@ -61,6 +62,7 @@ export default function ChatbotPage({ onClose }: { onClose: () => void }) {
     const pesan = text.trim()
     if (!pesan || loading) return
     setInput("")
+    if (composer.current) composer.current.style.height = "48px"
     setMsgs((current) => [...current, { dari: "ibu", teks: pesan }])
     setLoading(true)
     try {
@@ -156,13 +158,20 @@ export default function ChatbotPage({ onClose }: { onClose: () => void }) {
       )}
 
       <form onSubmit={(event) => { event.preventDefault(); void kirim() }} className="flex shrink-0 items-center gap-2 border-t border-[#D9E7E2] bg-white px-3 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-        <input
+        <textarea
+          ref={composer}
+          rows={1}
+          wrap="soft"
           value={input}
-          onChange={(event) => setInput(event.target.value)}
+          onChange={(event) => {
+            setInput(event.target.value)
+            event.currentTarget.style.height = "auto"
+            event.currentTarget.style.height = `${Math.min(event.currentTarget.scrollHeight, 128)}px`
+          }}
           disabled={loading}
           aria-label="Pesan untuk Siba"
           placeholder={PLACEHOLDER}
-          className="min-h-12 min-w-0 flex-1 rounded-full border border-[#D9E7E2] bg-[#FFFCF6] px-4 text-sm text-[#1D2B29] outline-none placeholder:text-[#6C757D] focus-visible:ring-2 focus-visible:ring-[#7AAE9A] disabled:opacity-60"
+          className="min-h-12 max-h-32 min-w-0 flex-1 resize-none overflow-y-auto rounded-[24px] border border-[#D9E7E2] bg-[#FFFCF6] px-4 py-3 text-sm leading-6 text-[#1D2B29] outline-none placeholder:text-[#6C757D] focus-visible:ring-2 focus-visible:ring-[#7AAE9A] disabled:opacity-60"
         />
         <button type="submit" disabled={loading || !input.trim()} aria-label="Kirim pesan" className="grid size-12 shrink-0 place-items-center rounded-full bg-[#4A6E54] text-white transition-colors hover:bg-[#3D5C46] active:scale-95 disabled:bg-[#D9E7E2] disabled:text-[#6C757D]">
           <ArrowUp className="size-5" />
