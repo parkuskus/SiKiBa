@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState, type ReactNode } from "react"
-import { ArrowUp, Plus, Share2, X, MapPin, Siren } from "lucide-react"
+import { ArrowUp, Plus, Share2, X, MapPin, Siren, ShieldCheck } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import { tanyaChatbot } from "@/services/chatService"
 import { getCurrentUserId } from "@/data/currentUser"
 import { shareViaWA } from "@/services/exportService"
 import { AVATAR, GELAR, NAMA, PLACEHOLDER, TYPING, sapaAcak } from "@/features/chatbot/personality"
 
-type Msg = { dari: "ibu" | "siba"; teks: string; offline?: boolean }
+type Msg = { dari: "ibu" | "siba"; teks: string; verified?: boolean }
 
 const TOPIK_CEPAT = ["Mual saat hamil", "Tanda bahaya", "Bayi kuning", "Rasa cemas"]
 
@@ -58,7 +58,7 @@ export default function ChatbotPage({ onClose }: { onClose: () => void }) {
     setLoading(true)
     try {
       const reply = await tanyaChatbot(pesan)
-      setMsgs((current) => [...current, { dari: "siba", teks: reply.answer, offline: reply.offline }])
+      setMsgs((current) => [...current, { dari: "siba", teks: reply.answer, verified: reply.verified }])
       if (reply.escalate) setEmergency(true)
     } catch {
       setMsgs((current) => [...current, { dari: "siba", teks: "Maaf Bunda, Siba belum bisa menjawab sekarang. Coba lagi sebentar lagi ya." }])
@@ -118,7 +118,11 @@ export default function ChatbotPage({ onClose }: { onClose: () => void }) {
                 ) : (
                   <p className="whitespace-pre-wrap">{message.teks}</p>
                 )}
-                {message.offline && <span className="mt-2 inline-flex rounded-full bg-[#FFF1E8] px-2 py-1 text-[11px] font-medium text-[#80552C]">Jawaban panduan dasar</span>}
+                {message.verified && (
+                  <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-[#EDF6EF] px-2 py-1 text-[11px] font-medium text-[#2E7D32]">
+                    <ShieldCheck className="size-3.5" /> Jawaban Terverifikasi Ahli
+                  </span>
+                )}
               </div>
             </div>
           ))}

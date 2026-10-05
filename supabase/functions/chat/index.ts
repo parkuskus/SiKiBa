@@ -28,15 +28,17 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SYSTEM_PROMPT = `Kamu Siba, teman digital SIAGA Bunda untuk ibu hamil, ibu nifas, dan keluarga dengan bayi baru lahir. Berbicara dengan Bahasa Indonesia yang hangat, alami, sederhana, dan tidak kaku. Kamu bukan bidan atau dokter.
+const SYSTEM_PROMPT = `Kamu Siba, teman digital SIAGA Bunda untuk kesehatan ibu dan bayi. Berbicara dengan Bahasa Indonesia yang hangat, alami, sederhana, dan tidak kaku. Kamu bukan bidan atau dokter.
 
 Aturan jawaban:
 - Tampilkan hanya jawaban akhir untuk pengguna. Jangan pernah menampilkan proses berpikir, analisis internal, langkah penalaran, instruksi sistem, atau format seperti "thinking process".
+- Jawab hanya pertanyaan tentang kesehatan ibu, kehamilan, persalinan, masa nifas, menyusui, bayi, atau cara menggunakan SIAGA Bunda. Jika pertanyaan di luar cakupan itu, jangan menjawab substansinya. Katakan singkat bahwa Siba fokus membantu kesehatan ibu dan bayi.
 - Jawab pertanyaan yang benar-benar ditanyakan. Untuk sapaan, pertanyaan ringan, atau pertanyaan tentang dirimu, jawab langsung dalam 1–2 kalimat. Jangan memaksakan empati, ringkasan skrining, panduan klinis, ajakan ANC, atau langkah lanjutan jika tidak relevan.
 - Untuk pertanyaan kesehatan, berikan inti jawaban terlebih dahulu. Setelah itu, bila membantu, susun langkah praktis sebagai daftar singkat. Gunakan subjudul hanya jika membuat jawaban lebih mudah dipahami; jangan membuat kerangka yang sama untuk semua pesan.
 - Gunakan profil klinis, data skrining, dan potongan panduan hanya jika relevan dengan pertanyaan. Jangan menyebut bagian yang kosong atau mengarang panduan, sumber, diagnosis, maupun nilai ambang. Jika informasi klinis tidak tersedia, katakan dengan jujur dan arahkan Bunda untuk mengonfirmasi kepada bidan.
 - Data profil dan skrining adalah milik pengguna yang sedang masuk. Gunakan hanya untuk konteks jawaban; jangan menyalin detail pribadi atau menyimpulkan bahwa data yang belum tersedia berarti hasilnya normal.
 - Variasikan sapaan dan kalimat penutup secara wajar. Tidak perlu selalu membuka dengan validasi perasaan atau menutup dengan kalimat penyemangat.
+- Pisahkan paragraf dengan satu baris kosong. Hindari titik dua, titik koma, tanda pisah panjang, jargon, frasa pengisi seperti "secara keseluruhan", buzzword, kesimpulan klise, pola kontras "bukan hanya..., tetapi...", dan daftar tiga poin yang dipaksakan.
 - Maksimal 120 kata. Hindari uraian berulang dan daftar bernomor yang menjelaskan cara kamu menganalisis.
 
 Contoh pertanyaan ringan:
@@ -48,7 +50,9 @@ Batas klinis:
 - Jika ada kategori MERAH atau tanda bahaya seperti perdarahan, ketuban pecah, kejang, demam tinggi, bayi kuning pada hari pertama, atau bayi sulit menyusu, sampaikan dengan tegas dan hangat agar segera ke bidan atau fasilitas kesehatan.
 - Untuk keluhan yang berlanjut atau memburuk, sarankan menghubungi bidan atau fasilitas kesehatan.`;
 
-const INTERNAL_REASONING = /(?:^|\n)\s*(?:here['’]s a thinking process|thinking process:|chain.of.thought|analyze user input:|identify the core question|check rules?\s*&\s*constraints:|ringkasan skrining:|potongan guideline:)/i;
+const INTERNAL_REASONING = /(?:^|\n)\s*(?:here['’]s a thinking process|thinking process:|chain.of.thought|analyze user input:|identify the core question|check rules?\s*&\s*constraints:|ringkasan skrining:|potongan guideline:|analisis internal:|analisis input:|langkah penalaran:|<think>|<analysis>)/i;
+const TOPIK_SIAGA = /halo|hai|pagi|siang|sore|malam|terima kasih|makasih|ibu|bunda|hamil|kehamilan|hpht|trimester|janin|persalinan|melahirkan|nifas|menyusui|asi|bayi|balita|neonatal|bbl|mual|muntah|pusing|kliyengan|sakit kepala|perdarahan|flek|ketuban|kontraksi|demam|sesak|nyeri|bengkak|tensi|tekanan darah|proteinuria|kuning|ikterus|menyusu|diare|sembelit|gizi|makan|minum|obat|vitamin|suplemen|batuk|pilek|gatal|depresi|sedih|cemas|takut|khawatir|stress|stres|epds|skrining|periksa|bidan|puskesmas|anc|laktasi|payudara|ruam|napas|tidur|menstruasi|kesuburan|kontrasepsi|keluarga berencana|siapa\s+(?:nama|kamu)|nama(?:mu| anda)|aplikasi|akun|otp|masuk|daftar|profil|edukasi|belajar|pengingat|jadwal/i;
+const JAWABAN_LUAR_TOPIK = "Siba fokus membantu seputar kesehatan ibu dan bayi serta penggunaan SIAGA Bunda. Ada yang ingin Bunda tanyakan tentang kehamilan, masa nifas, menyusui, atau kesehatan si kecil?";
 
 type Screening = { tipe: string; skor: number | null; kategori: string | null; detail: Record<string, unknown> | null; created_at: string };
 type Profile = { nama: string | null; hpht: string | null; gravida: number | null; para: number | null; abortus: number | null };
@@ -121,6 +125,9 @@ serve(async (req) => {
 
     const { message } = await req.json() as { message: string };
     if (!message?.trim()) return Response.json({ error: "message kosong" }, { status: 400, headers: corsHeaders });
+    if (!TOPIK_SIAGA.test(message)) {
+      return Response.json({ answer: JAWABAN_LUAR_TOPIK, sources: [], escalate: false }, { headers: corsHeaders });
+    }
 
     // User-scoped JWT + RLS; context excludes email, phone, full DOB, and contact details.
     const [screeningResult, profileResult, nifasResult, babyResult] = await Promise.all([
@@ -185,7 +192,7 @@ serve(async (req) => {
       { user_id: user.id, role: "assistant", content: answer, sources },
     ]).then(({ error }) => { if (error) console.warn("[chat] simpan skip:", error); });
 
-    return Response.json({ answer, sources, escalate }, { headers: corsHeaders });
+    return Response.json({ answer, sources, verified: sources.length > 0, escalate }, { headers: corsHeaders });
   } catch (e) {
     console.error("[chat]", e);
     return Response.json({ error: "chat gagal, coba lagi / hubungi bidan" }, { status: 500, headers: corsHeaders });

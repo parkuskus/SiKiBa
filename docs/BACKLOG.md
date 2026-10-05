@@ -57,7 +57,8 @@
 - [x] FE S-03b-f 5 skrining sisa — `GiziScreen.tsx` `DangerSignScreen.tsx` `PreeklamsiaScreen.tsx` `DmgScreen.tsx` `MentalScreen.tsx` + `SkriningPage.tsx` 6 tab + progress + ringkasan, Dexie queue fix `crypto.randomUUID` fallback `features/skrining/**/*.ts`
 - [ ] Sync Dexie ↔ Supabase (wire `*Form.ts` `db.*.put()` → `supabase.from().insert()` saat online) — stub `supabase.ts` sudah siap, tinggal 1 baris per form
 - [ ] FE S-04, S-05a/b — logic done, UI menyusul (next)
-- [ ] Validasi pakar & Ethical Clearance (di luar dev)
+- [x] FAQ/Panduan Dasar chatbot ditinjau pakar; badge hanya tampil pada jawaban yang memakai sumber terverifikasi (2026-10-05)
+- [ ] Validasi algoritma klinis & Ethical Clearance (di luar dev)
 
 ## Backlog (Fase 1-7) — logic done, FE pending
 - [x] Fase 0 — Fondasi: Vite+Supabase+Dexie+PWA (done)
@@ -70,6 +71,7 @@
 - [ ] Fase 7 — UAT (butuh Ethical Clearance)
 - [ ] **Deploy Play Store (TWA)**: `VitePWA` manifest (`vite.config.ts:6`) + `public/logo-siaga-bunda.png` + `bubblewrap build` → `.aab` → Play Console `riset@poltekkesbandung.ac.id` `ARCHITECTURE.md:33,162`
 - [x] Ganti onboarding OTP dari nomor telepon/demo ke email Supabase Auth; profil `email`, migration `004_profile_email.sql`, akses terautentikasi `005_authenticated_data_access.sql`, kolom profil `006_profile_sync_columns.sql`, dan alur signup profil (2026-10-05)
+- [x] Chatbot Siba: batas topik kesehatan ibu/bayi, larangan menampilkan reasoning, format jawaban lebih natural, Markdown, dan badge hijau untuk sumber Panduan Dasar terverifikasi (2026-10-05)
 
 ## Catatan Keputusan
 - PWA, bukan native — mitigasi retensi iOS (Dexie cache + sync Supabase) `ARCHITECTURE.md:6,9`
