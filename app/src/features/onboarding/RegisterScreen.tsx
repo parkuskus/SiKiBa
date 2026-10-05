@@ -81,34 +81,9 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
       return
     }
     if (!navigator.onLine) {
-      if (resending) {
-        setOtpErr("Periksa koneksi internet, lalu coba kirim ulang.")
-        return
-      }
-      // offline fallback langsung simpan lokal
-      setLoading(true)
-      try {
-        const res = await submitRegister({
-          nama: form.nama,
-          tanggalLahir: form.tanggalLahir,
-          email: form.email,
-          noHp: form.noHp,
-          gravida: Number(form.gravida),
-          para: Number(form.para),
-          abortus: Number(form.abortus),
-          hpht: form.hpht,
-          fasyankes: form.fasyankes,
-          namaBidan: form.namaBidan,
-        })
-        console.log("[register offline] UK", res.uk, "HPL", res.hpl)
-        onSuccess()
-      } catch (e: unknown) {
-        const err = e as { errs?: Record<string, string>; message?: string }
-        if (err.errs) setErrs(err.errs)
-        else setGlobalErr(err.message ?? "Gagal menyimpan")
-      } finally {
-        setLoading(false)
-      }
+      const message = "Koneksi internet diperlukan untuk mengirim kode verifikasi. Data belum disimpan."
+      if (resending) setOtpErr("Periksa koneksi internet, lalu coba kirim ulang.")
+      else setGlobalErr(message)
       return
     }
 
@@ -117,7 +92,7 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
     try {
       const normalizedEmail = form.email.trim().toLowerCase()
       setEmailForOtp(normalizedEmail)
-      const { error } = await supabase.auth.signInWithOtp({ email: normalizedEmail })
+      const { error } = await supabase.auth.signInWithOtp({ email: normalizedEmail, options: { shouldCreateUser: true } })
       if (error) throw error
       setDigits(["", "", "", "", "", ""])
       setStep("otp")
@@ -149,6 +124,13 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
         if (error) throw error
         const userId = data.user?.id ?? data.session?.user?.id
         if (!userId) throw new Error("Verifikasi berhasil tapi sesi tidak ditemukan")
+        const { data: existingProfile, error: profileError } = await supabase.from("profiles")
+          .select("id").eq("id", userId).maybeSingle()
+        if (profileError) throw profileError
+        if (existingProfile) {
+          onSuccess()
+          return
+        }
         const result = await submitRegister({
           nama: form.nama,
           email: emailForOtp,
@@ -216,7 +198,7 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
               ))}
             </div>
             {otpErr && <p className="text-xs text-[#E57373] text-center">{otpErr}</p>}
-            <p className="text-center text-xs text-[#33443F]">Kode kedaluwarsa dalam 05 00</p>
+            <p className="text-center text-xs text-[#33443F]">Gunakan kode terbaru sebelum kedaluwarsa</p>
             <Button onClick={handleVerifyOtp} disabled={otpLoading} className="w-full rounded-full bg-[#4A6E54] hover:bg-[#3D5C46] py-3.5 text-sm font-semibold text-white">
               {otpLoading ? "Memeriksa" : "Verifikasi"}
             </Button>

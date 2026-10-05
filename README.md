@@ -75,7 +75,7 @@ Deploy ulang function hanya ketika kode di `supabase/functions/chat/` berubah. P
 
 ### 4. Aktifkan OTP email
 
-Di Supabase Dashboard, pastikan **Authentication → Providers → Email** aktif. Atur template email OTP agar memuat `{{ .Token }}`, lalu konfigurasi SMTP khusus untuk pengiriman produksi agar email verifikasi terkirim dengan andal. Uji daftar dan masuk menggunakan kode email sungguhan; aplikasi tidak lagi menyediakan kode OTP demo.
+Di Supabase Dashboard, aktifkan **Authentication → Sign In / Providers → Email**, **Allow new users to sign up**, dan **Confirm email**. Aktifkan Custom SMTP untuk pengiriman produksi. Pada **Authentication → Emails**, gunakan `{{ .Token }}` pada template **Confirm signup** untuk pengguna baru dan **Magic link or OTP** untuk pengguna yang masuk. Template HTML tersedia di `docs/email-template-confirm-signup.html` dan `docs/email-template-otp.html`. Subject yang disarankan adalah `Kode daftar SIAGA Bunda` dan `Kode masuk SIAGA Bunda`. Aplikasi memverifikasi kode dengan Supabase Auth, membuat profil memakai ID Auth pengguna, dan tidak menimpa profil jika email sudah terdaftar. Pendaftaran akun baru memerlukan koneksi internet agar email OTP dapat dikirim.
 
 ### 5. Akun uji chatbot
 

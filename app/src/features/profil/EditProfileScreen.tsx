@@ -34,7 +34,7 @@ export default function EditProfileScreen({ profile, onBack, onSaved }: { profil
       const now = new Date().toISOString()
       const row: Profile = { ...profile, nama: form.nama.trim(), tanggal_lahir: form.tanggal_lahir, hpht: form.hpht, gravida: Number(form.gravida), para: Number(form.para), abortus: Number(form.abortus), fasyankes: form.fasyankes, nama_bidan: form.nama_bidan, updatedAt: now }
       await db.profiles.put(row)
-      syncProfile({ id: row.id, nama: row.nama, email: row.email, tanggal_lahir: row.tanggal_lahir, hpht: row.hpht, gravida: row.gravida, para: row.para, abortus: row.abortus, fasyankes: row.fasyankes, nama_bidan: row.nama_bidan, noHp: row.noHp })
+      await syncProfile({ id: row.id, nama: row.nama, email: row.email, tanggal_lahir: row.tanggal_lahir, hpht: row.hpht, gravida: row.gravida, para: row.para, abortus: row.abortus, fasyankes: row.fasyankes, nama_bidan: row.nama_bidan, noHp: row.noHp })
       onSaved()
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : "Gagal menyimpan")

@@ -64,6 +64,6 @@ export async function submitRegister(input: RegisterInput, userId?: string): Pro
   }
 
   await db.profiles.put(profile)
-  syncProfile(profile)
+  await syncProfile(profile)
   return { profile, uk, hpl, tri, progress }
 }

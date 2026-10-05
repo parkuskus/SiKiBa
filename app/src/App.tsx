@@ -35,16 +35,10 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session?.user) {
-        try { localStorage.removeItem("siaga_logged_out") } catch {}
-        setOnboarding("app")
-      }
-    })
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session?.user) {
+      if (event === "INITIAL_SESSION" && session?.user) {
         try { localStorage.removeItem("siaga_logged_out") } catch {}
         setOnboarding("app")
       }
