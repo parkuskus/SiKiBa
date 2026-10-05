@@ -52,15 +52,15 @@ export default function EditProfileScreen({ profile, onBack, onSaved }: { profil
           </button>
           <div>
             <h1 className="!m-0 text-lg font-bold leading-tight">Ubah Profil</h1>
-            <p className="mt-0.5 text-xs text-white/90">Perbarui informasi Bunda</p>
+            <p className="mt-0.5 text-xs text-white/90">Perbarui Informasi Bunda</p>
           </div>
         </div>
       </header>
 
       <div className="space-y-3.5 px-4 pb-6 pt-5">
         <section className="space-y-3 rounded-[24px] bg-[#EAF4F0] p-3.5">
-          <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Data diri</h2>
-          <div className="space-y-1.5">
+          <h2 className="!m-0 text-lg font-bold text-[#1D2B29]">Data Diri</h2>
+          <div className="space-y-1.5 mt-2">
             <Label className="text-xs font-medium text-[#33443F]">Nama Bunda</Label>
             <Input value={form.nama} onChange={(e) => setForm((s) => ({ ...s, nama: e.target.value }))} className="h-11 rounded-[14px] border-[#D9E7E2] bg-white px-3" />
           </div>
@@ -81,8 +81,8 @@ export default function EditProfileScreen({ profile, onBack, onSaved }: { profil
         </section>
 
         <section className="space-y-3 rounded-[24px] bg-[#EAF4F0] p-3.5">
-          <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Data kehamilan</h2>
-          <div className="space-y-1.5">
+          <h2 className="!m-0 text-lg font-bold text-[#1D2B29]">Data Kehamilan</h2>
+          <div className="space-y-1.5 mt-2">
             <Label className="text-xs font-medium text-[#33443F]">HPHT</Label>
             <DateInput value={form.hpht} onChange={(value) => setForm((s) => ({ ...s, hpht: value }))} aria-label="Hari pertama haid terakhir" className="h-11 rounded-[14px] border-[#D9E7E2] bg-white px-3 text-sm text-[#33443F]" />
           </div>
@@ -101,8 +101,8 @@ export default function EditProfileScreen({ profile, onBack, onSaved }: { profil
         </section>
 
         <section className="space-y-3 rounded-[24px] bg-[#EAF4F0] p-3.5">
-          <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Pendamping</h2>
-          <div className="space-y-1.5">
+          <h2 className="!m-0 text-lg font-bold text-[#1D2B29]">Pendamping</h2>
+          <div className="space-y-1.5 mt-2">
             <Label className="text-xs font-medium text-[#33443F]">Fasilitas kesehatan</Label>
             <Input value={form.fasyankes} onChange={(e) => setForm((s) => ({ ...s, fasyankes: e.target.value }))} placeholder="Nama puskesmas atau klinik" className="h-11 rounded-[14px] border-[#D9E7E2] bg-white px-3" />
           </div>

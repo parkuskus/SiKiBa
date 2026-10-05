@@ -64,7 +64,7 @@ export default function ProfileDetailScreen({
 
       <div className="space-y-3.5 px-4 pb-6 pt-5">
         <section className="rounded-[24px] bg-[#EAF4F0] p-3.5">
-          <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Data diri</h2>
+          <h2 className="!m-0 text-lg font-bold text-[#1D2B29]">Data Diri</h2>
           <div className="mt-1">
             <Row label="Nama" value={profile.nama} />
             <Row label="Email" value={profile.email} verified={verified} />
@@ -75,7 +75,7 @@ export default function ProfileDetailScreen({
 
         <section className="rounded-[24px] bg-[#EAF4F0] p-3.5">
           <div className="flex items-center justify-between gap-2">
-            <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Data kehamilan</h2>
+            <h2 className="!m-0 text-lg font-bold text-[#1D2B29]">Data Kehamilan</h2>
             <button onClick={onEdit} className="min-h-10 rounded-full bg-white px-4 text-xs font-bold text-[#4A6E54] ring-1 ring-[#D9E7E2] transition-colors hover:bg-[#F7FAF8]">Ubah</button>
           </div>
           <div className="mt-1">

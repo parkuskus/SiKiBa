@@ -170,7 +170,7 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
 
             {err && <p className="text-xs text-[#E57373] text-center">{err}</p>}
 
-            <Button onClick={handleRequestOtp} disabled={loading} className="w-full rounded-full bg-[#4A6E54] px-4 py-4 text-base font-bold text-white hover:bg-[#3D5C46]">
+            <Button onClick={handleRequestOtp} disabled={loading} className="w-full rounded-full bg-[#4A6E54] px-4 py-5 text-base font-bold text-white hover:bg-[#3D5C46]">
               {loading ? "Mengirim kode" : "Kirim Kode OTP"}
             </Button>
 
