@@ -19,8 +19,6 @@ type Props = {
   setTab: (t: "beranda" | "skrining" | "edukasi" | "tracker" | "profil") => void
 }
 
-const DEMO_HPHT = "2026-02-12"
-
 function formatHpl(hpht: string): string {
   const hpl = calcHPL(hpht)
   return new Date(hpl).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })
@@ -82,12 +80,13 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
     })()
   }, [])
 
-  const hpht = profile?.hpht ?? DEMO_HPHT
-  const uk = profile ? weeksFromHpht(hpht) : ukProp
-  const progress = profile ? progressPercent(uk) : progressProp
-  const hpl = calcHPL(hpht)
-  const hplLabel = profile ? formatHpl(hpht) : "19 Nov 2026"
-  const countdown = profile ? Math.max(0, Math.ceil((new Date(hpl).getTime() - new Date().getTime()) / 86400000)) : countdownProp
+  const hpht = profile?.hpht?.trim() || ""
+  const hasHpht = Boolean(hpht)
+  const uk = hasHpht ? weeksFromHpht(hpht) : profile ? null : ukProp
+  const progress = hasHpht ? progressPercent(uk!) : profile ? null : progressProp
+  const hpl = hasHpht ? calcHPL(hpht) : null
+  const hplLabel = hpl ? formatHpl(hpht) : profile ? "Belum diisi" : "19 Nov 2026"
+  const countdown = hpl ? Math.max(0, Math.ceil((new Date(hpl).getTime() - new Date().getTime()) / 86400000)) : profile ? null : countdownProp
   const gpa = profile ? `G${profile.gravida}P${profile.para}A${profile.abortus}` : "G2P1A0"
   const nama = profile?.nama ? profile.nama.split(" ")[0] : "Siti"
   const lastLabel = last ? `${last.kategori === "HIJAU" ? "Kondisi aman" : last.kategori === "KUNING" ? "Skrining Terakhir (Waspada)" : "Skrining Terakhir (Bahaya)"}` : "Belum ada skrining"

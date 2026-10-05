@@ -82,7 +82,7 @@ Di Supabase Dashboard, pastikan **Authentication → Providers → Email** aktif
 Pada proyek Supabase SIAGA Bunda yang tertaut, akun uji sudah dibuat:
 
 - **Email:** `ksmaachmad@gmail.com`
-- **Profil:** `Akun Uji Chatbot` dengan data sintetis
+- **Profil:** `Akun Uji Chatbot` dengan data sintetis, termasuk tanggal lahir dan HPHT `12 Februari 2026` (HPL `19 November 2026`)
 - **Masuk:** pilih Masuk Akun, masukkan email di atas, lalu gunakan OTP yang dikirim ke inbox. Tidak ada password atau kode OTP tetap.
 
 Akun ini hanya untuk pengujian. Pastikan SMTP email Supabase dapat mengirim OTP ke alamat tersebut. Jangan masukkan informasi kesehatan nyata ke akun uji.

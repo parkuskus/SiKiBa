@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import { ArrowUp, Plus, Share2, X, MapPin, Siren } from "lucide-react"
+import ReactMarkdown from "react-markdown"
 import { tanyaChatbot } from "@/services/chatService"
 import { getCurrentUserId } from "@/data/currentUser"
 import { shareViaWA } from "@/services/exportService"
@@ -8,6 +9,23 @@ import { AVATAR, GELAR, NAMA, PLACEHOLDER, TYPING, sapaAcak } from "@/features/c
 type Msg = { dari: "ibu" | "siba"; teks: string; offline?: boolean }
 
 const TOPIK_CEPAT = ["Mual saat hamil", "Tanda bahaya", "Bayi kuning", "Rasa cemas"]
+
+const markdownComponents = {
+  p: ({ children }: { children?: ReactNode }) => <p className="m-0 whitespace-pre-wrap">{children}</p>,
+  h1: ({ children }: { children?: ReactNode }) => <h3 className="m-0 text-base font-bold">{children}</h3>,
+  h2: ({ children }: { children?: ReactNode }) => <h3 className="m-0 text-base font-bold">{children}</h3>,
+  h3: ({ children }: { children?: ReactNode }) => <h3 className="m-0 text-sm font-bold">{children}</h3>,
+  ul: ({ children }: { children?: ReactNode }) => <ul className="my-0 list-disc space-y-1 pl-5">{children}</ul>,
+  ol: ({ children }: { children?: ReactNode }) => <ol className="my-0 list-decimal space-y-1 pl-5">{children}</ol>,
+  li: ({ children }: { children?: ReactNode }) => <li className="pl-0.5">{children}</li>,
+  strong: ({ children }: { children?: ReactNode }) => <strong className="font-bold">{children}</strong>,
+  em: ({ children }: { children?: ReactNode }) => <em>{children}</em>,
+  code: ({ children }: { children?: ReactNode }) => <code className="rounded bg-[#EAF4F0] px-1 py-0.5 font-mono text-[0.9em]">{children}</code>,
+  a: ({ href, children }: { href?: string; children?: ReactNode }) =>
+    href && /^https?:\/\//i.test(href)
+      ? <a href={href} target="_blank" rel="noreferrer" className="font-medium text-[#4A6E54] underline underline-offset-2">{children}</a>
+      : <>{children}</>,
+}
 
 export default function ChatbotPage({ onClose }: { onClose: () => void }) {
   const [msgs, setMsgs] = useState<Msg[]>(() => [{ dari: "siba", teks: sapaAcak() }])
@@ -93,7 +111,13 @@ export default function ChatbotPage({ onClose }: { onClose: () => void }) {
             <div key={`${index}-${message.dari}`} className={`flex items-start gap-2.5 ${message.dari === "ibu" ? "justify-end" : "justify-start"}`}>
               {message.dari === "siba" && <span aria-hidden className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full bg-[#EAF4F0] text-base">{AVATAR}</span>}
               <div className={`max-w-[84%] rounded-[20px] px-3.5 py-3 text-sm leading-relaxed ${message.dari === "ibu" ? "rounded-tr-[6px] bg-[#4A6E54] text-white" : "rounded-tl-[6px] bg-white text-[#1D2B29] ring-1 ring-[#D9E7E2] shadow-sm"}`}>
-                <p className="whitespace-pre-wrap">{message.teks}</p>
+                {message.dari === "siba" ? (
+                  <div className="space-y-3">
+                    <ReactMarkdown components={markdownComponents}>{message.teks}</ReactMarkdown>
+                  </div>
+                ) : (
+                  <p className="whitespace-pre-wrap">{message.teks}</p>
+                )}
                 {message.offline && <span className="mt-2 inline-flex rounded-full bg-[#FFF1E8] px-2 py-1 text-[11px] font-medium text-[#80552C]">Jawaban panduan dasar</span>}
               </div>
             </div>

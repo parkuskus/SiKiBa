@@ -5,9 +5,9 @@ type Props = {
   hariNifas: number
   beratLahir: number | null
   panjangLahir: number | null
-  uk: number
-  progress: number
-  countdown: number
+  uk: number | null
+  progress: number | null
+  countdown: number | null
   hplLabel: string
   gpa: string
   onShowBirth: () => void
@@ -16,7 +16,7 @@ type Props = {
 
 // S-02a + progress — kartu pekan putih (di stage) + kartu progress mint
 export default function ProfileCard({ isPostpartum, hariNifas, beratLahir, panjangLahir, uk, progress, countdown, hplLabel, gpa, onShowBirth, onBackToPregnant }: Props) {
-  const trimester = uk < 14 ? 1 : uk < 28 ? 2 : 3
+  const trimester = uk === null ? null : uk < 14 ? 1 : uk < 28 ? 2 : 3
   if (isPostpartum) {
     const hariTersisa = Math.max(0, 42 - hariNifas)
     const progressNifas = Math.min(100, (hariNifas / 42) * 100)
@@ -56,17 +56,26 @@ export default function ProfileCard({ isPostpartum, hariNifas, beratLahir, panja
   return (
     <>
       <div className="w-full rounded-[24px] bg-[#EAF4F0] p-4">
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-bold text-[#1D2B29]">Hamil Pekan Ke-{uk}</p>
-          <p className="text-xs font-bold text-[#9D2553]">Trimester Ke-{trimester}</p>
-        </div>
-        <div className="mt-2.5 h-2.5 w-full overflow-hidden rounded-full bg-white">
-          <div className="h-full rounded-full bg-[#4A6E54]" style={{ width: `${progress}%` }} />
-        </div>
-        <div className="mt-1.5 flex justify-between text-xs font-medium text-[#33443F]">
-          <span>{uk} dari 40 minggu</span>
-          <span>{countdown} hari menuju perkiraan lahir</span>
-        </div>
+        {uk === null ? (
+          <div className="mt-3 rounded-2xl bg-white px-3 py-3">
+            <p className="text-sm font-semibold text-[#1D2B29]">Usia kehamilan belum tersedia</p>
+            <p className="mt-1 text-xs text-[#536961]">Lengkapi HPHT di profil untuk melihat perkiraan lahir.</p>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-bold text-[#1D2B29]">Hamil Pekan Ke-{uk}</p>
+              <p className="text-xs font-bold text-[#9D2553]">Trimester Ke-{trimester}</p>
+            </div>
+            <div className="mt-2.5 h-2.5 w-full overflow-hidden rounded-full bg-white">
+              <div className="h-full rounded-full bg-[#4A6E54]" style={{ width: `${progress ?? 0}%` }} />
+            </div>
+            <div className="mt-1.5 flex justify-between text-xs font-medium text-[#33443F]">
+              <span>{uk} dari 40 minggu</span>
+              <span>{countdown === null ? "" : `${countdown} hari menuju perkiraan lahir`}</span>
+            </div>
+          </>
+        )}
         <div className="mt-3 grid grid-cols-2 gap-3">
           <div className="rounded-2xl bg-white px-3 py-2.5">
             <p className="flex items-center gap-1 text-[11px] font-medium text-[#33443F]"><CalendarDays className="size-3" /> GPA</p>

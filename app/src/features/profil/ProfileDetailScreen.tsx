@@ -34,7 +34,7 @@ export default function ProfileDetailScreen({
   onDeleteAccount,
 }: {
   profile: Profile
-  uk: number
+  uk: number | null
   hplLabel: string
   gpa: string
   verified: boolean
@@ -87,7 +87,7 @@ export default function ProfileDetailScreen({
             <CalendarDays className="mt-0.5 size-4 shrink-0 text-[#4A6E54]" />
             <div className="min-w-0">
               <p className="text-xs text-[#536961]">Usia kehamilan dan HPL</p>
-              <p className="mt-1 text-[15px] font-semibold leading-snug text-[#1D2B29]">Minggu ke-{uk}</p>
+               <p className="mt-1 text-[15px] font-semibold leading-snug text-[#1D2B29]">{uk === null ? "Usia kehamilan belum tersedia" : `Minggu ke-${uk}`}</p>
               <p className="text-sm text-[#33443F]">HPL {hplLabel}</p>
             </div>
           </div>

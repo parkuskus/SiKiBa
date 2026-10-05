@@ -25,12 +25,29 @@ export async function getCurrentProfile() {
   const uid = await getCurrentUserId()
   const p = await db.profiles.get(uid)
   if (p) {
-    if (!p.email) {
+    if (!p.email || !p.hpht?.trim()) {
       try {
-        const { data } = await supabase.auth.getUser()
-        if (data.user?.email) {
-          p.email = data.user.email
-          await db.profiles.put(p)
+        const { data: remote } = await supabase.from("profiles")
+          .select("nama,email,tanggal_lahir,hpht,gravida,para,abortus,fasyankes,nama_bidan,no_hp,created_at,updated_at")
+          .eq("id", uid).maybeSingle()
+        if (remote) {
+          const merged = {
+            ...p,
+            nama: p.nama || remote.nama || "",
+            email: p.email || remote.email || "",
+            tanggal_lahir: p.tanggal_lahir || remote.tanggal_lahir || "",
+            hpht: p.hpht?.trim() ? p.hpht : remote.hpht || "",
+            noHp: p.noHp || remote.no_hp || "",
+            gravida: p.gravida ?? remote.gravida ?? 1,
+            para: p.para ?? remote.para ?? 0,
+            abortus: p.abortus ?? remote.abortus ?? 0,
+            fasyankes: p.fasyankes || remote.fasyankes || "",
+            nama_bidan: p.nama_bidan || remote.nama_bidan || "",
+            createdAt: p.createdAt || remote.created_at || new Date().toISOString(),
+            updatedAt: p.updatedAt || remote.updated_at || new Date().toISOString(),
+          }
+          await db.profiles.put(merged as never)
+          return merged as never
         }
       } catch {}
     }

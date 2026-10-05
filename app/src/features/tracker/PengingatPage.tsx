@@ -66,7 +66,7 @@ export default function PengingatPage({ setShowBottomNav }: { setShowBottomNav: 
 
   const load = async () => {
     const p = await getCurrentProfile()
-    const h = p?.hpht ?? DEMO_HPHT
+    const h = p?.hpht?.trim() || DEMO_HPHT
     const id = p?.id ?? (await getCurrentUserId())
     setUid(id)
     setHpht(h)

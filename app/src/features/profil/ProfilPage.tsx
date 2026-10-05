@@ -15,8 +15,6 @@ import type { Profile, ScreeningResult } from "@/data/db"
 
 type Props = { uk: number; hplLabel: string }
 
-const DEMO_HPHT = "2026-02-12"
-
 function MenuRow({ icon, label, onClick, last }: { icon: React.ReactNode; label: string; onClick: () => void; last?: boolean }) {
   return (
     <button onClick={onClick} className={`flex min-h-[56px] w-full items-center gap-3 px-4 text-left transition-colors hover:bg-[#F7FAF8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#7AAE9A] active:bg-[#EAF4F0] ${last ? "" : "border-b border-[#E8EFEB]"}`}>
@@ -59,9 +57,10 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
     void load()
   }, [])
 
-  const hpht = profile?.hpht ?? DEMO_HPHT
-  const uk = profile ? weeksFromHpht(hpht) : ukProp
-  const hplLabel = profile ? new Date(calcHPL(hpht)).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) : hplProp
+  const hpht = profile?.hpht?.trim() || ""
+  const hasHpht = Boolean(hpht)
+  const uk = hasHpht ? weeksFromHpht(hpht) : profile ? null : ukProp
+  const hplLabel = hasHpht ? new Date(calcHPL(hpht)).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) : profile ? "Belum diisi" : hplProp
   const nama = profile?.nama ?? "Siti"
   const gpa = profile ? `G${profile.gravida}P${profile.para}A${profile.abortus}` : "G2P1A0"
   const inisial = nama.charAt(0).toUpperCase()

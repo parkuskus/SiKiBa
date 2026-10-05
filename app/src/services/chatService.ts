@@ -13,6 +13,7 @@ function jawabOffline(pesan: string): string {
 }
 
 const perluEskalasi = (jawaban: string) => /fasyankes atau bidan sekarang/i.test(jawaban)
+const berisiProsesInternal = /(?:^|\n)\s*(?:here['’]s a thinking process|thinking process:|chain.of.thought|analyze user input:|identify the core question|check rules?\s*&\s*constraints:|ringkasan skrining:|potongan guideline:)/i
 
 export async function tanyaChatbot(pesan: string): Promise<ChatReply> {
   const teks = pesan.trim()
@@ -26,7 +27,7 @@ export async function tanyaChatbot(pesan: string): Promise<ChatReply> {
     const { data, error } = await supabase.functions.invoke("chat", { body: { message: teks } })
     if (error) throw error
     const answer = typeof data?.answer === "string" ? data.answer.trim() : ""
-    if (!answer) throw new Error("jawaban kosong dari chatbot")
+    if (!answer || berisiProsesInternal.test(answer)) throw new Error("respons chatbot tidak layak ditampilkan")
     return { answer, sources: (data.sources as string[]) ?? [], escalate: !!data.escalate, offline: false }
   } catch (e) {
     // online gagal (Edge Function belum deploy / belum login) -> fallback lokal biar UX tidak mati
