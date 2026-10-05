@@ -38,13 +38,20 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
   }
 
   const handleRequestOtp = async () => {
+    const resending = step === "otp"
     setErr(null)
+    setOtpErr(null)
     const normalizedEmail = email.trim().toLowerCase()
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-      setErr("Alamat email tidak valid")
+      if (resending) setOtpErr("Alamat email tidak valid")
+      else setErr("Alamat email tidak valid")
       return
     }
     if (!navigator.onLine) {
+      if (resending) {
+        setOtpErr("Periksa koneksi internet, lalu coba kirim ulang.")
+        return
+      }
       const profiles = await db.profiles.toArray()
       const found = profiles.find((p) => p.email?.toLowerCase() === normalizedEmail)
       if (!found) {
@@ -60,10 +67,13 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
       setEmailForOtp(normalizedEmail)
       const { error } = await supabase.auth.signInWithOtp({ email: normalizedEmail, options: { shouldCreateUser: false } })
       if (error) throw error
+      setOtp("")
       setStep("otp")
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Gagal mengirim kode OTP"
-      setErr(msg.includes("rate limit") ? "Terlalu sering minta kode. Coba lagi beberapa saat." : msg)
+      const message = msg.toLowerCase().includes("rate limit") ? "Terlalu sering minta kode. Coba lagi beberapa saat." : msg
+      if (resending) setOtpErr(message)
+      else setErr(message)
     } finally {
       setLoading(false)
     }
@@ -136,8 +146,8 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
           <Button onClick={handleVerifyOtp} disabled={otpLoading} className="w-full rounded-full bg-[#4A6E54] px-4 py-5 mt-3 text-base font-bold text-white hover:bg-[#3D5C46]">
             {otpLoading ? "Memeriksa" : "Verifikasi"}
           </Button>
-          <button onClick={handleRequestOtp} className="w-full text-center text-sm font-medium leading-normal text-[#33443F]">
-            Kirim ulang kode
+          <button onClick={handleRequestOtp} disabled={loading || otpLoading} className="w-full text-center text-sm font-medium leading-normal text-[#33443F] disabled:opacity-50">
+            {loading ? "Mengirim kode" : "Kirim ulang kode"}
           </button>
         </div>
         <div className="relative mx-auto mt-auto w-full max-w-[480px]">
