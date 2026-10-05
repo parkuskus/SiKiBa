@@ -27,6 +27,12 @@ const markdownComponents = {
       : <>{children}</>,
 }
 
+function pisahkanSubjudul(teks: string): string {
+  return teks
+    .replace(/\n(?=\*\*[^*\n]+:\*\*\s*$)/gm, "\n\n")
+    .replace(/^(\*\*[^*\n]+:\*\*)\n(?=\s*(?:[-*+]|\d+\.)\s)/gm, "$1\n\n")
+}
+
 export default function ChatbotPage({ onClose }: { onClose: () => void }) {
   const [msgs, setMsgs] = useState<Msg[]>(() => [{ dari: "siba", teks: sapaAcak() }])
   const [input, setInput] = useState("")
@@ -84,7 +90,7 @@ export default function ChatbotPage({ onClose }: { onClose: () => void }) {
     }
   }
 
-  const petaDarurat = "https://www.google.com/maps/search/?api=1&query=puskesmas+PONED+terdekat"
+  const petaDarurat = "https://www.google.com/maps/search/?api=1&query=Puskesmas%20terdekat"
 
   return (
     <div className="relative flex h-full min-h-0 flex-col bg-[#FFFCF6]">
@@ -113,7 +119,7 @@ export default function ChatbotPage({ onClose }: { onClose: () => void }) {
               <div className={`max-w-[84%] rounded-[20px] px-3.5 py-3 text-sm leading-relaxed ${message.dari === "ibu" ? "rounded-tr-[6px] bg-[#4A6E54] text-white" : "rounded-tl-[6px] bg-white text-[#1D2B29] ring-1 ring-[#D9E7E2] shadow-sm"}`}>
                 {message.dari === "siba" ? (
                   <div className="space-y-3">
-                    <ReactMarkdown components={markdownComponents}>{message.teks}</ReactMarkdown>
+                    <ReactMarkdown components={markdownComponents}>{pisahkanSubjudul(message.teks)}</ReactMarkdown>
                   </div>
                 ) : (
                   <p className="whitespace-pre-wrap">{message.teks}</p>

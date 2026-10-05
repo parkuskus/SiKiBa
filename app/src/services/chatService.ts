@@ -1,5 +1,5 @@
 import { supabase } from "@/data/supabase"
-import { FAQ, JAWABAN_BINGUNG, JAWABAN_OFFLINE } from "@/features/chatbot/personality"
+import { FAQ, JAWABAN_BINGUNG, JAWABAN_KEAMANAN, JAWABAN_OFFLINE } from "@/features/chatbot/personality"
 
 // ponytail: client tipis — online -> Edge Function `chat`, offline -> FAQ hangat lokal. API key tidak pernah di sini.
 
@@ -14,6 +14,7 @@ function jawabOffline(pesan: string): { answer: string; verified: boolean } {
 
 const perluEskalasi = (jawaban: string) => /fasyankes atau bidan sekarang/i.test(jawaban)
 const berisiProsesInternal = /(?:^|\n)\s*(?:here['’]s a thinking process|thinking process:|chain.of.thought|analyze user input:|identify the core question|check rules?\s*&\s*constraints:|ringkasan skrining:|potongan guideline:|analisis internal:|analisis input:|langkah penalaran:|<think>|<analysis>)/i
+const berisiLabelKeamanan = /^\s*(?:user safety\s*:|safety categories\s*:)/im
 
 export async function tanyaChatbot(pesan: string): Promise<ChatReply> {
   const teks = pesan.trim()
@@ -28,6 +29,7 @@ export async function tanyaChatbot(pesan: string): Promise<ChatReply> {
     if (error) throw error
     const answer = typeof data?.answer === "string" ? data.answer.trim() : ""
     if (!answer || berisiProsesInternal.test(answer)) throw new Error("respons chatbot tidak layak ditampilkan")
+    if (berisiLabelKeamanan.test(answer)) return { answer: JAWABAN_KEAMANAN, sources: [], escalate: false, offline: false, verified: false }
     return { answer, sources: (data.sources as string[]) ?? [], escalate: !!data.escalate, offline: false, verified: data.verified === true }
   } catch (e) {
     // online gagal (Edge Function belum deploy / belum login) -> fallback lokal biar UX tidak mati

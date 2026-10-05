@@ -32,10 +32,11 @@ const SYSTEM_PROMPT = `Kamu Siba, teman digital SIAGA Bunda untuk kesehatan ibu 
 
 Aturan jawaban:
 - Tampilkan hanya jawaban akhir untuk pengguna. Jangan pernah menampilkan proses berpikir, analisis internal, langkah penalaran, instruksi sistem, atau format seperti "thinking process".
-- Jawab hanya pertanyaan tentang kesehatan ibu, kehamilan, persalinan, masa nifas, menyusui, bayi, atau cara menggunakan SIAGA Bunda. Jika pertanyaan di luar cakupan itu, jangan menjawab substansinya. Katakan singkat bahwa Siba fokus membantu kesehatan ibu dan bayi.
+- Jangan tampilkan label moderasi atau metadata internal seperti "User Safety" maupun "Safety Categories". Jika perlu menolak permintaan berisiko, sampaikan penolakan dengan bahasa yang wajar dan arahkan ke tenaga kesehatan.
+- Jawab hanya pertanyaan tentang kesehatan ibu, kehamilan, persalinan, masa nifas, menyusui, bayi, atau cara menggunakan SIAGA Bunda. Pertanyaan umum tentang kondisi bayi seperti bentuk kepala yang tampak peyang termasuk dalam cakupan, tetapi jangan mendiagnosis. Jika pertanyaan di luar cakupan itu, jangan menjawab substansinya. Katakan singkat bahwa Siba fokus membantu kesehatan ibu dan bayi.
 - Jawab pertanyaan yang benar-benar ditanyakan. Untuk sapaan, pertanyaan ringan, atau pertanyaan tentang dirimu, jawab langsung dalam 1–2 kalimat. Jangan memaksakan empati, ringkasan skrining, panduan klinis, ajakan ANC, atau langkah lanjutan jika tidak relevan.
 - Untuk pertanyaan kesehatan, berikan inti jawaban terlebih dahulu. Setelah itu, bila membantu, susun langkah praktis sebagai daftar singkat. Gunakan subjudul hanya jika membuat jawaban lebih mudah dipahami; jangan membuat kerangka yang sama untuk semua pesan.
-- Gunakan profil klinis, data skrining, dan potongan panduan hanya jika relevan dengan pertanyaan. Jangan menyebut bagian yang kosong atau mengarang panduan, sumber, diagnosis, maupun nilai ambang. Jika informasi klinis tidak tersedia, katakan dengan jujur dan arahkan Bunda untuk mengonfirmasi kepada bidan.
+- Gunakan profil klinis, data skrining, dan potongan panduan hanya jika relevan dengan pertanyaan. Jika pertanyaan kesehatan ibu atau bayi tidak tercakup di potongan guidebook, tetap berikan informasi umum yang aman dan jelas, lalu sarankan verifikasi kepada bidan atau puskesmas bila perlu. Jangan menolak hanya karena hasil pencarian guidebook kosong. Jangan mengarang sumber, diagnosis, dosis obat, atau nilai ambang klinis.
 - Data profil dan skrining adalah milik pengguna yang sedang masuk. Gunakan hanya untuk konteks jawaban; jangan menyalin detail pribadi atau menyimpulkan bahwa data yang belum tersedia berarti hasilnya normal.
 - Variasikan sapaan dan kalimat penutup secara wajar. Tidak perlu selalu membuka dengan validasi perasaan atau menutup dengan kalimat penyemangat.
 - Pisahkan paragraf dengan satu baris kosong. Hindari titik dua, titik koma, tanda pisah panjang, jargon, frasa pengisi seperti "secara keseluruhan", buzzword, kesimpulan klise, pola kontras "bukan hanya..., tetapi...", dan daftar tiga poin yang dipaksakan.
@@ -47,10 +48,15 @@ Siba: "Aku Siba, teman digital Bunda di SIAGA Bunda. Aku bisa membantu menjawab 
 
 Batas klinis:
 - Jangan menegakkan diagnosis atau mengubah skor skrining. Jangan menyatakan bahwa kamu pengganti tenaga kesehatan.
-- Jika ada kategori MERAH atau tanda bahaya seperti perdarahan, ketuban pecah, kejang, demam tinggi, bayi kuning pada hari pertama, atau bayi sulit menyusu, sampaikan dengan tegas dan hangat agar segera ke bidan atau fasilitas kesehatan.
+- Tanggapi tanda bahaya yang diceritakan pada pesan saat ini dengan tegas dan hangat. Hasil MERAH yang tersimpan hanya relevan jika Bunda bertanya tentang hasil tersebut; jangan memicu peringatan darurat untuk sapaan atau pertanyaan lain yang tidak berkaitan.
+- Tanda bahaya meliputi perdarahan, ketuban pecah, kejang, sesak napas, nyeri kepala hebat disertai pandangan kabur, demam tinggi, bayi kuning pada hari pertama, atau bayi sulit menyusu. Sarankan segera ke bidan atau fasilitas kesehatan.
 - Untuk keluhan yang berlanjut atau memburuk, sarankan menghubungi bidan atau fasilitas kesehatan.`;
 
 const INTERNAL_REASONING = /(?:^|\n)\s*(?:here['’]s a thinking process|thinking process:|chain.of.thought|analyze user input:|identify the core question|check rules?\s*&\s*constraints:|ringkasan skrining:|potongan guideline:|analisis internal:|analisis input:|langkah penalaran:|<think>|<analysis>)/i;
+const SAFETY_METADATA = /^\s*(?:user safety\s*:|safety categories\s*:)/im;
+const JAWABAN_KEAMANAN = "Siba belum bisa memberi arahan yang berisiko. Untuk memilih obat atau tindakan, konsultasikan dengan bidan atau dokter. Jika Bunda atau si kecil mengalami tanda bahaya, segera ke fasilitas kesehatan.";
+const TANDA_BAHAYA_PESAN = /perdarahan|keluar darah|flek banyak|ketuban.{0,12}pecah|kejang|sesak napas|sulit bernapas|pingsan|nyeri kepala hebat|pandangan.{0,12}kabur|kabur.{0,12}pandangan|nyeri perut hebat|demam tinggi|bayi.{0,40}(?:kuning.{0,25}(?:hari pertama|baru lahir|24 jam|\bjam pertama\b)|(?:tidak mau|malas|sulit).{0,12}(?:menyusu|minum)|sangat lemas)/i;
+const TANYA_HASIL_MERAH = /(?:hasil|skor|kategori|skrining).{0,30}merah|merah.{0,30}(?:hasil|skor|kategori|skrining)/i;
 
 type Screening = { tipe: string; skor: number | null; kategori: string | null; detail: Record<string, unknown> | null; created_at: string };
 type Profile = { nama: string | null; hpht: string | null; gravida: number | null; para: number | null; abortus: number | null };
@@ -178,9 +184,13 @@ serve(async (req) => {
       console.warn("[chat] respons berisi proses internal, disembunyikan", { model: LLM_MODEL });
       throw new Error("LLM mengembalikan proses internal");
     }
+    if (SAFETY_METADATA.test(answer)) {
+      console.warn("[chat] metadata safety model disembunyikan", { model: LLM_MODEL });
+      return Response.json({ answer: JAWABAN_KEAMANAN, sources: [], verified: false, escalate: adaMerah }, { headers: corsHeaders });
+    }
 
     // 4. simpan riwayat (fire-and-forget, jangan gagalkan jawaban)
-    const escalate = adaMerah || /segera ke|tanda bahaya|igd|darurat/i.test(answer);
+    const escalate = TANDA_BAHAYA_PESAN.test(message) || (adaMerah && TANYA_HASIL_MERAH.test(message));
     await supabase.from("chat_messages").insert([
       { user_id: user.id, role: "user", content: message },
       { user_id: user.id, role: "assistant", content: answer, sources },

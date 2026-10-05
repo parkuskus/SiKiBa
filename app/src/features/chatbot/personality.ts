@@ -8,6 +8,7 @@ export const GELAR = "Sahabat Bunda"
 export const TYPING = "Siba sedang mengetik..."
 export const PLACEHOLDER = "Cerita ke Siba di sini"
 export const AVATAR = "💗" // ponytail. emoji satu-satunya yang diizinkan, sebagai wajah Siba di header. Jangan tambah di bubble chat.
+export const JAWABAN_KEAMANAN = "Siba belum bisa memberi arahan yang berisiko. Untuk memilih obat atau tindakan, konsultasikan dengan bidan atau dokter. Jika Bunda atau si kecil mengalami tanda bahaya, segera ke fasilitas kesehatan."
 
 // Sapaan pembuka — dipilih acak biar tidak monoton
 export const SAPAAN: string[] = [
@@ -28,12 +29,16 @@ export const PENUTUP_HANGAT = "Bunda sudah hebat memperhatikan hal ini. Kalau ma
 // Set terverifikasiAhli hanya setelah isi jawaban ditinjau dan disetujui pakar.
 export const FAQ: { kunci: string[]; jawab: string; terverifikasiAhli?: boolean }[] = [
   {
+    kunci: ["kepala peyang", "kepala datar", "bentuk kepala", "plagiocephaly", "plagiosefali", "tengkorak bayi", "kepala bayi"],
+    jawab: "Siba belum bisa memastikan penyebab bentuk kepala bayi lewat chat. Bawa si kecil ke bidan atau dokter anak agar dapat diperiksa langsung. Jangan menggunakan alat koreksi atau terapi tanpa arahan tenaga kesehatan.",
+  },
+  {
     kunci: ["mual", "muntah", "morning"],
     jawab: "Duh, mual memang tidak enak ya Bunda, apalagi di trimester awal. Ini umum terjadi kok. Coba makan porsi kecil tapi sering dan jauhi bau yang memicu. Bunda juga bisa cek skrining gizi di menu Skrining. Tapi kalau muntahnya terus sampai lemas atau sulit minum, segera ke bidan ya. Bunda sudah hebat memperhatikan hal ini.",
     terverifikasiAhli: true,
   },
   {
-    kunci: ["pusing", "sakit kepala", "kepala", "kliyengan"],
+    kunci: ["pusing", "sakit kepala", "kliyengan"],
     jawab: "Sakit kepala pasti mengganggu aktivitas Bunda ya. Kalau ringan, biasanya karena lelah atau kurang minum, coba istirahat dan minum air putih yang cukup. Tapi Siba titip pesan penting. Kalau sakitnya hebat ditambah pandangan kabur atau bengkak, itu tanda bahaya preeklamsia. Langsung ke fasyankes ya Bunda, jangan ditunda. Bawa juga hasil skrining Bunda.",
     terverifikasiAhli: true,
   },
