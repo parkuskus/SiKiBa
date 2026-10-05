@@ -141,7 +141,8 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
           <span className="grid size-14 shrink-0 place-items-center rounded-full bg-white text-xl font-bold text-[#4A6E54] ring-1 ring-[#D9E7E2]">{inisial}</span>
           <div className="min-w-0 flex-1">
             <p className="truncate text-base font-bold text-[#1D2B29]">{nama}</p>
-            <p className="truncate text-xs text-[#33443F]">{profile?.noHp ?? "Nomor HP belum diisi"}</p>
+            <p className="truncate text-xs text-[#33443F]">{profile?.email || "Email belum diisi"}</p>
+            <p className="truncate text-xs text-[#536961]">{profile?.noHp || "Nomor telepon belum diisi"}</p>
             <p className="mt-1 text-xs font-semibold text-[#4A6E54]">{gpa}</p>
           </div>
           <button onClick={() => profile && setShowDetail(true)} aria-label="Ubah profil" className="grid size-11 shrink-0 place-items-center rounded-full bg-white text-[#4A6E54] ring-1 ring-[#D9E7E2] transition-colors hover:bg-[#F7FAF8] active:scale-95">

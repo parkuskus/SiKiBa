@@ -24,14 +24,29 @@ export async function getCurrentUserId(): Promise<string> {
 export async function getCurrentProfile() {
   const uid = await getCurrentUserId()
   const p = await db.profiles.get(uid)
-  if (p) return p
+  if (p) {
+    if (!p.email) {
+      try {
+        const { data } = await supabase.auth.getUser()
+        if (data.user?.email) {
+          p.email = data.user.email
+          await db.profiles.put(p)
+        }
+      } catch {}
+    }
+    return p
+  }
   // coba fetch dari Supabase jika ada sesi riil tapi Dexie kosong (login di device baru)
   try {
-    const { data: remote } = await supabase.from("profiles").select("*").eq("id", uid).single()
+    const [{ data: remote }, { data: auth }] = await Promise.all([
+      supabase.from("profiles").select("*").eq("id", uid).single(),
+      supabase.auth.getUser(),
+    ])
     if (remote) {
       const mapped = {
         id: remote.id as string,
         nama: (remote.nama as string) ?? "",
+        email: (remote.email as string) ?? auth.user?.email ?? "",
         tanggal_lahir: (remote.tanggal_lahir as string) ?? "",
         noHp: (remote.no_hp as string) ?? "",
         hpht: (remote.hpht as string) ?? "",

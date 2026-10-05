@@ -76,9 +76,9 @@ if (typeof window !== 'undefined') {
 }
 
 // helpers — tetap fire-and-forget untuk caller (void), tapi di dalam sudah queue-aware
-export function syncProfile(p: { id: string; nama: string; tanggal_lahir: string; hpht: string; gravida: number; para: number; abortus: number; fasyankes: string; nama_bidan: string; noHp: string }) {
+export function syncProfile(p: { id: string; nama: string; email: string; tanggal_lahir: string; hpht: string; gravida: number; para: number; abortus: number; fasyankes: string; nama_bidan: string; noHp: string }) {
   void fireOrQueue('profiles', 'upsert', {
-    id: p.id, nama: p.nama, tanggal_lahir: p.tanggal_lahir || null, hpht: p.hpht || null,
+    id: p.id, nama: p.nama, email: p.email, tanggal_lahir: p.tanggal_lahir || null, hpht: p.hpht || null,
     gravida: p.gravida, para: p.para, abortus: p.abortus,
     fasyankes: p.fasyankes, nama_bidan: p.nama_bidan, no_hp: p.noHp,
     updated_at: new Date().toISOString(),

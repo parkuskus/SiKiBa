@@ -5,6 +5,7 @@ import Dexie, { type Table } from 'dexie'
 export interface Profile {
   id: string // auth uid (uuid)
   nama: string
+  email: string
   tanggal_lahir: string // YYYY-MM-DD
   noHp: string
   hpht: string // YYYY-MM-DD
@@ -68,6 +69,9 @@ export class SIAGADB extends Dexie {
     })
     this.version(4).stores({
       doseLogs: 'id, userId, tanggal',
+    })
+    this.version(5).stores({
+      profiles: 'id, hpht, noHp, email',
     })
   }
 }

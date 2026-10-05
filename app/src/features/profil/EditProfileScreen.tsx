@@ -8,7 +8,7 @@ import { db } from "@/data/db"
 import { syncProfile } from "@/data/sync"
 import type { Profile } from "@/data/db"
 
-// S-08: ubah profil (noHp dikunci — identitas auth)
+// S-08: email dan nomor telepon ditampilkan sebagai identitas akun.
 export default function EditProfileScreen({ profile, onBack, onSaved }: { profile: Profile; onBack: () => void; onSaved: () => void }) {
   const [form, setForm] = useState({
     nama: profile.nama,
@@ -34,7 +34,7 @@ export default function EditProfileScreen({ profile, onBack, onSaved }: { profil
       const now = new Date().toISOString()
       const row: Profile = { ...profile, nama: form.nama.trim(), tanggal_lahir: form.tanggal_lahir, hpht: form.hpht, gravida: Number(form.gravida), para: Number(form.para), abortus: Number(form.abortus), fasyankes: form.fasyankes, nama_bidan: form.nama_bidan, updatedAt: now }
       await db.profiles.put(row)
-      syncProfile({ id: row.id, nama: row.nama, tanggal_lahir: row.tanggal_lahir, hpht: row.hpht, gravida: row.gravida, para: row.para, abortus: row.abortus, fasyankes: row.fasyankes, nama_bidan: row.nama_bidan, noHp: row.noHp })
+      syncProfile({ id: row.id, nama: row.nama, email: row.email, tanggal_lahir: row.tanggal_lahir, hpht: row.hpht, gravida: row.gravida, para: row.para, abortus: row.abortus, fasyankes: row.fasyankes, nama_bidan: row.nama_bidan, noHp: row.noHp })
       onSaved()
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : "Gagal menyimpan")
@@ -64,14 +64,18 @@ export default function EditProfileScreen({ profile, onBack, onSaved }: { profil
             <Label className="text-xs font-medium text-[#33443F]">Nama Bunda</Label>
             <Input value={form.nama} onChange={(e) => setForm((s) => ({ ...s, nama: e.target.value }))} className="h-11 rounded-[14px] border-[#D9E7E2] bg-white px-3" />
           </div>
+          <div className="min-w-0 space-y-1.5">
+            <Label className="text-xs font-medium text-[#33443F]">Email</Label>
+            <Input type="email" value={profile.email || "Belum diisi"} disabled aria-label="Email akun terkunci" className="h-11 rounded-[14px] border-[#D9E7E2] bg-[#F1F5F2] px-3 text-sm text-[#6C757D] disabled:opacity-100" />
+          </div>
           <div className="grid grid-cols-2 gap-2.5">
             <div className="min-w-0 space-y-1.5">
               <Label className="text-xs font-medium text-[#33443F]">Tanggal lahir</Label>
               <DateInput value={form.tanggal_lahir} onChange={(value) => setForm((s) => ({ ...s, tanggal_lahir: value }))} aria-label="Tanggal lahir" className="h-11 rounded-[14px] border-[#D9E7E2] bg-white px-3 text-sm text-[#33443F]" />
             </div>
             <div className="min-w-0 space-y-1.5">
-              <Label className="text-xs font-medium text-[#33443F]">Nomor HP</Label>
-              <Input value={profile.noHp || "Belum diisi"} disabled aria-label="Nomor HP terkunci" className="h-11 rounded-[14px] border-[#D9E7E2] bg-[#F1F5F2] px-3 text-sm text-[#6C757D] disabled:opacity-100" />
+              <Label className="text-xs font-medium text-[#33443F]">Nomor telepon</Label>
+              <Input type="tel" value={profile.noHp || "Belum diisi"} disabled aria-label="Nomor telepon" className="h-11 rounded-[14px] border-[#D9E7E2] bg-[#F1F5F2] px-3 text-sm text-[#6C757D] disabled:opacity-100" />
             </div>
           </div>
         </section>

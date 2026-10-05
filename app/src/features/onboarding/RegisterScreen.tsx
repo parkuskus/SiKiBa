@@ -1,14 +1,11 @@
 import { useRef, useState } from "react"
-import { ChevronRight, MessageCircle } from "lucide-react"
+import { ChevronRight, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DateInput } from "@/components/ui/date-input"
 import { Label } from "@/components/ui/label"
 import { submitRegister, formatGPA } from "@/features/onboarding/registerForm"
-import { toE164, dummyEmail, makeDummyCode } from "@/features/onboarding/otpDummy"
 import { supabase } from "@/data/supabase"
-import { db } from "@/data/db"
-import { syncProfile } from "@/data/sync"
 
 type Props = { onBack: () => void; onSuccess: () => void; onToLogin: () => void }
 
@@ -16,6 +13,7 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
   const [form, setForm] = useState({
     nama: "",
     tanggalLahir: "",
+    email: "",
     noHp: "",
     gravida: 1,
     para: 0,
@@ -52,8 +50,7 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
   }
   const [otpErr, setOtpErr] = useState<string | null>(null)
   const [otpLoading, setOtpLoading] = useState(false)
-  const [phoneForOtp, setPhoneForOtp] = useState("")
-  const [demoCode, setDemoCode] = useState<string | null>(null)
+  const [emailForOtp, setEmailForOtp] = useState("")
 
   const set = (k: string, v: string | number) => setForm((s) => ({ ...s, [k]: v }))
 
@@ -64,7 +61,8 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
     const tempErrs: Record<string, string> = {}
     if (!form.nama.trim()) tempErrs.nama = "Nama wajib"
     if (!form.tanggalLahir) tempErrs.tanggalLahir = "Tanggal lahir wajib"
-    if (!/^08\d{8,11}$/.test(form.noHp.replace(/[^0-9]/g, ""))) tempErrs.noHp = "No HP tidak valid (08...)"
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) tempErrs.email = "Alamat email tidak valid"
+    if (!/^08\d{8,11}$/.test(form.noHp.replace(/[^0-9]/g, ""))) tempErrs.noHp = "Nomor telepon tidak valid"
     if (!form.hpht) tempErrs.hpht = "HPHT wajib"
     if (!form.fasyankes.trim()) tempErrs.fasyankes = "Fasyankes wajib"
     if (!form.namaBidan.trim()) tempErrs.namaBidan = "Nama bidan wajib"
@@ -79,6 +77,7 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
         const res = await submitRegister({
           nama: form.nama,
           tanggalLahir: form.tanggalLahir,
+          email: form.email,
           noHp: form.noHp,
           gravida: Number(form.gravida),
           para: Number(form.para),
@@ -101,23 +100,10 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
 
     setLoading(true)
     try {
-      const e164 = toE164(form.noHp)
-      setPhoneForOtp(e164)
-      // demo: generate kode sintetis agar bisa dicoba tanpa SMS/email beneran
-      const code = makeDummyCode()
-      setDemoCode(code)
-      console.log("[demo OTP]", code, "untuk", e164)
-      // coba phone OTP, kalau gagal fallback ke email sintetis — tapi demo tetap jalan
-      try {
-        const { error } = await supabase.auth.signInWithOtp({ phone: e164 })
-        if (error) {
-          const email = dummyEmail(form.noHp)
-          setPhoneForOtp(email)
-          await supabase.auth.signInWithOtp({ email })
-        }
-      } catch {
-        // abaikan, demo code tetap bisa dipakai
-      }
+      const normalizedEmail = form.email.trim().toLowerCase()
+      setEmailForOtp(normalizedEmail)
+      const { error } = await supabase.auth.signInWithOtp({ email: normalizedEmail })
+      if (error) throw error
       setStep("otp")
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Gagal mengirim kode OTP"
@@ -133,45 +119,21 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
       setOtpErr("Kode 6 digit wajib diisi")
       return
     }
-    // demo didahulukan — biar bisa dicoba tanpa SMS beneran (online maupun offline)
-    if (demoCode && otpValue.trim() === demoCode) {
-      const demoUserId = `demo-${form.noHp.replace(/[^0-9]/g, "")}`
-      const tmp = await submitRegister({
-        nama: form.nama,
-        tanggalLahir: form.tanggalLahir,
-        noHp: form.noHp,
-        gravida: Number(form.gravida),
-        para: Number(form.para),
-        abortus: Number(form.abortus),
-        hpht: form.hpht,
-        fasyankes: form.fasyankes,
-        namaBidan: form.namaBidan,
-      })
-      const profile = { ...tmp.profile, id: demoUserId }
-      await db.profiles.put(profile)
-      syncProfile(profile)
-      try { await db.profiles.delete(tmp.profile.id) } catch {}
-      console.log("[register demo]", tmp.uk, tmp.hpl, demoUserId)
-      onSuccess()
-      return
-    }
     const isOnline = typeof navigator !== "undefined" && navigator.onLine
-    // online → coba verifikasi Supabase beneran
     if (isOnline) {
       setOtpLoading(true)
       try {
-        const isEmail = phoneForOtp.includes("@")
         const { data, error } = await supabase.auth.verifyOtp({
-          phone: isEmail ? undefined : (phoneForOtp as string),
-          email: isEmail ? (phoneForOtp as string) : undefined,
+          email: emailForOtp,
           token: otpValue.trim(),
-          type: isEmail ? "email" : "sms",
-        } as never)
+          type: "email",
+        })
         if (error) throw error
         const userId = data.user?.id ?? data.session?.user?.id
         if (!userId) throw new Error("Verifikasi berhasil tapi sesi tidak ditemukan")
-        const tmp = await submitRegister({
+        const result = await submitRegister({
           nama: form.nama,
+          email: emailForOtp,
           tanggalLahir: form.tanggalLahir,
           noHp: form.noHp,
           gravida: Number(form.gravida),
@@ -180,14 +142,8 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
           hpht: form.hpht,
           fasyankes: form.fasyankes,
           namaBidan: form.namaBidan,
-        })
-        const profile = { ...tmp.profile, id: userId }
-        await db.profiles.put(profile)
-        syncProfile(profile)
-        try {
-          await db.profiles.delete(tmp.profile.id)
-        } catch {}
-        console.log("[register] UK", tmp.uk, "HPL", tmp.hpl, "GPA", formatGPA(profile.gravida, profile.para, profile.abortus), "uid", userId)
+        }, userId)
+        console.log("[register] GPA", formatGPA(result.profile.gravida, result.profile.para, result.profile.abortus), "uid", userId)
         onSuccess()
         return
       } catch (e: unknown) {
@@ -214,19 +170,12 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
               <p className="text-xs text-white/90">Langkah 2 dari 2</p>
             </div>
             <span className="grid size-11 shrink-0 place-items-center rounded-full bg-white text-[#DB2777]">
-              <MessageCircle className="size-5" />
+              <Mail className="size-5" />
             </span>
           </div>
         </div>
         <div className="mx-auto w-full max-w-[480px] flex-1 px-6 pb-6 -mt-6">
-          <p className="text-center text-[13px] text-[#33443F]">Kode 6 digit dikirim ke {phoneForOtp.includes("@") ? "email" : "WhatsApp"} {phoneForOtp}</p>
-          {demoCode && (
-            <div className="mt-3 rounded-[20px] bg-[#FFF8EC] px-3 py-3 ring-1 ring-[#F5C16C]/40 text-center">
-              <p className="text-xs font-medium text-[#7A5F00]">Kode demo untuk percobaan</p>
-              <p className="font-mono text-2xl font-bold tracking-[0.3em] text-[#1D2B29]">{demoCode}</p>
-              <p className="text-xs text-[#33443F]">Gunakan kode ini tanpa SMS</p>
-            </div>
-          )}
+          <p className="text-center text-[13px] text-[#33443F]">Kode 6 digit dikirim ke {emailForOtp}</p>
           <div className="mt-4 rounded-[24px] bg-[#EAF4F0] p-4 space-y-4">
             <div className="flex items-center justify-center gap-2">
               {digits.map((d, i) => (
@@ -257,7 +206,7 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
               Kirim ulang kode
             </button>
           </div>
-          <p className="mt-3 text-center text-xs text-[#33443F]">Pastikan nomor aktif untuk hasil akurat</p>
+          <p className="mt-3 text-center text-xs text-[#33443F]">Periksa kotak masuk dan folder spam</p>
         </div>
         <div className="relative mx-auto mt-auto w-full max-w-[480px]">
           <img src="/illu/illu-11-florist-2.png" alt="" aria-hidden className="pointer-events-none w-full select-none object-cover" />
@@ -279,15 +228,19 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
           </div>
         </div>
       </div>
-      <div className="mx-auto w-full max-w-[480px] flex-1 px-6 pb-6 -mt-6 space-y-3.5">
-        <p className="text-center text-[13px] text-[#33443F]">Isi data kehamilan untuk skrining personal</p>
-
+      <div className="mx-auto w-full max-w-[480px] flex-1 px-6 pb-6 mt-2 space-y-3.5">
         <div className="rounded-[24px] bg-[#EAF4F0] p-3.5 space-y-3">
-          <p className="text-sm font-bold text-[#1D2B29]">Data diri ibu</p>
-          <div className="space-y-1.5">
+          <p className="text-lg font-bold text-[#1D2B29]">Data diri ibu</p>
+          <div className="space-y-1.5 mt-2">
             <Label className="text-xs text-[#33443F]">Nama lengkap</Label>
             <Input value={form.nama} onChange={(e) => set("nama", e.target.value)} placeholder="cth Siti Aminah" className="rounded-2xl bg-white" />
             {errs.nama && <p className="text-xs text-[#E57373]">{errs.nama}</p>}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs text-[#33443F]">Email</Label>
+            <Input type="email" autoComplete="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="nama@email.com" className="rounded-2xl bg-white" />
+            {errs.email && <p className="text-xs text-[#E57373]">{errs.email}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -297,16 +250,16 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
               {errs.tanggalLahir && <p className="text-xs text-[#E57373]">{errs.tanggalLahir}</p>}
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs text-[#33443F]">Nomor WhatsApp</Label>
-              <Input value={form.noHp} onChange={(e) => set("noHp", e.target.value)} placeholder="0812xxxxxxx" className="rounded-2xl bg-white" />
+              <Label className="text-xs text-[#33443F]">Nomor telepon</Label>
+              <Input type="tel" autoComplete="tel" inputMode="tel" value={form.noHp} onChange={(e) => set("noHp", e.target.value)} placeholder="08xxxxxxxxxx" className="rounded-2xl bg-white" />
               {errs.noHp && <p className="text-xs text-[#E57373]">{errs.noHp}</p>}
             </div>
           </div>
         </div>
 
         <div className="rounded-[24px] bg-[#EAF4F0] p-3.5 space-y-3">
-          <p className="text-sm font-bold text-[#1D2B29]">Data kehamilan</p>
-          <div className="grid grid-cols-3 gap-2">
+          <p className="text-lg font-bold text-[#1D2B29]  ">Data kehamilan</p>
+          <div className="grid grid-cols-3 gap-2 mt-2">
             <div className="space-y-1 rounded-2xl bg-white px-2 py-2.5 text-center">
               <Label className="text-xs text-[#33443F]">Hamil ke</Label>
               <Input type="number" value={form.gravida} onChange={(e) => set("gravida", Number(e.target.value))} className="rounded-xl bg-white text-center font-bold" />
@@ -350,14 +303,13 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
 
         {globalErr && <p className="text-xs text-[#E57373] text-center">{globalErr}</p>}
 
-        <Button onClick={handleRequestOtp} disabled={loading} className="w-full rounded-full bg-[#4A6E54] hover:bg-[#3D5C46] py-3.5 text-sm font-semibold text-white">
+        <Button onClick={handleRequestOtp} disabled={loading} className="w-full rounded-full bg-[#4A6E54] hover:bg-[#3D5C46] py-5.5 text-sm font-semibold text-white">
           {loading ? "Mengirim kode" : "Daftar dan lanjut"}
         </Button>
 
         <button onClick={onToLogin} className="w-full rounded-full bg-white py-3 text-center text-sm font-medium text-[#33443F] ring-2 ring-[#FFCFCF]">
           Sudah punya akun? Masuk
         </button>
-        <p className="text-center text-xs text-[#33443F]">Data tersimpan aman di HP dan cloud</p>
       </div>
       <div className="relative mx-auto mt-auto w-full max-w-[480px]">
         <img src="/illu/illu-11-florist-2.png" alt="" aria-hidden className="pointer-events-none w-full select-none object-cover" />

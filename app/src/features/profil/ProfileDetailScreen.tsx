@@ -13,7 +13,7 @@ function Row({ label, value, verified }: { label: string; value: string; verifie
   )
 }
 
-// Profil Saya ala Gojek — data sesuai model SIAGA (tanpa email/alamat fiktif)
+// Profil Saya menampilkan identitas autentikasi dan data SIAGA.
 function hitungUsia(tglLahir?: string): number | null {
   if (!tglLahir) return null
   const b = new Date(tglLahir)
@@ -67,7 +67,8 @@ export default function ProfileDetailScreen({
           <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Data diri</h2>
           <div className="mt-1">
             <Row label="Nama" value={profile.nama} />
-            <Row label="Nomor HP" value={profile.noHp} verified={verified} />
+            <Row label="Email" value={profile.email} verified={verified} />
+            <Row label="Nomor telepon" value={profile.noHp} />
             <Row label="Usia" value={usia ? `${usia} tahun` : "-"} />
           </div>
         </section>

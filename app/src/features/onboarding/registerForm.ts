@@ -6,6 +6,7 @@ import { calcHPL, weeksFromHpht, trimester, progressPercent } from '@/clinical-r
 
 export type RegisterInput = {
   nama: string
+  email: string
   tanggalLahir: string // YYYY-MM-DD
   noHp: string
   gravida: number
@@ -23,8 +24,9 @@ export function formatGPA(g: number, p: number, a: number): string {
 export function validateRegisterInput(v: RegisterInput): Record<string, string> {
   const e: Record<string, string> = {}
   if (!v.nama.trim()) e.nama = 'Nama wajib'
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email.trim())) e.email = 'Alamat email tidak valid'
   if (!v.tanggalLahir) e.tanggalLahir = 'Tanggal lahir wajib'
-  if (!/^08\d{8,11}$/.test(v.noHp.replace(/[^0-9]/g, ''))) e.noHp = 'No HP tidak valid (08...)'
+  if (!/^08\d{8,11}$/.test(v.noHp.replace(/[^0-9]/g, ''))) e.noHp = 'Nomor telepon tidak valid'
   if (v.gravida < 1) e.gravida = 'Gravida ≥1'
   if (v.para < 0 || v.para > v.gravida) e.para = 'Para 0..gravida'
   if (v.abortus < 0 || v.abortus > v.gravida) e.abortus = 'Abortus 0..gravida'
@@ -35,7 +37,7 @@ export function validateRegisterInput(v: RegisterInput): Record<string, string> 
   return e
 }
 
-export async function submitRegister(input: RegisterInput): Promise<{ profile: Profile; uk: number; hpl: string; tri: 1|2|3; progress: number }> {
+export async function submitRegister(input: RegisterInput, userId?: string): Promise<{ profile: Profile; uk: number; hpl: string; tri: 1|2|3; progress: number }> {
   const errs = validateRegisterInput(input)
   if (Object.keys(errs).length) throw Object.assign(new Error('validasi gagal'), { errs })
 
@@ -43,11 +45,12 @@ export async function submitRegister(input: RegisterInput): Promise<{ profile: P
   const hpl = calcHPL(input.hpht)
   const tri = trimester(uk)
   const progress = progressPercent(uk)
-  const id = globalThis.crypto?.randomUUID?.() ?? ("demo-" + Date.now() + "-" + Math.random().toString(36).slice(2,8))
+  const id = userId ?? globalThis.crypto?.randomUUID?.() ?? ("demo-" + Date.now() + "-" + Math.random().toString(36).slice(2,8))
 
   const profile: Profile = {
     id,
     nama: input.nama.trim(),
+    email: input.email.trim().toLowerCase(),
     tanggal_lahir: input.tanggalLahir,
     noHp: input.noHp.replace(/[^0-9]/g, ''),
     hpht: input.hpht,

@@ -52,7 +52,7 @@
 - [x] Figma eksplorasi bebas S-00 s.d. S-03g (semua A+) — file `Project SIAGA Bunda`, token `primary #7AAE9A` / `primary-dark #4A6E54`, pink sekunder. Status per layar: `SCREENS.md`
 - [x] FE ikut Figma: S-00 (hero `illu-01-hero`, florist `illu-11-florist-2`), S-01 + OTP 6 kotak, S-02 Beranda (hero `illu-12-hero-2`, tanpa AppHeader & kartu Pekan). `index.css`: blok global `h1/h2` dihapus
 - [ ] Lanjut: Figma S-04 (Nifas) lalu FE-nya — pola stage + sheet + BottomNav pil (lihat `DESIGN.md`)
-- [x] OTP Supabase Auth S-01/S-01b — **DEMO** sintetis `@siagabunda.test` + kode demo 6 digit tampil di UI `RegisterScreen.tsx:90` `LoginScreen.tsx:30` — real SMS OTP pending setup Twilio di Supabase Dashboard (Auth → Providers → Phone), untuk UAT ganti ke SMS beneran
+- [x] OTP Supabase Auth S-01/S-01b — email sebagai identitas OTP, field email tersimpan di profil Dexie/Supabase; OTP email memerlukan konfigurasi SMTP/Auth email Supabase untuk produksi
 - [x] FE shell HP-only 480px + S-00 Splash 2.2s + S-01 Register + S-01b Login + S-02 Beranda Image2-style + S-03a RiskFactorScreen end-to-end (Dexie + sync) — modular `app/src/features/` `app/src/shared/` `App.tsx:40`
 - [x] FE S-03b-f 5 skrining sisa — `GiziScreen.tsx` `DangerSignScreen.tsx` `PreeklamsiaScreen.tsx` `DmgScreen.tsx` `MentalScreen.tsx` + `SkriningPage.tsx` 6 tab + progress + ringkasan, Dexie queue fix `crypto.randomUUID` fallback `features/skrining/**/*.ts`
 - [ ] Sync Dexie ↔ Supabase (wire `*Form.ts` `db.*.put()` → `supabase.from().insert()` saat online) — stub `supabase.ts` sudah siap, tinggal 1 baris per form
@@ -69,6 +69,7 @@
 - [ ] Fase 6 — QA + validasi pakar SpOG + test retensi/notifikasi lintas browser (butuh APK PWA)
 - [ ] Fase 7 — UAT (butuh Ethical Clearance)
 - [ ] **Deploy Play Store (TWA)**: `VitePWA` manifest (`vite.config.ts:6`) + `public/logo-siaga-bunda.png` + `bubblewrap build` → `.aab` → Play Console `riset@poltekkesbandung.ac.id` `ARCHITECTURE.md:33,162`
+- [x] Ganti onboarding OTP dari nomor telepon/demo ke email Supabase Auth; tambah profil `email` dan migration `004_profile_email.sql` (2026-10-05)
 
 ## Catatan Keputusan
 - PWA, bukan native — mitigasi retensi iOS (Dexie cache + sync Supabase) `ARCHITECTURE.md:6,9`
