@@ -4,6 +4,9 @@ supabase/.temp/
 app/supabase/
 .env
 
+# local helper repository; not required to deploy the app
+/mcp-auth-helper/
+
 # python
 scripts/__pycache__/
 __pycache__/
