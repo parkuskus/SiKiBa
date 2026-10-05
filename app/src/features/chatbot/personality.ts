@@ -5,11 +5,9 @@
 
 export const NAMA = "Siba"
 export const GELAR = "Sahabat Bunda"
-export const TYPING = "Siba sedang mengetik"
+export const TYPING = "Siba sedang mengetik..."
 export const PLACEHOLDER = "Cerita ke Siba di sini"
 export const AVATAR = "💗" // ponytail. emoji satu-satunya yang diizinkan, sebagai wajah Siba di header. Jangan tambah di bubble chat.
-export const JAWABAN_LUAR_TOPIK = "Siba fokus membantu seputar kesehatan ibu dan bayi serta penggunaan SIAGA Bunda. Ada yang ingin Bunda tanyakan tentang kehamilan, masa nifas, menyusui, atau kesehatan si kecil?"
-export const TOPIK_SIAGA = /halo|hai|pagi|siang|sore|malam|terima kasih|makasih|ibu|bunda|hamil|kehamilan|hpht|trimester|janin|persalinan|melahirkan|nifas|menyusui|asi|bayi|balita|neonatal|bbl|mual|muntah|pusing|kliyengan|sakit kepala|perdarahan|flek|ketuban|kontraksi|demam|sesak|nyeri|bengkak|tensi|tekanan darah|proteinuria|kuning|ikterus|menyusu|diare|sembelit|gizi|makan|minum|obat|vitamin|suplemen|batuk|pilek|gatal|depresi|sedih|cemas|takut|khawatir|stress|stres|epds|skrining|periksa|bidan|puskesmas|anc|laktasi|payudara|ruam|napas|tidur|menstruasi|kesuburan|kontrasepsi|keluarga berencana|siapa\s+(?:nama|kamu)|nama(?:mu| anda)|aplikasi|akun|otp|masuk|daftar|profil|edukasi|belajar|pengingat|jadwal/i
 
 // Sapaan pembuka — dipilih acak biar tidak monoton
 export const SAPAAN: string[] = [

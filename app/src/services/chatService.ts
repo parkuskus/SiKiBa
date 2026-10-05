@@ -1,5 +1,5 @@
 import { supabase } from "@/data/supabase"
-import { FAQ, JAWABAN_BINGUNG, JAWABAN_LUAR_TOPIK, JAWABAN_OFFLINE, TOPIK_SIAGA } from "@/features/chatbot/personality"
+import { FAQ, JAWABAN_BINGUNG, JAWABAN_OFFLINE } from "@/features/chatbot/personality"
 
 // ponytail: client tipis — online -> Edge Function `chat`, offline -> FAQ hangat lokal. API key tidak pernah di sini.
 
@@ -18,10 +18,6 @@ const berisiProsesInternal = /(?:^|\n)\s*(?:here['’]s a thinking process|think
 export async function tanyaChatbot(pesan: string): Promise<ChatReply> {
   const teks = pesan.trim()
   if (!teks) throw new Error("pesan kosong")
-  if (!TOPIK_SIAGA.test(teks)) return { answer: JAWABAN_LUAR_TOPIK, sources: [], escalate: false, offline: false, verified: false }
-  if (/siapa\s+(?:nama|kamu)|nama(?:mu| anda)/i.test(teks)) {
-    return { answer: "Aku Siba, teman digital Bunda di SIAGA Bunda. Aku bisa membantu menjawab pertanyaan seputar kehamilan, masa nifas, dan bayi baru lahir.", sources: [], escalate: false, offline: false, verified: false }
-  }
   // offline -> FAQ lokal, tidak pernah gagal
   if (typeof navigator !== "undefined" && !navigator.onLine) {
     const local = jawabOffline(teks)

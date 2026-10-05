@@ -51,8 +51,6 @@ Batas klinis:
 - Untuk keluhan yang berlanjut atau memburuk, sarankan menghubungi bidan atau fasilitas kesehatan.`;
 
 const INTERNAL_REASONING = /(?:^|\n)\s*(?:here['’]s a thinking process|thinking process:|chain.of.thought|analyze user input:|identify the core question|check rules?\s*&\s*constraints:|ringkasan skrining:|potongan guideline:|analisis internal:|analisis input:|langkah penalaran:|<think>|<analysis>)/i;
-const TOPIK_SIAGA = /halo|hai|pagi|siang|sore|malam|terima kasih|makasih|ibu|bunda|hamil|kehamilan|hpht|trimester|janin|persalinan|melahirkan|nifas|menyusui|asi|bayi|balita|neonatal|bbl|mual|muntah|pusing|kliyengan|sakit kepala|perdarahan|flek|ketuban|kontraksi|demam|sesak|nyeri|bengkak|tensi|tekanan darah|proteinuria|kuning|ikterus|menyusu|diare|sembelit|gizi|makan|minum|obat|vitamin|suplemen|batuk|pilek|gatal|depresi|sedih|cemas|takut|khawatir|stress|stres|epds|skrining|periksa|bidan|puskesmas|anc|laktasi|payudara|ruam|napas|tidur|menstruasi|kesuburan|kontrasepsi|keluarga berencana|siapa\s+(?:nama|kamu)|nama(?:mu| anda)|aplikasi|akun|otp|masuk|daftar|profil|edukasi|belajar|pengingat|jadwal/i;
-const JAWABAN_LUAR_TOPIK = "Siba fokus membantu seputar kesehatan ibu dan bayi serta penggunaan SIAGA Bunda. Ada yang ingin Bunda tanyakan tentang kehamilan, masa nifas, menyusui, atau kesehatan si kecil?";
 
 type Screening = { tipe: string; skor: number | null; kategori: string | null; detail: Record<string, unknown> | null; created_at: string };
 type Profile = { nama: string | null; hpht: string | null; gravida: number | null; para: number | null; abortus: number | null };
@@ -125,10 +123,6 @@ serve(async (req) => {
 
     const { message } = await req.json() as { message: string };
     if (!message?.trim()) return Response.json({ error: "message kosong" }, { status: 400, headers: corsHeaders });
-    if (!TOPIK_SIAGA.test(message)) {
-      return Response.json({ answer: JAWABAN_LUAR_TOPIK, sources: [], escalate: false }, { headers: corsHeaders });
-    }
-
     // User-scoped JWT + RLS; context excludes email, phone, full DOB, and contact details.
     const [screeningResult, profileResult, nifasResult, babyResult] = await Promise.all([
       supabase.from("screening_results")
