@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { ChevronRight, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -51,6 +51,13 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
   const [otpErr, setOtpErr] = useState<string | null>(null)
   const [otpLoading, setOtpLoading] = useState(false)
   const [emailForOtp, setEmailForOtp] = useState("")
+  const [resendCooldown, setResendCooldown] = useState(0)
+
+  useEffect(() => {
+    if (!resendCooldown) return
+    const timer = window.setTimeout(() => setResendCooldown((seconds) => Math.max(0, seconds - 1)), 1000)
+    return () => window.clearTimeout(timer)
+  }, [resendCooldown])
 
   const set = (k: string, v: string | number) => setForm((s) => ({ ...s, [k]: v }))
 
@@ -106,6 +113,7 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
     }
 
     setLoading(true)
+    setResendCooldown(60)
     try {
       const normalizedEmail = form.email.trim().toLowerCase()
       setEmailForOtp(normalizedEmail)
@@ -212,8 +220,8 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
             <Button onClick={handleVerifyOtp} disabled={otpLoading} className="w-full rounded-full bg-[#4A6E54] hover:bg-[#3D5C46] py-3.5 text-sm font-semibold text-white">
               {otpLoading ? "Memeriksa" : "Verifikasi"}
             </Button>
-            <button onClick={handleRequestOtp} disabled={loading || otpLoading} className="w-full text-center text-sm font-medium text-[#33443F] disabled:opacity-50">
-              {loading ? "Mengirim kode" : "Kirim ulang kode"}
+            <button onClick={handleRequestOtp} disabled={loading || otpLoading || resendCooldown > 0} className="w-full text-center text-sm font-medium text-[#33443F] disabled:opacity-50">
+              {loading ? "Mengirim kode" : resendCooldown > 0 ? `Kirim ulang dalam ${resendCooldown} detik` : "Kirim ulang kode"}
             </button>
           </div>
           <p className="mt-3 text-center text-xs text-[#33443F]">Periksa kotak masuk dan folder spam</p>
@@ -313,8 +321,8 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
 
         {globalErr && <p className="text-xs text-[#E57373] text-center">{globalErr}</p>}
 
-        <Button onClick={handleRequestOtp} disabled={loading} className="w-full rounded-full bg-[#4A6E54] hover:bg-[#3D5C46] py-5.5 text-sm font-semibold text-white">
-          {loading ? "Mengirim kode" : "Daftar dan lanjut"}
+        <Button onClick={handleRequestOtp} disabled={loading || resendCooldown > 0} className="w-full rounded-full bg-[#4A6E54] hover:bg-[#3D5C46] py-5.5 text-sm font-semibold text-white">
+          {loading ? "Mengirim kode" : resendCooldown > 0 ? `Tunggu ${resendCooldown} detik` : "Daftar dan lanjut"}
         </Button>
 
         <button onClick={onToLogin} className="w-full rounded-full bg-white py-3 text-center text-sm font-medium text-[#33443F] ring-2 ring-[#FFCFCF]">

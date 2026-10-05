@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { ChevronLeft, ChevronRight, LogIn, Mail, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -17,7 +17,14 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
   const [otpErr, setOtpErr] = useState<string | null>(null)
   const [otpLoading, setOtpLoading] = useState(false)
   const [emailForOtp, setEmailForOtp] = useState("")
+  const [resendCooldown, setResendCooldown] = useState(0)
   const otpRefs = useRef<(HTMLInputElement | null)[]>([])
+
+  useEffect(() => {
+    if (!resendCooldown) return
+    const timer = window.setTimeout(() => setResendCooldown((seconds) => Math.max(0, seconds - 1)), 1000)
+    return () => window.clearTimeout(timer)
+  }, [resendCooldown])
 
   const updateOtpDigit = (index: number, value: string) => {
     const digit = value.replace(/[^0-9]/g, "").slice(-1)
@@ -63,6 +70,7 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
       return
     }
     setLoading(true)
+    setResendCooldown(60)
     try {
       setEmailForOtp(normalizedEmail)
       const { error } = await supabase.auth.signInWithOtp({ email: normalizedEmail, options: { shouldCreateUser: false } })
@@ -146,8 +154,8 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
           <Button onClick={handleVerifyOtp} disabled={otpLoading} className="w-full rounded-full bg-[#4A6E54] px-4 py-5 mt-3 text-base font-bold text-white hover:bg-[#3D5C46]">
             {otpLoading ? "Memeriksa" : "Verifikasi"}
           </Button>
-          <button onClick={handleRequestOtp} disabled={loading || otpLoading} className="w-full text-center text-sm font-medium leading-normal text-[#33443F] disabled:opacity-50">
-            {loading ? "Mengirim kode" : "Kirim ulang kode"}
+          <button onClick={handleRequestOtp} disabled={loading || otpLoading || resendCooldown > 0} className="w-full text-center text-sm font-medium leading-normal text-[#33443F] disabled:opacity-50">
+            {loading ? "Mengirim kode" : resendCooldown > 0 ? `Kirim ulang dalam ${resendCooldown} detik` : "Kirim ulang kode"}
           </button>
         </div>
         <div className="relative mx-auto mt-auto w-full max-w-[480px]">
@@ -180,8 +188,8 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
 
             {err && <p className="text-xs text-[#E57373] text-center">{err}</p>}
 
-            <Button onClick={handleRequestOtp} disabled={loading} className="w-full rounded-full bg-[#4A6E54] px-4 py-5 text-base font-bold text-white hover:bg-[#3D5C46]">
-              {loading ? "Mengirim kode" : "Kirim Kode OTP"}
+            <Button onClick={handleRequestOtp} disabled={loading || resendCooldown > 0} className="w-full rounded-full bg-[#4A6E54] px-4 py-5 text-base font-bold text-white hover:bg-[#3D5C46]">
+              {loading ? "Mengirim kode" : resendCooldown > 0 ? `Tunggu ${resendCooldown} detik` : "Kirim Kode OTP"}
             </Button>
 
             <button onClick={onToRegister} className="w-full text-center text-sm font-medium leading-normal text-[#33443F]">
