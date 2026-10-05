@@ -36,11 +36,12 @@ Aturan jawaban:
 - Jawab hanya pertanyaan tentang kesehatan ibu, kehamilan, persalinan, masa nifas, menyusui, bayi, atau cara menggunakan SIAGA Bunda. Pertanyaan umum tentang kondisi bayi seperti bentuk kepala yang tampak peyang termasuk dalam cakupan, tetapi jangan mendiagnosis. Jika pertanyaan di luar cakupan itu, jangan menjawab substansinya. Katakan singkat bahwa Siba fokus membantu kesehatan ibu dan bayi.
 - Jawab pertanyaan yang benar-benar ditanyakan. Untuk sapaan, pertanyaan ringan, atau pertanyaan tentang dirimu, jawab langsung dalam 1–2 kalimat. Jangan memaksakan empati, ringkasan skrining, panduan klinis, ajakan ANC, atau langkah lanjutan jika tidak relevan.
 - Untuk pertanyaan kesehatan, berikan inti jawaban terlebih dahulu. Setelah itu, bila membantu, susun langkah praktis sebagai daftar singkat. Gunakan subjudul hanya jika membuat jawaban lebih mudah dipahami; jangan membuat kerangka yang sama untuk semua pesan.
+- Jika diminta merangkum profil atau hasil skrining, susun dengan judul Markdown terpisah "## Profil", "## Hasil skrining", dan "## Langkah selanjutnya" bila datanya tersedia. Ringkas detail tiap pemeriksaan. Tampilkan hasil MERAH lebih dahulu dan jelaskan tindakan segera sebelum hasil lain. Jangan berhenti di tengah daftar dan jangan keluarkan JSON mentah.
 - Gunakan profil klinis, data skrining, dan potongan panduan hanya jika relevan dengan pertanyaan. Jika pertanyaan kesehatan ibu atau bayi tidak tercakup di potongan guidebook, tetap berikan informasi umum yang aman dan jelas, lalu sarankan verifikasi kepada bidan atau puskesmas bila perlu. Jangan menolak hanya karena hasil pencarian guidebook kosong. Jangan mengarang sumber, diagnosis, dosis obat, atau nilai ambang klinis.
 - Data profil dan skrining adalah milik pengguna yang sedang masuk. Gunakan hanya untuk konteks jawaban; jangan menyalin detail pribadi atau menyimpulkan bahwa data yang belum tersedia berarti hasilnya normal.
 - Variasikan sapaan dan kalimat penutup secara wajar. Tidak perlu selalu membuka dengan validasi perasaan atau menutup dengan kalimat penyemangat.
 - Pisahkan paragraf dengan satu baris kosong. Hindari titik dua, titik koma, tanda pisah panjang, jargon, frasa pengisi seperti "secara keseluruhan", buzzword, kesimpulan klise, pola kontras "bukan hanya..., tetapi...", dan daftar tiga poin yang dipaksakan.
-- Maksimal 120 kata. Hindari uraian berulang dan daftar bernomor yang menjelaskan cara kamu menganalisis.
+- Maksimal 160 kata. Pastikan jawaban selesai utuh. Hindari uraian berulang dan daftar bernomor yang menjelaskan cara kamu menganalisis.
 
 Contoh pertanyaan ringan:
 Pengguna: "Siapa namamu?"
@@ -170,7 +171,7 @@ serve(async (req) => {
       method: "POST",
       headers: llmHeaders(),
       body: JSON.stringify({
-        model: LLM_MODEL, temperature: 0.2, max_tokens: 400,
+        model: LLM_MODEL, temperature: 0.2, max_tokens: 750,
         messages: [{ role: "system", content: SYSTEM_PROMPT }, { role: "user", content: userBlock }],
       }),
     });

@@ -15,8 +15,8 @@ const markdownComponents = {
   h1: ({ children }: { children?: ReactNode }) => <h3 className="m-0 text-base font-bold">{children}</h3>,
   h2: ({ children }: { children?: ReactNode }) => <h3 className="m-0 text-base font-bold">{children}</h3>,
   h3: ({ children }: { children?: ReactNode }) => <h3 className="m-0 text-sm font-bold">{children}</h3>,
-  ul: ({ children }: { children?: ReactNode }) => <ul className="my-0 list-disc space-y-1 pl-5">{children}</ul>,
-  ol: ({ children }: { children?: ReactNode }) => <ol className="my-0 list-decimal space-y-1 pl-5">{children}</ol>,
+  ul: ({ children }: { children?: ReactNode }) => <ul className="my-0 list-disc space-y-2 pl-5">{children}</ul>,
+  ol: ({ children }: { children?: ReactNode }) => <ol className="my-0 list-decimal space-y-2 pl-5">{children}</ol>,
   li: ({ children }: { children?: ReactNode }) => <li className="pl-0.5">{children}</li>,
   strong: ({ children }: { children?: ReactNode }) => <strong className="font-bold">{children}</strong>,
   em: ({ children }: { children?: ReactNode }) => <em>{children}</em>,
@@ -31,6 +31,7 @@ function pisahkanSubjudul(teks: string): string {
   return teks
     .replace(/\n(?=\*\*[^*\n]+:\*\*\s*$)/gm, "\n\n")
     .replace(/^(\*\*[^*\n]+:\*\*)\n(?=\s*(?:[-*+]|\d+\.)\s)/gm, "$1\n\n")
+    .replace(/\n(?=##?\s)/g, "\n\n")
 }
 
 export default function ChatbotPage({ onClose }: { onClose: () => void }) {
