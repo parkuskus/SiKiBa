@@ -1,6 +1,6 @@
 # AGENTS.md — SIAGA Bunda
 
-PWA skrining kesehatan ibu hamil/nifas/bayi (React 19 + Vite 6 + Tailwind v4 + Dexie + Supabase). Product spec: `docs/SiKiBa_Spesifikasi_Storyboard_Prototype.md`, screen IDs (`S-xx`): `docs/SCREENS.md`, design lock: `docs/DESIGN.md`.
+PWA skrining kesehatan ibu hamil/nifas/bayi (React 19 + Vite + Tailwind v4 + Dexie + Supabase). Product spec and screen IDs (`S-xx`): `docs/SiKiBa_Spesifikasi_Storyboard_Prototype.md`, current progress: `docs/BACKLOG.md`, design lock: `docs/DESIGN.md`.
 
 ## App essentials
 
