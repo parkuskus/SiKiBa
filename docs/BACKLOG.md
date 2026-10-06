@@ -17,6 +17,8 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 - [x] Redesign Figma-first yang tercatat 1 Oktober: onboarding, beranda, form skrining, nifas/BBL, tracker, profil, dan chatbot mengikuti stage sage, panel mint/putih, serta format tanggal `DD/MM/YYYY`.
 - [x] Migration Supabase 001–006 untuk skema awal, chatbot/RAG, grant, email profil, akses terautentikasi, dan kolom sync profil.
 - [x] Build produksi berhasil pada 2026-10-06 (`npm run build`).
+- [x] Kriteria manifest PWA diperbaiki 2026-10-06: ikon 192/512 valid, bahasa Indonesia, `start_url` dan `scope`; pemicu instal otomatis tetap dikendalikan Chrome.
+- [x] Logo ibu hamil diperbarui 2026-10-06: ikon PWA, logo transparan untuk UI, dan versi latar putih untuk favicon/ikon layar utama.
 
 ### Belum selesai / perlu konfirmasi
 - [ ] S-06 Edukasi: konten dan layar topik menunggu materi klinis dari stakeholder; `EdukasiPage.tsx` saat ini masih perlu ditinjau untuk kelengkapan produk.

@@ -53,7 +53,7 @@ export default function SplashScreen({ onDaftar, onMasuk, onAutoMasuk }: Props) 
     <div className="min-h-[100dvh] bg-[#FFFCF6] flex flex-col">
       <div className="rounded-b-[32px] bg-[#4A6E54] px-6 pb-8 pt-[max(1.75rem,env(safe-area-inset-top))] mx-auto w-full max-w-[480px]">
         <div className="mx-auto flex w-full max-w-[480px] items-center justify-center gap-2">
-          <img src="/logo-siaga-bunda.png" alt="SIAGA Bunda" className="size-9 rounded-xl bg-white p-1 object-contain" />
+          <img src="/logo-siaga-transparent.png" alt="Logo SIAGA Bunda" className="size-9 rounded-xl bg-white p-1 object-contain" />
           <p className="text-lg font-extrabold tracking-tight text-white">SIAGA Bunda</p>
         </div>
         <div className="mx-auto mt-4 w-full max-w-[480px]">

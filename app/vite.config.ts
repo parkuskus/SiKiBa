@@ -14,14 +14,15 @@ export default defineConfig({
       manifest: {
         name: 'SIAGA Bunda - Sistem Informasi Antisipasi & menjaGA Bunda',
         short_name: 'SIAGA Bunda',
+        lang: 'id',
         description: 'Siaga menjaga bunda dan buah hati — skrining ibu hamil, nifas & bayi baru lahir (PDUPT Poltekkes Bandung)',
         theme_color: '#6B8E73',
         background_color: '#FFFDEC',
         display: 'standalone',
+        start_url: '/',
+        scope: '/',
         icons: [
-          { src: 'logo-siaga-bunda.png', sizes: 'any', type: 'image/png', purpose: 'any maskable' },
-          { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
-          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'logo-pwa-512x512.png', sizes: '192x192 512x512', type: 'image/png', purpose: 'any maskable' },
         ],
       },
       workbox: {

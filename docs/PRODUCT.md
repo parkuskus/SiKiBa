@@ -10,7 +10,7 @@
 
 **Filosofi/Makna:** Secara alami, seorang ibu memiliki naluri protektif untuk memberikan perlindungan terbaik bagi dirinya dan buah hatinya sejak masa kehamilan. “Siaga” merepresentasikan kesiapan untuk mengenali, memahami, dan mengantisipasi berbagai kondisi selama perjalanan kehamilan hingga masa nifas dan bayi baru lahir. Nama ini mencerminkan kehadiran aplikasi yang senantiasa mengingatkan, mendampingi, dan membantu Bunda dalam menjaga kesehatan dirinya dan buah hati. Sementara “Bunda” menjadi representasi dari sosok ibu sebagai pusat perhatian dan penerima manfaat utama aplikasi.
 
-**Logo** (`assets/Logo Aplikasi Siaga Bunda.png` → `public/logo-siaga-bunda.png` + `manifest` PWA):
+**Logo:** ikon PWA `app/public/logo-pwa-512x512.png`; logo transparan di UI `app/public/logo-siaga-transparent.png`; versi latar putih `app/public/logo-siaga-white.png` untuk favicon dan ikon layar utama:
 - Ibu Hamil (fokus utama pengguna)
 - Tangan Melindungi (kasih sayang, perlindungan, kesiapan menjaga buah hati)
 - Daun (pertumbuhan dan perkembangan)
