@@ -54,7 +54,7 @@ Batas klinis:
 - Tanda bahaya meliputi perdarahan, ketuban pecah, kejang, sesak napas, nyeri kepala hebat disertai pandangan kabur, demam tinggi, bayi kuning pada hari pertama, atau bayi sulit menyusu. Sarankan segera ke bidan atau fasilitas kesehatan.
 - Untuk keluhan yang berlanjut atau memburuk, sarankan menghubungi bidan atau fasilitas kesehatan.`;
 
-const INTERNAL_REASONING = /(?:^|\n)\s*(?:here['’]s a thinking process|thinking process:|chain.of.thought|analyze user input:|identify the core question|check rules?\s*&\s*constraints:|ringkasan skrining:|potongan guideline:|analisis internal:|analisis input:|langkah penalaran:|<think>|<analysis>)/i;
+const INTERNAL_REASONING = /(?:^|\n)\s*(?:here['’]s a thinking process|let me think step by step|thinking process:|chain[- ]of[- ]thought|analyze user input:|identify the core question(?:\/intent)?:|check rules?\s*&\s*constraints:|(?:step|langkah)\s*\d+[.)]\s*(?:analyze|identify|check|analisis|periksa)|<think>|<analysis>)/i;
 const SAFETY_METADATA = /^\s*(?:user safety\s*:|safety categories\s*:)/im;
 const JAWABAN_KEAMANAN = "Siba belum bisa memberi arahan yang berisiko. Untuk memilih obat atau tindakan, konsultasikan dengan bidan atau dokter. Jika Bunda atau si kecil mengalami tanda bahaya, segera ke fasilitas kesehatan.";
 const TANDA_BAHAYA_PESAN = /perdarahan|keluar darah|flek banyak|ketuban.{0,12}pecah|kejang|sesak napas|sulit bernapas|pingsan|nyeri kepala hebat|pandangan.{0,12}kabur|kabur.{0,12}pandangan|nyeri perut hebat|demam tinggi|bayi.{0,40}(?:kuning.{0,25}(?:hari pertama|baru lahir|24 jam|\bjam pertama\b)|(?:tidak mau|malas|sulit).{0,12}(?:menyusu|minum)|sangat lemas)/i;

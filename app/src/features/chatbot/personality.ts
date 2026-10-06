@@ -29,6 +29,15 @@ export const PENUTUP_HANGAT = "Bunda sudah hebat memperhatikan hal ini. Kalau ma
 // Set terverifikasiAhli hanya setelah isi jawaban ditinjau dan disetujui pakar.
 export const FAQ: { kunci: string[]; jawab: string; terverifikasiAhli?: boolean }[] = [
   {
+    kunci: ["siapa nama", "nama siba", "nama kamu"],
+    jawab: "Aku Siba, teman digital Bunda di SIAGA Bunda. Aku bisa membantu menjawab pertanyaan seputar kehamilan, masa nifas, dan bayi baru lahir.",
+  },
+  {
+    kunci: ["tanda bahaya", "tanda-tanda bahaya", "gejala bahaya"],
+    jawab: "Tanda bahaya yang perlu segera diperiksa antara lain perdarahan, ketuban pecah, kejang, sesak napas, sakit kepala hebat disertai pandangan kabur, atau demam tinggi. Pada bayi, waspadai kuning sejak hari pertama atau sulit menyusu.\n\nJika salah satunya sedang terjadi, segera hubungi bidan atau pergi ke IGD maupun puskesmas. Kalau Bunda sedang mengalami keluhan tertentu, ceritakan gejalanya agar Siba bisa membantu memberi arahan umum.",
+    terverifikasiAhli: true,
+  },
+  {
     kunci: ["kepala peyang", "kepala datar", "bentuk kepala", "plagiocephaly", "plagiosefali", "tengkorak bayi", "kepala bayi"],
     jawab: "Siba belum bisa memastikan penyebab bentuk kepala bayi lewat chat. Bawa si kecil ke bidan atau dokter anak agar dapat diperiksa langsung. Jangan menggunakan alat koreksi atau terapi tanpa arahan tenaga kesehatan.",
   },
