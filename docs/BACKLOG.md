@@ -28,7 +28,13 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 - [ ] Tinjau kebutuhan overlay darurat bersama untuk eskalasi chatbot dan hasil MERAH.
 - [ ] Finalisasi isi/tampilan PDF bersama stakeholder; pastikan data ekspor dan format berbagi sesuai kebutuhan bidan.
 - [ ] Konfigurasi SMTP produksi, secret Edge Function, dan verifikasi deployment Supabase/Cloudflare Pages.
-- [ ] Putuskan dan siapkan distribusi: PWA produksi serta TWA/Play Store bila tetap dibutuhkan.
+- [ ] Siapkan distribusi Google Play melalui TWA setelah PWA production, keamanan data, validasi klinis, dan persyaratan akun/testing siap.
+- [x] Panduan rilis Android ke Google Play Store via TWA/Bubblewrap ditambahkan di `docs/DEPLOY_PLAY_STORE.md` (2026-10-06); implementasi paket Android dan submission masih pekerjaan lanjutan.
+- [ ] **Prasyarat Play Store:** deploy manifest/ikon PWA terbaru; siapkan package name permanen, akun Play Console institusi, Bubblewrap, Android SDK, dan signing key.
+- [ ] Sajikan `/.well-known/assetlinks.json` sebagai JSON valid di production memakai SHA-256 App Signing certificate dari Play Console.
+- [ ] **Keamanan dan kebijakan:** implementasikan enkripsi data kesehatan; lengkapi penghapusan akun dan data cloud; siapkan kebijakan privasi, Data safety, serta Health apps declaration.
+- [ ] Uji AAB lewat internal/closed testing pada perangkat Android; siapkan store listing, screenshot, dan akses reviewer. Penuhi closed test tambahan jika diwajibkan tipe/umur akun Play Console.
+- [ ] Validasi klinis, review pakar dan Ethical Clearance harus selesai sebelum penggunaan penelitian/publik yang relevan.
 
 ## Catatan teknis
 - Dexie adalah penyimpanan lokal/offline; Supabase Postgres adalah sumber data cloud dengan RLS per pengguna.

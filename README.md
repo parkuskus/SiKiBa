@@ -14,6 +14,8 @@ assets/      File binary desain/PDF (lokal saja, di-ignore)
 
 Frontend di-host di Cloudflare Pages. Database, autentikasi, dan Edge Function chatbot menggunakan Supabase dan dikelola terpisah.
 
+- [Panduan rilis Android ke Google Play Store](docs/DEPLOY_PLAY_STORE.md)
+
 ### 1. Deploy frontend ke Cloudflare Pages
 
 Hubungkan repository GitHub ini ke Cloudflare Pages, lalu atur:
