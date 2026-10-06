@@ -20,6 +20,12 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 - [x] Kriteria manifest PWA diperbaiki 2026-10-06: ikon 192/512 valid, bahasa Indonesia, `start_url` dan `scope`; pemicu instal otomatis tetap dikendalikan Chrome.
 - [x] Logo ibu hamil diperbarui 2026-10-06: ikon PWA, logo transparan untuk UI, dan versi latar putih untuk favicon/ikon layar utama.
 - [x] Kartu menu skrining memilih hasil tersimpan terbaru per tipe, bukan hanya hasil hari ini; progress harian tetap dihitung dari tanggal hasil terbaru (2026-10-06).
+- [x] Brief prompt ilustrasi dan variasi layout header untuk 10 form skrining dibuat di `docs/SCREENING_HEADER_ILLUSTRATIONS.md` (2026-10-06); generate aset dan implementasi header masih pending.
+- [x] Sepuluh ilustrasi header skrining yang dibuat pengguna diurutkan dan dinamai `illu-46` sampai `illu-55` sesuai `docs/SCREENING_HEADER_ILLUSTRATIONS.md`.
+- [x] Header S-03a Faktor Risiko memakai komposisi asimetris dan ilustrasi `illu-46-skrining-risiko.png`; logo dihapus dari header agar ilustrasi tidak tertutup.
+- [x] Header S-03a dipisahkan dari sheet form tanpa overlap negatif agar ilustrasi dan konten form tidak bertabrakan.
+- [x] Header S-03b Status Gizi memakai layout header berilustrasi dengan aset `illu-47-skrining-gizi.png`.
+- [x] Header berilustrasi dengan dekorasi lingkaran diterapkan ke seluruh 10 form skrining sesuai pasangan aset `illu-46` sampai `illu-55`.
 
 ### Belum selesai / perlu konfirmasi
 - [ ] S-06 Edukasi: konten dan layar topik menunggu materi klinis dari stakeholder; `EdukasiPage.tsx` saat ini masih perlu ditinjau untuk kelengkapan produk.
