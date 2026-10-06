@@ -24,7 +24,7 @@ export async function tanyaChatbot(pesan: string): Promise<ChatReply> {
   const teks = pesan.trim()
   if (!teks) throw new Error("pesan kosong")
   // offline -> FAQ lokal, tidak pernah gagal
-  if (typeof navigator !== "undefined" && !navigator.onLine) {
+  if ((typeof navigator !== "undefined" && !navigator.onLine) || localStorage.getItem("siaga_demo_user_id") === "demo-dummy") {
     const local = jawabOffline(teks)
     return { answer: local.answer, sources: [], escalate: perluEskalasi(local.answer), offline: true, verified: local.verified }
   }

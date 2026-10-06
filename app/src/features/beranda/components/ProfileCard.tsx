@@ -30,9 +30,9 @@ export default function ProfileCard({ isPostpartum, hariNifas, beratLahir, panja
             <div className="grid size-10 shrink-0 place-items-center rounded-full bg-white text-[#4A6E54] ring-1 ring-[#D9E7E2]">
               <Baby className="size-4" />
             </div>
-            <div className="min-w-0">
-              <p className="text-base font-bold leading-tight text-[#1D2B29]">Hari ke {hariNifas}, {hariTersisa} hari lagi</p>
-              <p className="mt-0.5 text-xs font-medium text-[#33443F]">Masa nifas, pemulihan</p>
+            <div className="min-w-0 mt-2">
+              <p className="text-base font-bold leading-tight text-[#1D2B29]">Hari ke-{hariNifas}, Tersisa {hariTersisa} hari lagi</p>
+              <p className="!mt-1 text-xs font-medium text-[#33443F]">Masa nifas Bunda harus banyak beristirahat...</p>
             </div>
           </div>
           <div className="h-2 w-full overflow-hidden rounded-full bg-white">
@@ -48,7 +48,6 @@ export default function ProfileCard({ isPostpartum, hariNifas, beratLahir, panja
               <p className="mt-0.5 truncate text-[15px] font-semibold leading-tight text-[#1D2B29]">{ukuranBayi}</p>
             </div>
           </div>
-          <p className="text-center text-xs leading-relaxed text-[#33443F]">Cek nifas dan bayi ada di Skrining.</p>
           <button onClick={onBackToPregnant} className="min-h-11 w-full rounded-[16px] bg-white px-3 text-sm font-semibold text-[#4A6E54] transition-colors hover:bg-[#F7FAF8] active:scale-[0.99]">Kembali ke mode hamil</button>
       </div>
     )

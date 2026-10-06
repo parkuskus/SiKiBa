@@ -5,6 +5,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { db } from "@/data/db"
 import { supabase } from "@/data/supabase"
+import { activateDemoAccount, DEMO_EMAIL, DEMO_OTP } from "@/features/onboarding/demoAccount"
+import { disablePushNotifications } from "@/services/pushNotifications"
 
 type Props = { onBack: () => void; onSuccess: () => void; onToRegister: () => void }
 
@@ -54,6 +56,13 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
       else setErr("Alamat email tidak valid")
       return
     }
+    if (normalizedEmail === DEMO_EMAIL) {
+      setEmailForOtp(DEMO_EMAIL)
+      setOtp("")
+      setResendCooldown(0)
+      setStep("otp")
+      return
+    }
     if (!navigator.onLine) {
       if (resending) {
         setOtpErr("Periksa koneksi internet, lalu coba kirim ulang.")
@@ -66,6 +75,10 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
         else setErr("Email tidak ditemukan. Periksa kembali atau daftar akun baru.")
         return
       }
+      try {
+        localStorage.removeItem("siaga_demo_user_id")
+        localStorage.setItem("siaga_active_user_id", found.id)
+      } catch {}
       onSuccess()
       return
     }
@@ -93,14 +106,37 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
       setOtpErr("Kode 6 digit wajib diisi")
       return
     }
+    if (emailForOtp === DEMO_EMAIL) {
+      if (otp.trim() !== DEMO_OTP) {
+        setOtpErr("Kode demo tidak cocok")
+        return
+      }
+      setOtpLoading(true)
+      try {
+        await disablePushNotifications()
+        const { error } = await supabase.auth.signOut({ scope: "local" })
+        if (error) throw error
+        await activateDemoAccount()
+        onSuccess()
+      } catch (e) {
+        setOtpErr(e instanceof Error ? e.message : "Gagal membuka akun demo")
+      } finally {
+        setOtpLoading(false)
+      }
+      return
+    }
     setOtpLoading(true)
     try {
-      const { error } = await supabase.auth.verifyOtp({
+      const { data, error } = await supabase.auth.verifyOtp({
         email: emailForOtp,
         token: otp.trim(),
         type: "email",
       })
       if (error) throw error
+      try {
+        localStorage.removeItem("siaga_demo_user_id")
+        if (data.user) localStorage.setItem("siaga_active_user_id", data.user.id)
+      } catch {}
       onSuccess()
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Kode salah atau kadaluarsa"
@@ -126,7 +162,7 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
           </span>
         </div>
         <div className="mx-auto w-full max-w-[480px] flex-1 space-y-3.5 px-6 pb-6 pt-6">
-          <p className="text-[13px] leading-normal text-[#33443F]">Kode 6 digit dikirim ke {emailForOtp}.</p>
+          <p className="text-[13px] leading-normal text-[#33443F]">{emailForOtp === DEMO_EMAIL ? `Akun Dummy memakai kode ${DEMO_OTP}. Email tidak dikirim.` : `Kode 6 digit dikirim ke ${emailForOtp}.`}</p>
           <div className="flex items-center justify-center gap-2">
             {Array.from({ length: 6 }, (_, index) => {
               const digit = otp[index] ?? ""
@@ -150,7 +186,7 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
             })}
           </div>
           {otpErr && <p className="text-center text-xs text-[#E57373]">{otpErr}</p>}
-          <p className="text-xs leading-normal text-[#33443F]">Periksa kotak masuk dan folder spam</p>
+          <p className="text-xs leading-normal text-[#33443F]">{emailForOtp === DEMO_EMAIL ? "Akun uji lokal. Gunakan kode demo dari README." : "Periksa kotak masuk dan folder spam"}</p>
           <Button onClick={handleVerifyOtp} disabled={otpLoading} className="w-full rounded-full bg-[#4A6E54] px-4 py-5 mt-3 text-base font-bold text-white hover:bg-[#3D5C46]">
             {otpLoading ? "Memeriksa" : "Verifikasi"}
           </Button>
@@ -189,7 +225,7 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
             {err && <p className="text-xs text-[#E57373] text-center">{err}</p>}
 
             <Button onClick={handleRequestOtp} disabled={loading || resendCooldown > 0} className="w-full rounded-full bg-[#4A6E54] px-4 py-5 text-base font-bold text-white hover:bg-[#3D5C46]">
-              {loading ? "Mengirim kode" : resendCooldown > 0 ? `Tunggu ${resendCooldown} detik` : "Kirim Kode OTP"}
+                {loading ? "Mengirim kode" : resendCooldown > 0 ? `Tunggu ${resendCooldown} detik` : "Kirim Kode OTP"}
             </Button>
 
             <button onClick={onToRegister} className="w-full text-center text-sm font-medium leading-normal text-[#33443F]">

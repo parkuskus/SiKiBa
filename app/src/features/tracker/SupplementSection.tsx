@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Bell, Check, Plus, Trash2, X } from "lucide-react"
+import { Bell, Check, CircleHelp, Plus, Trash2, X } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { db } from "@/data/db"
 import { getCurrentUserId } from "@/data/currentUser"
@@ -18,12 +18,17 @@ const startOfWeek = (d: Date) => {
 
 type Dose = { med: SupplementReminder; waktu: string; status: DoseLog["status"] }
 
-// satu gambar obat untuk semua bentuk sediaan — status lewat warna ring
+// Ikon dosis menggantikan gambar obat supaya status bisa dikenali sekilas.
 function MedImage({ status }: { status: DoseLog["status"] }) {
-  const ring = status === "taken" ? "ring-[#7ACB8A]" : status === "skip" ? "ring-[#E57373]" : "ring-[#D9E7E2]"
+  const Icon = status === "taken" ? Check : status === "skip" ? X : CircleHelp
+  const style = status === "taken"
+    ? "bg-[#EDF6EF] text-[#2E7D32] ring-[#7ACB8A]"
+    : status === "skip"
+      ? "bg-[#FDECEC] text-[#C62828] ring-[#E57373]"
+      : "bg-[#F2F4F2] text-[#8A8F93] ring-[#D9E7E2]"
   return (
-    <span className={`grid size-12 shrink-0 place-items-center overflow-hidden rounded-[16px] bg-white ring-2 ${ring}`}>
-      <img src="/illu/illu-obat.svg" alt="Obat" className="size-9 object-contain" />
+    <span className={`grid size-12 shrink-0 place-items-center rounded-[16px] ring-2 ${style}`}>
+      <Icon className="size-6" strokeWidth={2.75} aria-hidden="true" />
     </span>
   )
 }

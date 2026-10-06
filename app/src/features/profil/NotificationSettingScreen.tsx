@@ -1,18 +1,37 @@
 import { useEffect, useState } from "react"
 import { Bell, ChevronLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { getCurrentUserId } from "@/data/currentUser"
+import { disablePushNotifications, enablePushNotifications, isPushConfigured, isPushLinked, supportsPush } from "@/services/pushNotifications"
 
 export default function NotificationSettingScreen({ onBack }: { onBack: () => void }) {
-  const [notifPerm, setNotifPerm] = useState<string>(typeof Notification !== "undefined" ? Notification.permission : "unsupported")
+  const [notifPerm, setNotifPerm] = useState<string>(supportsPush() ? Notification.permission : "unsupported")
+  const [userId, setUserId] = useState("")
+  const [pushLinked, setPushLinked] = useState(false)
+  const [working, setWorking] = useState(false)
+  const [error, setError] = useState("")
 
   useEffect(() => {
-    if (typeof Notification !== "undefined") setNotifPerm(Notification.permission)
+    if (supportsPush()) setNotifPerm(Notification.permission)
+    void getCurrentUserId().then((id) => {
+      setUserId(id)
+      return isPushLinked(id)
+    }).then(setPushLinked).catch(() => setPushLinked(false))
   }, [])
 
   const handleNotif = async () => {
-    if (typeof Notification === "undefined") return
-    const p = await Notification.requestPermission()
-    setNotifPerm(p)
+    setWorking(true)
+    setError("")
+    try {
+      await enablePushNotifications(userId)
+      setNotifPerm(Notification.permission)
+      setPushLinked(true)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Gagal mengaktifkan notifikasi")
+      if (typeof Notification !== "undefined") setNotifPerm(Notification.permission)
+    } finally {
+      setWorking(false)
+    }
   }
 
   return (
@@ -37,26 +56,40 @@ export default function NotificationSettingScreen({ onBack }: { onBack: () => vo
               <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Izin perangkat</h2>
               <p className="mt-0.5 text-xs text-[#33443F]">Pengingat suplemen dan jadwal periksa</p>
             </div>
-            <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${notifPerm === "granted" ? "bg-[#EDF6EF] text-[#2E7D32]" : notifPerm === "denied" ? "bg-[#FDECEC] text-[#C62828]" : "bg-white text-[#536961]"}`}>
-              {notifPerm === "granted" ? "Aktif" : notifPerm === "denied" ? "Ditolak" : notifPerm === "unsupported" ? "Tidak didukung" : "Belum aktif"}
+            <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${pushLinked ? "bg-[#EDF6EF] text-[#2E7D32]" : notifPerm === "denied" ? "bg-[#FDECEC] text-[#C62828]" : "bg-white text-[#536961]"}`}>
+              {pushLinked ? "Aktif" : notifPerm === "denied" ? "Ditolak" : notifPerm === "unsupported" ? "Tidak didukung" : notifPerm === "granted" ? "Belum tertaut" : "Belum aktif"}
             </span>
           </div>
 
           <p className="rounded-[16px] bg-white p-3 text-xs leading-relaxed text-[#33443F]">
-            {notifPerm === "granted"
-              ? "Izin notifikasi aktif di perangkat ini."
+            {userId.startsWith("demo-")
+              ? "Akun Dummy memakai pengingat lokal. Untuk menguji push saat aplikasi tertutup, gunakan akun email terverifikasi."
+              : pushLinked
+              ? "Push pengingat sudah aktif di perangkat ini."
+              : !isPushConfigured()
+                ? "Push server belum dikonfigurasi. Jadwal tetap dapat dilihat di halaman Pengingat."
+                : notifPerm === "granted"
+                  ? "Izin perangkat aktif. Tautkan push agar pengingat tetap diterima saat aplikasi tertutup."
               : notifPerm === "denied"
                 ? "Izin ditolak. Ubah izin SIAGA Bunda melalui pengaturan browser perangkat."
                 : notifPerm === "unsupported"
                   ? "Browser ini belum mendukung notifikasi. Bunda tetap dapat melihat jadwal di halaman Pengingat."
                   : "Izinkan notifikasi agar Bunda mendapat pengingat minum suplemen dan jadwal periksa. Di iOS, pasang aplikasi ke layar utama terlebih dahulu."}
           </p>
+          {error && <p role="alert" className="rounded-[14px] bg-[#FDECEC] p-3 text-xs text-[#C62828]">{error}</p>}
 
-          {notifPerm !== "granted" && notifPerm !== "denied" && notifPerm !== "unsupported" && (
-            <Button className="min-h-12 w-full rounded-full bg-[#4A6E54] text-sm font-bold text-white hover:bg-[#3D5C46]" onClick={() => void handleNotif()}>
-              Aktifkan notifikasi
+          {!userId.startsWith("demo-") && !pushLinked && isPushConfigured() && notifPerm !== "denied" && notifPerm !== "unsupported" && (
+            <Button disabled={working || !userId} className="min-h-12 w-full rounded-full bg-[#4A6E54] text-sm font-bold text-white hover:bg-[#3D5C46]" onClick={() => void handleNotif()}>
+              {working ? "Mengaktifkan" : notifPerm === "granted" ? "Tautkan push notification" : "Aktifkan notifikasi"}
             </Button>
           )}
+          {pushLinked && <Button disabled={working} variant="outline" className="min-h-12 w-full rounded-full" onClick={async () => {
+            setWorking(true)
+            try { await disablePushNotifications(); setPushLinked(false) }
+            catch { setError("Gagal mematikan push. Coba lagi saat terhubung internet.") }
+            finally { setWorking(false) }
+          }}>Matikan push</Button>}
+          <p className="text-xs leading-relaxed text-[#33443F]">Obat diingatkan pada jam minum. Pemeriksaan rutin diingatkan dua hari dan satu hari sebelumnya pukul 09.00 sesuai zona waktu perangkat.</p>
         </section>
       </div>
     </div>

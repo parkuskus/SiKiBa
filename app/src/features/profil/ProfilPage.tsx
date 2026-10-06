@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { ChevronRight, ClipboardList, Share2, Bell, Database, CircleHelp, Pencil, FileDown, LogOut } from "lucide-react"
+import { ChevronRight, ClipboardList, Share2, Bell, Camera, Database, CircleHelp, Pencil, FileDown, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { db } from "@/data/db"
 import { supabase } from "@/data/supabase"
@@ -11,9 +11,12 @@ import StorageSettingScreen from "@/features/profil/StorageSettingScreen"
 import EditProfileScreen from "@/features/profil/EditProfileScreen"
 import HistoryScreen from "@/features/profil/HistoryScreen"
 import ProfileDetailScreen from "@/features/profil/ProfileDetailScreen"
+import AvatarEditor from "@/features/profil/AvatarEditor"
+import ProfileAvatar from "@/features/profil/ProfileAvatar"
+import { disablePushNotifications } from "@/services/pushNotifications"
 import type { Profile, ScreeningResult } from "@/data/db"
 
-type Props = { uk: number; hplLabel: string }
+type Props = { uk: number; hplLabel: string; setShowBottomNav: (visible: boolean) => void }
 
 function MenuRow({ icon, label, onClick, last }: { icon: React.ReactNode; label: string; onClick: () => void; last?: boolean }) {
   return (
@@ -25,7 +28,7 @@ function MenuRow({ icon, label, onClick, last }: { icon: React.ReactNode; label:
   )
 }
 
-export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
+export default function ProfilPage({ uk: ukProp, hplLabel: hplProp, setShowBottomNav }: Props) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [history, setHistory] = useState<ScreeningResult[]>([])
   const [exporting, setExporting] = useState(false)
@@ -34,6 +37,7 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
   const [showEdit, setShowEdit] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
   const [showDetail, setShowDetail] = useState(false)
+  const [showAvatarEditor, setShowAvatarEditor] = useState(false)
   const [showExport, setShowExport] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
   const [verified, setVerified] = useState(false)
@@ -57,13 +61,17 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
     void load()
   }, [])
 
+  useEffect(() => {
+    setShowBottomNav(!showAvatarEditor)
+    return () => setShowBottomNav(true)
+  }, [showAvatarEditor, setShowBottomNav])
+
   const hpht = profile?.hpht?.trim() || ""
   const hasHpht = Boolean(hpht)
   const uk = hasHpht ? weeksFromHpht(hpht) : profile ? null : ukProp
   const hplLabel = hasHpht ? new Date(calcHPL(hpht)).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) : profile ? "Belum diisi" : hplProp
   const nama = profile?.nama ?? "Siti"
   const gpa = profile ? `G${profile.gravida}P${profile.para}A${profile.abortus}` : "G2P1A0"
-  const inisial = nama.charAt(0).toUpperCase()
 
   const handleExport = async (viaWA: boolean) => {
     setExporting(true)
@@ -88,8 +96,14 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
   const handleLogout = async () => {
     if (!window.confirm("Keluar dari akun? Data lokal tetap tersimpan di ponsel.")) return
     try {
+      await disablePushNotifications()
       const { error } = await supabase.auth.signOut()
       if (error) throw error
+      try {
+        localStorage.removeItem("siaga_demo_user_id")
+        localStorage.setItem("siaga_logged_out", "true")
+      } catch {}
+      window.location.reload()
     } catch {
       alert("Gagal keluar. Periksa koneksi, lalu coba lagi.")
     }
@@ -103,6 +117,7 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
     } catch {}
     try {
       for (const k of ["siaga_isPostpartum", "siaga_birth_date", "siaga_bb_target"]) localStorage.removeItem(k)
+      localStorage.removeItem("siaga_demo_user_id")
     } catch {}
     try {
       await db.delete()
@@ -112,6 +127,7 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
 
   if (showNotif) return <NotificationSettingScreen onBack={() => setShowNotif(false)} />
   if (showStorage) return <StorageSettingScreen onBack={() => setShowStorage(false)} />
+  if (showAvatarEditor && profile) return <AvatarEditor profile={profile} onBack={() => setShowAvatarEditor(false)} onSaved={() => { setShowAvatarEditor(false); void load() }} />
   if (showEdit && profile) return <EditProfileScreen profile={profile} onBack={() => setShowEdit(false)} onSaved={() => { setShowEdit(false); void load() }} />
   if (showHistory) return <HistoryScreen history={history} onBack={() => setShowHistory(false)} onChanged={() => void load()} />
   if (showDetail && profile)
@@ -131,13 +147,16 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp }: Props) {
   return (
     <div className="-mx-4 -mt-5">
       <header className="rounded-b-[32px] bg-[#4A6E54] px-6 pb-6 pt-7 text-white">
-        <h1 className="!m-0 text-xl font-bold leading-tight">Profil Saya</h1>
+        <h1 className="!m-0 text-3xl font-bold leading-tight">Profil Saya</h1>
         <p className="mt-1 text-xs text-white/90">Data dan pengaturan akun Bunda</p>
       </header>
 
       <div className="space-y-5 px-4 pb-6 pt-5">
         <section className="flex items-center gap-3 rounded-[24px] bg-[#EAF4F0] p-4">
-          <span className="grid size-14 shrink-0 place-items-center rounded-full bg-white text-xl font-bold text-[#4A6E54] ring-1 ring-[#D9E7E2]">{inisial}</span>
+          <button onClick={() => profile && setShowAvatarEditor(true)} aria-label="Ubah foto profil" className="relative grid size-14 shrink-0 place-items-center rounded-full bg-white text-xl font-bold text-[#4A6E54] ring-1 ring-[#D9E7E2]">
+            <ProfileAvatar profile={profile} />
+            <span className="absolute bottom-0 right-0 z-10 grid size-5 place-items-center rounded-full bg-[#4A6E54] text-white ring-2 ring-[#EAF4F0]"><Camera className="size-3" /></span>
+          </button>
           <div className="min-w-0 flex-1">
             <p className="truncate text-base font-bold text-[#1D2B29]">{nama}</p>
             <p className="truncate text-xs text-[#33443F]">{profile?.email || "Email belum diisi"}</p>

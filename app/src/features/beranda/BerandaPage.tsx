@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react"
-import { Bell, Smile, ChevronRight } from "lucide-react"
+import { Bell, Smile, ChevronRight, X } from "lucide-react"
+import { liveQuery } from "dexie"
 import { db } from "@/data/db"
 import { getCurrentProfile, getCurrentUserId } from "@/data/currentUser"
 import { weeksFromHpht, calcHPL, progressPercent } from "@/clinical-rules/ukHpl"
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import type { Profile, ScreeningResult } from "@/data/db"
 import ProfileCard from "./components/ProfileCard"
 import QuickActionGrid from "./components/QuickActionGrid"
 import LastCheckCard from "./components/LastCheckCard"
 import TodayReminderCard from "./components/TodayReminderCard"
+import ProfileAvatar from "@/features/profil/ProfileAvatar"
+import { daysUntil, medicineTimes, normalizeTime } from "../../../../supabase/functions/_shared/reminderSchedule"
 
 type Props = {
   uk: number
@@ -34,8 +38,10 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
   const [beratLahir, setBeratLahir] = useState<number | null>(null)
   const [panjangLahir, setPanjangLahir] = useState<number | null>(null)
   const [last, setLast] = useState<ScreeningResult | null>(null)
-  const [meds, setMeds] = useState<{ nama: string; waktu: string }[]>([])
+  const [meds, setMeds] = useState<{ nama: string; waktu: string[] }[]>([])
   const [nextAncLabel, setNextAncLabel] = useState<string | null>(null)
+  const [showReminders, setShowReminders] = useState(false)
+  const [clock, setClock] = useState(() => Date.now())
 
   useEffect(() => {
     void (async () => {
@@ -60,27 +66,45 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
         skr.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
         setLast(skr[0])
       }
-      const sup = await db.supplementReminders.where("userId").equals(uid).toArray()
-      setMeds(
-        sup
-          .filter((s) => s.statusAktif)
-          .sort((a, b) => a.waktu.localeCompare(b.waktu))
-          .slice(0, 3)
-          .map((s) => ({ nama: s.namaSuplemen, waktu: (s.waktuList?.[0] ?? s.waktu) || s.waktu })),
-      )
-      const anc = await db.ancVisits.where("userId").equals(uid).toArray()
-      const upcoming = anc
-        .filter((a) => !a.statusSelesai)
-        .sort((a, b) => a.tanggalTerjadwal.localeCompare(b.tanggalTerjadwal))[0]
-      if (upcoming) {
-        const d = new Date(upcoming.tanggalTerjadwal)
-        const label = d.toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "short" })
-        setNextAncLabel(`${label} · ${upcoming.catatan || "Puskesmas"}`)
-      }
     })()
   }, [])
 
+  useEffect(() => {
+    const timer = window.setInterval(() => setClock(Date.now()), 60000)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    if (!profile) return
+    const current = new Date(clock)
+    const date = `${current.getFullYear()}-${String(current.getMonth() + 1).padStart(2, "0")}-${String(current.getDate()).padStart(2, "0")}`
+    const subscription = liveQuery(async () => {
+      const [medicines, logs, visits] = await Promise.all([
+        db.supplementReminders.where("userId").equals(profile.id).toArray(),
+        db.doseLogs.where("userId").equals(profile.id).filter((item) => item.tanggal === date).toArray(),
+        db.ancVisits.where("userId").equals(profile.id).toArray(),
+      ])
+      const completed = new Set(logs.filter((item) => item.status !== "none").map((item) => `${item.suplemenId}|${normalizeTime(item.waktu)}`))
+      const medications = medicines.map((medicine) => ({
+        nama: medicine.namaSuplemen,
+        waktu: medicineTimes(medicine, date).filter((time) => !completed.has(`${medicine.id}|${time}`)),
+      })).filter((item) => item.waktu.length).sort((a, b) => a.waktu[0].localeCompare(b.waktu[0]))
+      const nextVisit = visits.filter((item) => !item.statusSelesai && item.tanggalTerjadwal >= date)
+        .sort((a, b) => a.tanggalTerjadwal.localeCompare(b.tanggalTerjadwal))[0]
+      const daysLeft = nextVisit ? daysUntil(date, nextVisit.tanggalTerjadwal) : null
+      const visitLabel = nextVisit
+        ? `${daysLeft === 0 ? "Hari ini" : daysLeft === 1 ? "Besok" : `${daysLeft} hari lagi`} pada ${new Date(`${nextVisit.tanggalTerjadwal}T00:00:00`).toLocaleDateString("id-ID", { day: "numeric", month: "short" })} di ${nextVisit.catatan || "Puskesmas"}`
+        : null
+      return { medications, visitLabel }
+    }).subscribe({
+      next: ({ medications, visitLabel }) => { setMeds(medications); setNextAncLabel(visitLabel) },
+      error: () => { setMeds([]); setNextAncLabel(null) },
+    })
+    return () => subscription.unsubscribe()
+  }, [profile?.id, clock])
+
   const hpht = profile?.hpht?.trim() || ""
+  const reminderCount = meds.reduce((sum, med) => sum + med.waktu.length, 0) + (nextAncLabel ? 1 : 0)
   const hasHpht = Boolean(hpht)
   const uk = hasHpht ? weeksFromHpht(hpht) : profile ? null : ukProp
   const progress = hasHpht ? progressPercent(uk!) : profile ? null : progressProp
@@ -97,8 +121,11 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
       <div className="-mx-4 -mt-5 rounded-b-[32px] bg-[#4A6E54] px-6 pb-6 pt-7 text-white">
         <div className="flex items-center gap-2.5">
           <p className="flex-1 text-xl font-bold">SIAGA Bunda</p>
-          <span className="grid size-11 place-items-center rounded-full bg-white text-[#4A6E54]"><Bell className="size-5" /></span>
-          <span className="grid size-11 place-items-center rounded-full bg-white text-[#DB2777]"><Smile className="size-6" /></span>
+          <button onClick={() => setShowReminders(true)} aria-label={`Notifikasi pengingat, ${reminderCount} jadwal`} className="relative grid size-11 shrink-0 place-items-center rounded-full bg-white text-[#4A6E54] transition-transform active:scale-95">
+            <Bell className="size-5" />
+            {reminderCount > 0 && <span className="absolute -right-0.5 -top-0.5 grid min-w-4 place-items-center rounded-full bg-[#DB2777] px-1 text-[10px] font-bold leading-4 text-white">{Math.min(9, reminderCount)}</span>}
+          </button>
+          <button onClick={() => setTab("profil")} aria-label="Buka profil" className="grid size-11 shrink-0 place-items-center overflow-hidden rounded-full bg-white text-[#4A6E54]"><ProfileAvatar profile={profile} /></button>
         </div>
         <div className="mt-4 flex items-center gap-3">
           <div className="min-w-0 flex-1">
@@ -137,7 +164,7 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
           onReminder={() => setTab("tracker")}
           onEdukasi={() => setTab("edukasi")}
         />
-        <p className="text-[15px] font-bold py-2 text-[#1D2B29]">Skrining & Pengigat</p>
+        <p className="text-[15px] font-bold py-2 text-[#1D2B29]">Skrining Kesehatan</p>
         <LastCheckCard label={lastLabel} dateLabel={lastDate} kategori={last?.kategori} onLihat={() => setTab("skrining")} />
         <button onClick={() => setTab("tracker")} className="flex w-full items-center gap-3 rounded-[24px] bg-white p-4 text-left ring-2 ring-[#FFCFCF] active:scale-[0.99] transition">
           <span className="grid size-12 shrink-0 place-items-center rounded-full bg-[#FFE2E2] text-[#DB2777]"><Smile className="size-7" /></span>
@@ -147,9 +174,49 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
           </span>
           <ChevronRight className="size-5 shrink-0 text-[#1D2B29]" />
         </button>
-        <p className="text-[15px] font-bold py-2 text-[#1D2B29]">Pengingat Harian</p>
-        <TodayReminderCard meds={meds} nextAncLabel={nextAncLabel} />
+        {meds.length > 0 && (
+          <>
+            <p className="text-[15px] font-bold py-2 text-[#1D2B29]">Pengingat Harian</p>
+            <TodayReminderCard meds={meds.slice(0, 3).map((med) => ({ nama: med.nama, waktu: med.waktu.map((time) => time.replace(":", ".")).join(" dan ") }))} nextAncLabel={nextAncLabel} onOpen={() => setTab("tracker")} />
+          </>
+        )}
       </div>
+
+      <Dialog open={showReminders} onOpenChange={setShowReminders}>
+        <DialogContent showCloseButton={false} className="fixed inset-x-auto bottom-0 left-1/2 top-auto flex max-h-[75dvh] w-full max-w-[480px] -translate-x-1/2 translate-y-0 flex-col gap-0 overflow-y-auto rounded-t-[28px] rounded-b-none border-0 bg-[#FFFCF6] p-5 ring-0 sm:max-w-[480px]">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <DialogTitle className="!m-0 text-lg font-bold text-[#1D2B29]">Pengingat terdekat</DialogTitle>
+              <DialogDescription className="mt-1 text-xs text-[#536961]">Obat dan jadwal pemeriksaan Bunda</DialogDescription>
+            </div>
+            <button onClick={() => setShowReminders(false)} aria-label="Tutup notifikasi" className="grid size-11 shrink-0 place-items-center rounded-full bg-white text-[#4A6E54] ring-1 ring-[#D9E7E2]">
+              <X className="size-4" />
+            </button>
+          </div>
+          <div className="mt-4 space-y-2.5">
+            {meds.map((med) => (
+              <div key={med.nama} className="flex items-center gap-3 rounded-[18px] bg-white p-3 ring-1 ring-[#D9E7E2]">
+                <span className="grid size-10 shrink-0 place-items-center rounded-[14px] bg-[#EAF4F0] text-[#4A6E54]"><Bell className="size-4" /></span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold text-[#1D2B29]">{med.nama}</p>
+                  <p className="text-xs text-[#536961]">Jadwal hari ini pukul {med.waktu.map((time) => time.replace(":", ".")).join(" dan ")}</p>
+                </div>
+              </div>
+            ))}
+            {nextAncLabel && (
+              <div className="flex items-center gap-3 rounded-[18px] bg-white p-3 ring-1 ring-[#D9E7E2]">
+                <span className="grid size-10 shrink-0 place-items-center rounded-[14px] bg-[#FFE2E2] text-[#9D2553]"><ChevronRight className="size-4" /></span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold text-[#1D2B29]">Pemeriksaan berikutnya</p>
+                  <p className="truncate text-xs text-[#536961]">{nextAncLabel}</p>
+                </div>
+              </div>
+            )}
+            {!meds.length && !nextAncLabel && <p className="rounded-[18px] bg-[#EAF4F0] p-4 text-center text-sm text-[#536961]">Belum ada pengingat obat atau jadwal periksa.</p>}
+          </div>
+          <button onClick={() => { setShowReminders(false); setTab("tracker") }} className="mt-4 min-h-11 w-full rounded-full bg-[#4A6E54] text-sm font-bold text-white">Buka Pengingat</button>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

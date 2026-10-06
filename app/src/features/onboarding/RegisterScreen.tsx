@@ -128,6 +128,7 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
           .select("id").eq("id", userId).maybeSingle()
         if (profileError) throw profileError
         if (existingProfile) {
+          try { localStorage.removeItem("siaga_demo_user_id") } catch {}
           onSuccess()
           return
         }
@@ -143,6 +144,7 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
           fasyankes: form.fasyankes,
           namaBidan: form.namaBidan,
         }, userId)
+        try { localStorage.removeItem("siaga_demo_user_id") } catch {}
         console.log("[register] GPA", formatGPA(result.profile.gravida, result.profile.para, result.profile.abortus), "uid", userId)
         onSuccess()
         return

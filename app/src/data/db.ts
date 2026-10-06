@@ -14,6 +14,8 @@ export interface Profile {
   abortus: number
   fasyankes: string
   nama_bidan: string
+  avatarPath?: string
+  avatarBlob?: Blob
   createdAt: string
   updatedAt: string
 }
@@ -35,7 +37,7 @@ export interface ANCVisit { id: string; userId: string; tanggalTerjadwal: string
 export interface DiaryEntry { id: string; userId: string; tanggal: string; teks: string; mood: number; judul?: string }
 export interface NifasScreening { id: string; userId: string; hariKe: number; parameterVital: Record<string, unknown>; status: string; createdAt: string }
 export interface BBLProfile { id: string; userId: string; dataLahir: string; apgar?: number; usiaGestasi?: number }
-export interface SyncQueueItem { id?: number; table: string; op: 'insert' | 'upsert'; payload: Record<string, unknown>; onConflict?: string; createdAt: string }
+export interface SyncQueueItem { id?: number; table: string; op: 'insert' | 'upsert' | 'delete'; payload: Record<string, unknown>; onConflict?: string; createdAt: string }
 
 export class SIAGADB extends Dexie {
   profiles!: Table<Profile, string>

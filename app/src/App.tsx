@@ -20,7 +20,7 @@ type Tab = "beranda" | "skrining" | "edukasi" | "tracker" | "profil"
 type Onboarding = "splash" | "register" | "login" | "app"
 
 export default function App() {
-  const [tab, setTab] = useState<Tab>("beranda")
+  const [tab, setTab] = useState<Tab>(() => new URLSearchParams(window.location.search).get("tab") === "tracker" ? "tracker" : "beranda")
   const [isPostpartum, setIsPostpartum] = useState(() => {
     try { return localStorage.getItem("siaga_isPostpartum") === "true" } catch { return false }
   })
@@ -31,6 +31,7 @@ export default function App() {
 
   const enterApp = useCallback(() => {
     try { localStorage.removeItem("siaga_logged_out") } catch {}
+    try { setIsPostpartum(localStorage.getItem("siaga_isPostpartum") === "true") } catch {}
     setOnboarding("app")
   }, [])
 
@@ -39,7 +40,11 @@ export default function App() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "INITIAL_SESSION" && session?.user) {
-        try { localStorage.removeItem("siaga_logged_out") } catch {}
+        try {
+          localStorage.removeItem("siaga_logged_out")
+          localStorage.removeItem("siaga_demo_user_id")
+          localStorage.setItem("siaga_active_user_id", session.user.id)
+        } catch {}
         setOnboarding("app")
       }
       if (event === "SIGNED_OUT") {
@@ -107,7 +112,7 @@ export default function App() {
           {tab === "skrining" && <SkriningPage setTab={setTab} setShowBirth={setShowBirth} isPostpartum={isPostpartum} setShowBottomNav={setShowBottomNav} />}
           {tab === "edukasi" && <EdukasiPage />}
           {tab === "tracker" && <PengingatPage setShowBottomNav={setShowBottomNav} />}
-          {tab === "profil" && <ProfilPage uk={uk} hplLabel={hplLabel} />}
+          {tab === "profil" && <ProfilPage uk={uk} hplLabel={hplLabel} setShowBottomNav={setShowBottomNav} />}
         </div>
       </main>
 

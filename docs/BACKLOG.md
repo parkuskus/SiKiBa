@@ -26,12 +26,23 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 - [x] Header S-03a dipisahkan dari sheet form tanpa overlap negatif agar ilustrasi dan konten form tidak bertabrakan.
 - [x] Header S-03b Status Gizi memakai layout header berilustrasi dengan aset `illu-47-skrining-gizi.png`.
 - [x] Header berilustrasi dengan dekorasi lingkaran diterapkan ke seluruh 10 form skrining sesuai pasangan aset `illu-46` sampai `illu-55`.
+- [x] Ikon jadwal obat mengikuti status dosis: centang hijau, silang merah, dan tanda tanya abu-abu.
+- [x] Field judul diary dan placeholder-nya disamakan ukurannya dengan isi diary; judul tampil tebal saat placeholder maupun saat diketik.
+- [x] Lebar grafik/empty state berat badan dibatasi pada area isi card, tidak lagi memakai margin negatif yang membuatnya melewati card.
+- [x] Tombol peta pada hasil Tanda Bahaya Kehamilan menggunakan query `Puskesmas Terdekat`, bukan nama fasyankes/profil demo.
+- [x] Lonceng Beranda membuka daftar obat hari ini yang belum dicatat dan pemeriksaan terdekat; kartu harian disembunyikan jika tidak ada dosis obat tersisa (2026-10-06).
+- [x] Foto profil mendukung pilih foto, zoom, posisi horizontal/vertikal, crop 512×512, bucket privat dan cache Blob offline; tampil di Beranda dan Saya (2026-10-06).
+- [x] Migration 007–008 diterapkan ke Supabase tertaut: `avatar_path`, bucket privat/RLS, jadwal obat lengkap, log dosis, langganan push, klaim anti-duplikat dan Cron per menit. `dispatch-reminders` sudah di-deploy dengan VAPID privat di Edge Secrets dan secret Cron di Vault (2026-10-06).
+- [x] Pengirim push obat mengikuti jam/hari/periode, dan ANC H-2 serta H-1 pukul 09.00 sesuai zona perangkat; aktivasi melalui pengaturan Notifikasi (2026-10-06).
+- [x] Akun Dummy lokal `dummy@siagabunda.test` dengan kode `246810`, usia 26 tahun dan kehamilan sekitar 10 minggu tersedia tanpa inbox; petunjuk dan batas demo dicatat di README (2026-10-06).
+- [x] Verifikasi fitur baru lolos: build frontend, pengecekan Deno pengirim push, check kalender/zona waktu/crop, serta uji Chrome untuk penolakan kode salah, login Dummy, lonceng, foto profil dan kartu pengingat kosong. Endpoint pengirim menolak panggilan tanpa autentikasi dengan HTTP 401 (2026-10-06).
 
 ### Belum selesai / perlu konfirmasi
 - [ ] S-06 Edukasi: konten dan layar topik menunggu materi klinis dari stakeholder; `EdukasiPage.tsx` saat ini masih perlu ditinjau untuk kelengkapan produk.
 - [ ] Validasi seluruh algoritma klinis oleh SpOG/bidan senior. Ambang dan rekomendasi belum boleh dianggap tervalidasi untuk pelayanan.
 - [ ] Ethical Clearance sebelum uji coba dengan partisipan.
 - [ ] QA end-to-end pada perangkat Android dan iOS: OTP/SMTP produksi, offline dan antrean sync, RLS, retensi data, reminder/notifikasi, mode nifas, chatbot, dan alur MERAH.
+- [ ] Setelah deploy frontend, aktifkan push di perangkat dengan akun riil dan uji penerimaan ketika PWA tertutup, termasuk obat, ANC H-2/H-1, serta upload/crop avatar cloud. Backend sudah di-deploy; izin browser belum dapat diberikan dari agen.
 - [ ] Tinjau kebutuhan overlay darurat bersama untuk eskalasi chatbot dan hasil MERAH.
 - [ ] Finalisasi isi/tampilan PDF bersama stakeholder; pastikan data ekspor dan format berbagi sesuai kebutuhan bidan.
 - [ ] Konfigurasi SMTP produksi, secret Edge Function, dan verifikasi deployment Supabase/Cloudflare Pages.
@@ -46,7 +57,7 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 ## Catatan teknis
 - Dexie adalah penyimpanan lokal/offline; Supabase Postgres adalah sumber data cloud dengan RLS per pengguna.
 - `app/src/data/crypto.ts` masih stub/plaintext; enkripsi data kesehatan yang direncanakan di `ARCHITECTURE.md` belum diterapkan.
-- Tidak ada test suite saat ini. Gerbang verifikasi proyek adalah `cd app && npm run build`.
+- Belum ada test suite formal. Gerbang verifikasi proyek adalah `cd app && npm run build`; check kecil kalender/jadwal/crop tersedia di `scripts/check-profile-reminders.mjs`.
 - Build berhasil, tetapi Vite memberi peringatan bundle utama >500 kB dan beberapa dynamic import tidak menghasilkan pemisahan chunk.
 - Data beranda di `app/src/App.tsx` masih memiliki nilai default UK/progress/countdown/HPL; pastikan nilai yang tampil selalu berasal dari profil sebelum rilis.
 - Konten edukasi, validasi klinis, dan persetujuan etik bergantung pada stakeholder/peneliti.

@@ -276,7 +276,7 @@ export default function SkriningPage({
         rekomendasi={activeResult.rekomendasi}
         urgensiLabel={activeResult.urgensiLabel}
         waktuISO={activeResult.waktuISO}
-        mapsQuery={fasyankes ?? undefined}
+        mapsQuery={activeResult.tipeKey === "danger" ? "Puskesmas Terdekat" : fasyankes ?? undefined}
         onUlangi={() => {
           const k = activeResult.tipeKey as ActiveForm
           setActiveResult(null)

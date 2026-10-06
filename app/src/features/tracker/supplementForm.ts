@@ -1,5 +1,5 @@
 import { db } from '@/data/db'
-import { syncSupplement } from '@/data/sync'
+import { deleteSyncedSupplement, syncDose, syncSupplement } from '@/data/sync'
 import type { DoseLog } from '@/data/db'
 
 // S-07a: Suplemen ala medication-app — nama, bentuk, periode, frekuensi, jam, status per dosis
@@ -46,8 +46,9 @@ export async function upsertSupplement(input: SupplementInput) {
 }
 
 export async function deleteSupplement(id: string) {
-  // ponytail: hapus lokal saja (riwayat dosis ikut terhapus)
+  const medicine = await db.supplementReminders.get(id)
   await db.supplementReminders.delete(id)
+  if (medicine) deleteSyncedSupplement(medicine.userId, medicine.namaSuplemen)
   const logs = await db.doseLogs.where('suplemenId').equals(id).toArray()
   await Promise.all(logs.map((l) => db.doseLogs.delete(l.id)))
 }
@@ -55,6 +56,7 @@ export async function deleteSupplement(id: string) {
 export async function setDoseStatus(input: { userId: string; suplemenId: string; tanggal: string; waktu: string; status: DoseLog['status'] }) {
   const id = `${input.userId}-${input.suplemenId}-${input.tanggal}-${input.waktu}`
   await db.doseLogs.put({ id, ...input })
+  syncDose(input)
 }
 
 export async function getDoseMap(userId: string, tanggal: string): Promise<Record<string, DoseLog['status']>> {

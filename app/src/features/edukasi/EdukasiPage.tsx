@@ -2,7 +2,7 @@ export default function EdukasiPage() {
   return (
     <div className="-mx-4 -mt-5">
       <header className="rounded-b-[32px] bg-[#4A6E54] px-6 pb-7 pt-7 text-white">
-        <h1 className="!m-0 text-xl font-bold leading-tight">Belajar</h1>
+        <h1 className="!m-0 text-3xl font-bold leading-tight">Belajar</h1>
         <p className="mt-1 text-sm leading-relaxed text-white/90">Informasi untuk Bunda dan buah hati</p>
       </header>
 

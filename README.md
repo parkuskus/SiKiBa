@@ -80,7 +80,25 @@ Deploy ulang function hanya ketika kode di `supabase/functions/chat/` berubah. P
 
 Di Supabase Dashboard, aktifkan **Authentication → Sign In / Providers → Email**, **Allow new users to sign up**, dan **Confirm email**. Aktifkan Custom SMTP untuk pengiriman produksi. Pada **Authentication → Emails**, gunakan `{{ .Token }}` pada template **Confirm signup** untuk pengguna baru dan **Magic link or OTP** untuk pengguna yang masuk. Template HTML tersedia di `docs/email-template-confirm-signup.html` dan `docs/email-template-otp.html`. Subject yang disarankan adalah `Kode daftar SIAGA Bunda` dan `Kode masuk SIAGA Bunda`. Aplikasi memverifikasi kode dengan Supabase Auth, membuat profil memakai ID Auth pengguna, dan tidak menimpa profil jika email sudah terdaftar. Pendaftaran akun baru memerlukan koneksi internet agar email OTP dapat dikirim.
 
-### 5. Akun uji chatbot
+### 5. Akun uji
+
+#### Akun Dummy tanpa inbox email
+
+Untuk menguji UI, skrining, tracker, notifikasi di lonceng, foto profil lokal, dan ekspor PDF, pilih **Masuk** lalu gunakan:
+
+| Isian | Nilai |
+| --- | --- |
+| Email | `dummy@siagabunda.test` |
+| Kode demo | `246810` |
+| Nama | Dummy |
+| Usia | 26 tahun |
+| Kehamilan | Sekitar 10 minggu ketika masuk, G1P0A0 |
+| Fasyankes | Puskesmas Uji SIAGA |
+| Pendamping | Bidan Dummy |
+
+Email ini khusus demo; tidak ada email yang dikirim. Profil lengkap dibuat otomatis pada perangkat, termasuk tanggal lahir, nomor telepon contoh, dan HPHT. Data Dummy terpisah dari akun riil dan tidak dikirim ke Supabase. Foto Dummy disimpan lokal, chatbot memakai FAQ, dan data testing tersimpan di perangkat masing-masing. **Push server dan upload foto cloud diuji memakai akun Supabase terverifikasi**, bukan kode demo. Kode tetap ini hanya berlaku untuk Dummy; OTP akun lainnya tetap diverifikasi Supabase.
+
+#### Akun Supabase untuk menguji layanan cloud
 
 Pada proyek Supabase SIAGA Bunda yang tertaut, akun uji sudah dibuat:
 
@@ -89,6 +107,23 @@ Pada proyek Supabase SIAGA Bunda yang tertaut, akun uji sudah dibuat:
 - **Masuk:** pilih Masuk Akun, masukkan email di atas, lalu gunakan OTP yang dikirim ke inbox. Tidak ada password atau kode OTP tetap.
 
 Akun ini hanya untuk pengujian. Pastikan SMTP email Supabase dapat mengirim OTP ke alamat tersebut. Jangan masukkan informasi kesehatan nyata ke akun uji.
+
+### Foto profil dan push pengingat
+
+- **Foto profil:** buka **Saya**, ketuk foto/inisial dengan ikon kamera, pilih JPG/PNG/WebP maksimal 10 MB, lalu atur zoom serta posisi horizontal/vertikal. Foto hasil potongan 512×512 disimpan di bucket privat `profile-avatars`, direferensikan oleh `profiles.avatar_path`, dan di-cache di Dexie agar bisa tampil offline.
+- **Lonceng Beranda:** menampilkan jadwal obat hari ini yang belum dicatat serta pemeriksaan berikutnya. Kartu Pengingat Harian disembunyikan jika tidak ada obat yang dijadwalkan atau semua dosis sudah dicatat.
+- **Push:** buka **Saya → Notifikasi → Aktifkan notifikasi** pada akun email terverifikasi. Browser harus memberikan izin. Service worker menerima push saat aplikasi tertutup.
+- **Jadwal:** obat dikirim pada jam minum yang disimpan, sesuai periode dan hari pilihan; ANC dikirim **H-2 dan H-1 pukul 09.00**. Zona waktu mengikuti perangkat ketika mengaktifkan push. Dosis yang sudah diminum/terlewat dan ANC yang selesai tidak dikirim lagi.
+- Backend memakai `dispatch-reminders`, `pg_cron` setiap menit, VAPID, dan Vault. Migration `007_avatar_push_reminders.sql` serta `008_schedule_reminder_push.sql` sudah diterapkan ke proyek yang tertaut pada 2026-10-06; Edge Function pengirim juga sudah di-deploy. Frontend terbaru tetap perlu di-deploy ke Cloudflare.
+- Kunci VAPID publik sudah ada di client dan dapat di-override dengan `VITE_VAPID_PUBLIC_KEY`. Kunci privat hanya ada di Supabase Edge Secrets. Jangan menjalankan ulang `scripts/configure-push.mjs` pada proyek ini tanpa rencana rotasi karena langganan browser lama terikat pada kunci tersebut.
+- Pada proyek Supabase lain, tinjau migration, ubah secret Vault `siaga_supabase_url` ke Project URL baru, provision pasangan VAPID, lalu deploy `npx supabase functions deploy dispatch-reminders --no-verify-jwt`. Flag itu diperlukan karena function memakai autentikasi secret Cron/Vault sendiri, **bukan endpoint publik tanpa autentikasi**. Jangan gunakan flag itu untuk chatbot `chat`.
+- Push memerlukan koneksi dan browser/OS yang mendukung; jadwal pengiriman server tidak menjamin perangkat selalu menampilkan notifikasi tepat detik yang sama. Pada iPhone, gunakan PWA terpasang di layar utama pada versi iOS yang mendukung Web Push.
+
+Pengecekan kecil logika kalender/zona waktu dan crop foto:
+
+```bash
+node --experimental-strip-types scripts/check-profile-reminders.mjs
+```
 
 ### 6. Alur rilis
 
