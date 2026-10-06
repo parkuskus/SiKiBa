@@ -95,7 +95,6 @@ export default function SkriningPage({
         const { getCurrentUserId } = await import("@/data/currentUser")
         const uid = await getCurrentUserId()
         const all = await db.screeningResults.where("userId").equals(uid).toArray()
-        const today = all.filter((r) => isToday(r.createdAt))
         const map: Record<string, AnyResult & { createdAt?: string }> = {}
         const tipeToKey: Record<string, string> = {
           poedji_rochjati: "risk",
@@ -109,11 +108,17 @@ export default function SkriningPage({
           ikterus: "ikterus",
           hipotiroid: "hipotiroid",
         }
-        for (const r of today) {
+        for (const r of all.sort((a, b) => b.createdAt.localeCompare(a.createdAt))) {
           const k = tipeToKey[r.tipe] ?? r.tipe
-          map[k] = { warna: r.kategori, kategori: r.kategori, skor: r.skor, extra: String(r.skor), createdAt: r.createdAt }
+          if (!map[k]) map[k] = { warna: r.kategori, kategori: r.kategori, skor: r.skor, extra: String(r.skor), createdAt: r.createdAt }
         }
-        if (Object.keys(map).length) setResults((prev) => ({ ...map, ...prev }))
+        setResults((current) => {
+          const latest = { ...map }
+          for (const [key, result] of Object.entries(current)) {
+            if (!latest[key] || (result.createdAt ?? "") > (latest[key].createdAt ?? "")) latest[key] = result
+          }
+          return latest
+        })
       } catch {}
     })()
   }, [])
