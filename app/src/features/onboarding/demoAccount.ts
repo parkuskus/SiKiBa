@@ -1,4 +1,5 @@
 import { db, type Profile } from "@/data/db"
+import { supabase } from "@/data/supabase"
 
 export const DEMO_EMAIL = "dummy@siagabunda.test"
 export const DEMO_OTP = "246810"
@@ -9,6 +10,9 @@ function dateString(date: Date) {
 }
 
 export async function activateDemoAccount() {
+  const { error } = await supabase.auth.signInAnonymously()
+  if (error) throw new Error(`Gagal mengaktifkan chatbot online: ${error.message}`)
+
   const today = new Date()
   const birth = new Date(today)
   birth.setFullYear(birth.getFullYear() - 26)

@@ -119,7 +119,10 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
         await activateDemoAccount()
         onSuccess()
       } catch (e) {
-        setOtpErr(e instanceof Error ? e.message : "Gagal membuka akun demo")
+        const message = e instanceof Error ? e.message : "Gagal membuka akun demo"
+        setOtpErr(message.toLowerCase().includes("anonymous")
+          ? "Chatbot online belum aktif. Aktifkan Anonymous Sign-Ins di Supabase Auth."
+          : message)
       } finally {
         setOtpLoading(false)
       }

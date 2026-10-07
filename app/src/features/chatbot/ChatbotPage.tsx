@@ -12,11 +12,11 @@ const TOPIK_CEPAT = ["Mual saat hamil", "Tanda bahaya", "Bayi kuning", "Rasa cem
 
 const markdownComponents = {
   p: ({ children }: { children?: ReactNode }) => <p className="m-0 whitespace-pre-wrap">{children}</p>,
-  h1: ({ children }: { children?: ReactNode }) => <h3 className="m-0 text-base font-bold">{children}</h3>,
-  h2: ({ children }: { children?: ReactNode }) => <h3 className="m-0 text-base font-bold">{children}</h3>,
-  h3: ({ children }: { children?: ReactNode }) => <h3 className="m-0 text-sm font-bold">{children}</h3>,
-  ul: ({ children }: { children?: ReactNode }) => <ul className="my-0 list-disc space-y-2 pl-5">{children}</ul>,
-  ol: ({ children }: { children?: ReactNode }) => <ol className="my-0 list-decimal space-y-2 pl-5">{children}</ol>,
+  h1: ({ children }: { children?: ReactNode }) => <h3 className="mb-1 mt-3 text-base font-bold first:mt-0">{children}</h3>,
+  h2: ({ children }: { children?: ReactNode }) => <h3 className="mb-1 mt-3 text-base font-bold first:mt-0">{children}</h3>,
+  h3: ({ children }: { children?: ReactNode }) => <h3 className="mb-1 mt-2 text-sm font-bold first:mt-0">{children}</h3>,
+  ul: ({ children }: { children?: ReactNode }) => <ul className="my-1 list-disc space-y-1.5 pl-5">{children}</ul>,
+  ol: ({ children }: { children?: ReactNode }) => <ol className="my-1 list-decimal space-y-1.5 pl-5">{children}</ol>,
   li: ({ children }: { children?: ReactNode }) => <li className="pl-0.5">{children}</li>,
   strong: ({ children }: { children?: ReactNode }) => <strong className="font-bold">{children}</strong>,
   em: ({ children }: { children?: ReactNode }) => <em>{children}</em>,
@@ -119,9 +119,9 @@ export default function ChatbotPage({ onClose }: { onClose: () => void }) {
           {msgs.map((message, index) => (
             <div key={`${index}-${message.dari}`} className={`flex items-start gap-2.5 ${message.dari === "ibu" ? "justify-end" : "justify-start"}`}>
               {message.dari === "siba" && <span aria-hidden className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full bg-[#EAF4F0] text-base">{AVATAR}</span>}
-              <div className={`max-w-[84%] rounded-[20px] px-3.5 py-3 text-sm leading-relaxed ${message.dari === "ibu" ? "rounded-tr-[6px] bg-[#4A6E54] text-white" : "rounded-tl-[6px] bg-white text-[#1D2B29] ring-1 ring-[#D9E7E2] shadow-sm"}`}>
+              <div className={`max-w-[90%] rounded-[20px] px-3.5 py-3 text-sm leading-relaxed ${message.dari === "ibu" ? "rounded-tr-[6px] bg-[#4A6E54] text-white" : "rounded-tl-[6px] bg-white text-[#1D2B29] ring-1 ring-[#D9E7E2] shadow-sm"}`}>
                 {message.dari === "siba" ? (
-                  <div className="space-y-3">
+                  <div className="space-y-1">
                     <ReactMarkdown components={markdownComponents}>{pisahkanSubjudul(message.teks)}</ReactMarkdown>
                   </div>
                 ) : (

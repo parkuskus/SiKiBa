@@ -1,4 +1,5 @@
 # SiKiBa — SIAGA Bunda
+
 PWA skrining kesehatan ibu hamil, ibu nifas & bayi baru lahir (PDUPT Poltekkes Bandung).
 
 ```
@@ -86,15 +87,15 @@ Di Supabase Dashboard, aktifkan **Authentication → Sign In / Providers → Ema
 
 Untuk menguji UI, skrining, tracker, notifikasi di lonceng, foto profil lokal, dan ekspor PDF, pilih **Masuk** lalu gunakan:
 
-| Isian | Nilai |
-| --- | --- |
-| Email | `dummy@siagabunda.test` |
-| Kode demo | `246810` |
-| Nama | Dummy |
-| Usia | 26 tahun |
-| Kehamilan | Sekitar 10 minggu ketika masuk, G1P0A0 |
-| Fasyankes | Puskesmas Uji SIAGA |
-| Pendamping | Bidan Dummy |
+| Isian      | Nilai                                  |
+| ---------- | -------------------------------------- |
+| Email      | `dummy@siagabunda.test`                |
+| Kode demo  | `246810`                               |
+| Nama       | Dummy                                  |
+| Usia       | 26 tahun                               |
+| Kehamilan  | Sekitar 10 minggu ketika masuk, G1P0A0 |
+| Fasyankes  | Puskesmas Uji SIAGA                    |
+| Pendamping | Bidan Dummy                            |
 
 Email ini khusus demo; tidak ada email yang dikirim. Profil lengkap dibuat otomatis pada perangkat, termasuk tanggal lahir, nomor telepon contoh, dan HPHT. Data Dummy terpisah dari akun riil dan tidak dikirim ke Supabase. Foto Dummy disimpan lokal, chatbot memakai FAQ, dan data testing tersimpan di perangkat masing-masing. **Push server dan upload foto cloud diuji memakai akun Supabase terverifikasi**, bukan kode demo. Kode tetap ini hanya berlaku untuk Dummy; OTP akun lainnya tetap diverifikasi Supabase.
 
@@ -127,11 +128,11 @@ node --experimental-strip-types scripts/check-profile-reminders.mjs
 
 ### 6. Alur rilis
 
-| Perubahan | Tindakan rilis |
-| --- | --- |
-| UI atau logika frontend | Push ke production branch; Cloudflare Pages deploy otomatis |
-| Kode Edge Function chatbot | `npx supabase functions deploy chat` |
-| Skema atau policy database | Buat migration, tinjau, lalu `npx supabase db push` |
-| Secret chatbot | Perbarui secret di Supabase Dashboard |
+| Perubahan                  | Tindakan rilis                                              |
+| -------------------------- | ----------------------------------------------------------- |
+| UI atau logika frontend    | Push ke production branch; Cloudflare Pages deploy otomatis |
+| Kode Edge Function chatbot | `npx supabase functions deploy chat`                        |
+| Skema atau policy database | Buat migration, tinjau, lalu `npx supabase db push`         |
+| Secret chatbot             | Perbarui secret di Supabase Dashboard                       |
 
 Setelah deployment, uji URL production, refresh halaman, koneksi database, mode offline, dan chatbot bila diaktifkan. Jangan gunakan data kesehatan sungguhan sampai SMTP, autentikasi email, dan kebijakan RLS diverifikasi. Aturan skrining klinis juga perlu divalidasi pakar sebelum digunakan dalam layanan nyata.
