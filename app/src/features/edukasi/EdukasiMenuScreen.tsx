@@ -2,12 +2,10 @@ import {
   Activity,
   ArrowRight,
   Baby,
-  BriefcaseMedical,
   Brain,
   Dna,
   HeartPulse,
   ShieldAlert,
-  Stethoscope,
   type LucideIcon,
 } from "lucide-react"
 
@@ -18,8 +16,6 @@ const topik = [
   { judul: "Perubahan tubuh", keterangan: "Adaptasi tubuh selama kehamilan", icon: HeartPulse, screen: "fisiologi" },
   { judul: "Tanda bahaya", keterangan: "Kenali gejala yang perlu diperiksa", icon: ShieldAlert },
   { judul: "Emosi Bunda", keterangan: "Perubahan perasaan tiap trimester", icon: Brain },
-  { judul: "Keluhan umum", keterangan: "Penyebab dan cara mengatasinya", icon: Stethoscope },
-  { judul: "Persiapan persalinan", keterangan: "Rencana persalinan dan P4K", icon: BriefcaseMedical },
 ] satisfies { judul: string; keterangan: string; icon: LucideIcon; screen?: "fertilisasi" | "janin" | "s06c" | "fisiologi" }[]
 
 type Props = { onOpenFertilisasi: () => void; onOpenJanin: () => void; onOpenPlasenta: () => void; onOpenFisiologi: () => void }

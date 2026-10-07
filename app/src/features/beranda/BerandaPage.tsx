@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Bell, Smile, ChevronRight, X } from "lucide-react"
+import { Bell, Smile, ChevronRight, X, ClipboardList } from "lucide-react"
 import { liveQuery } from "dexie"
 import { db } from "@/data/db"
 import { getCurrentProfile, getCurrentUserId } from "@/data/currentUser"
@@ -164,6 +164,14 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
           onReminder={() => setTab("tracker")}
           onEdukasi={() => setTab("edukasi")}
         />
+        <button onClick={() => setTab("edukasi")} className="flex w-full items-center gap-3 rounded-[24px] bg-white p-4 text-left ring-1 ring-[#D9E7E2] transition active:scale-[0.99]">
+          <span className="grid size-12 shrink-0 place-items-center rounded-full bg-[#FFF1E8] text-[#9A5B00]"><ClipboardList className="size-6" /></span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-bold text-[#1D2B29]">Birth Plan dan Persiapan Persalinan (P4K)</span>
+            <span className="block text-xs text-[#536961]">Rencanakan persalinan dan checklist P4K</span>
+          </span>
+          <ChevronRight className="size-5 shrink-0 text-[#536961]" />
+        </button>
         <p className="text-[15px] font-bold py-2 text-[#1D2B29]">Skrining Kesehatan</p>
         <LastCheckCard label={lastLabel} dateLabel={lastDate} kategori={last?.kategori} onLihat={() => setTab("skrining")} />
         <button onClick={() => setTab("tracker")} className="flex w-full items-center gap-3 rounded-[24px] bg-white p-4 text-left ring-2 ring-[#FFCFCF] active:scale-[0.99] transition">

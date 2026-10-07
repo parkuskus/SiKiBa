@@ -42,9 +42,11 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 - [x] S-06c diimplementasikan sebagai satu layar tab ketuban, tali pusat, dan plasenta pada `PlasentaKetubanScreen.tsx`, menggunakan empat ilustrasi WebP yang direncanakan (2026-10-07).
 - [x] Rencana layout S-06d dan pemetaan 12 ilustrasi (thumbnail + 11 sistem) diperbarui di `docs/RENCANA_EDUKASI_S06D.md`; 12 PNG dari folder S-06d dikonversi ke WebP dan dimasukkan ke katalog aset.
 - [x] S-06d Perubahan Fisiologi diimplementasikan sebagai daftar 11 sistem dengan pencarian, ilustrasi accordion, thumbnail header, dan navigasi dari katalog pada `FisiologiScreen.tsx` serta `fisiologiData.ts`.
+- [x] Katalog S-06 diperbarui: materi Keluhan Umum dihapus dan Birth Plan & Persiapan Persalinan (P4K) menjadi S-06g; tile S-06h duplikat dihilangkan (2026-10-07).
+- [x] Birth Plan dipindahkan dari katalog edukasi ke kartu akses cepat tersendiri di Beranda, mengikuti revisi layout (2026-10-07).
 
 ### Belum selesai / perlu konfirmasi
-- [ ] S-06 Edukasi: S-06 sampai S-06d sudah tersedia; empat topik S-06e–S-06h masih tampil sebagai “Segera hadir”. Lanjutkan desain/implementasi berdasarkan `docs/EKSTRAK_EDUKASI_LOVABLE.md` dan materi yang divalidasi stakeholder.
+- [ ] S-06 Edukasi: S-06 sampai S-06d sudah tersedia; S-06e–S-06g masih tampil sebagai “Segera hadir”. Lanjutkan desain/implementasi berdasarkan `docs/EKSTRAK_EDUKASI_LOVABLE.md` dan materi yang divalidasi stakeholder.
 - [ ] Validasi seluruh algoritma klinis oleh SpOG/bidan senior. Ambang dan rekomendasi belum boleh dianggap tervalidasi untuk pelayanan.
 - [ ] Ethical Clearance sebelum uji coba dengan partisipan.
 - [ ] QA end-to-end pada perangkat Android dan iOS: OTP/SMTP produksi, offline dan antrean sync, RLS, retensi data, reminder/notifikasi, mode nifas, chatbot, dan alur MERAH.
@@ -71,6 +73,6 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 ## Urutan kerja berikutnya
 1. QA dan perbaiki alur data profil/beranda serta kelahiran, lalu verifikasi sinkronisasi Supabase dan RLS.
 2. Finalisasi dokumen PDF dan review hasil bersama stakeholder/bidan.
-3. Lengkapi S-06b–S-06h sesuai `docs/EKSTRAK_EDUKASI_LOVABLE.md` dan validasi klinis stakeholder.
+3. Lengkapi S-06b–S-06g sesuai `docs/EKSTRAK_EDUKASI_LOVABLE.md` dan validasi klinis stakeholder; P4K kini memakai ID S-06g.
 4. Jalankan validasi pakar, QA lintas perangkat, dan proses Ethical Clearance/UAT.
 5. Siapkan deployment produksi dan distribusi yang dipilih.

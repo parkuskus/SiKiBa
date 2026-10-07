@@ -130,8 +130,6 @@ Pengguna segera memahami bahwa halaman ini berisi materi belajar dan dapat memil
 │ Tanda Bahaya      Emosi Bunda    │
 │                                  │
 │ [gambar]          [gambar]       │
-│ Keluhan Umum      Persiapan      │
-│                  Persalinan     │
 │                                  │
 ├──────────────────────────────────┤
 │ Beranda Skrining Edukasi ...     │
@@ -148,8 +146,6 @@ Pengguna segera memahami bahwa halaman ini berisi materi belajar dan dapat memil
 | 4 | Perubahan Tubuh | Adaptasi tubuh selama hamil | S-06d |
 | 5 | Tanda Bahaya | Gejala yang perlu diperiksa | S-06e |
 | 6 | Emosi Bunda | Perasaan di setiap trimester | S-06f |
-| 7 | Keluhan Umum | Penyebab dan cara mengatasi | S-06g |
-| 8 | Persiapan Persalinan | Rencana persalinan dan P4K | S-06h |
 
 - Pada frame 360 px, lebar isi sekitar 320 px; setiap tile sekitar 154 px dengan celah 12 px.
 - Bidang gambar sekitar 80 px tinggi. Label ditempatkan di bawahnya dan dapat mengambil dua baris. Keterangan memakai maksimal dua baris pendek tanpa pemotongan informasi penting.
@@ -168,8 +164,6 @@ Pengguna segera memahami bahwa halaman ini berisi materi belajar dan dapat memil
 | Tile Perubahan Tubuh | Bunda hamil dan penanda perubahan tubuh | Rencana cover sederhana tanpa banyak organ kecil |
 | Tile Tanda Bahaya | Buku KIA dan simbol perhatian | Rencana cover edukasi, tidak menyerupai hasil darurat pengguna |
 | Tile Emosi Bunda | Wajah Bunda dan hati | Rencana cover dukungan emosi |
-| Tile Keluhan Umum | Bunda beristirahat | Rencana cover keluhan ringan dan kenyamanan |
-| Tile Persiapan Persalinan | Tas bersalin dan perlengkapan bayi | Rencana cover persiapan praktis |
 
 Folder `s-06b/`, `s-06c/`, dan `s-06d/` telah tersedia tetapi masih kosong saat pemeriksaan. Tujuh cover selain fertilisasi dicatat sebagai kebutuhan aset, bukan gambar yang sudah selesai. Pada wireframe Figma, slot tersebut dapat memakai ikon penanda sementara dari keluarga ikon yang sama.
 
