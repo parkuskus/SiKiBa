@@ -162,7 +162,7 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
           </span>
         </div>
         <div className="mx-auto w-full max-w-[480px] flex-1 space-y-3.5 px-6 pb-6 pt-6">
-          <p className="text-[13px] leading-normal text-[#33443F]">{emailForOtp === DEMO_EMAIL ? `Akun Dummy memakai kode ${DEMO_OTP}. Email tidak dikirim.` : `Kode 6 digit dikirim ke ${emailForOtp}.`}</p>
+          <p className="text-[13px] leading-normal text-[#33443F]">{emailForOtp === DEMO_EMAIL ? `Akun Dummy memakai kode ${DEMO_OTP}. Tidak perlu menunggu OTP dari Email` : `Kode 6 digit dikirim ke ${emailForOtp}.`}</p>
           <div className="flex items-center justify-center gap-2">
             {Array.from({ length: 6 }, (_, index) => {
               const digit = otp[index] ?? ""
@@ -186,7 +186,6 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
             })}
           </div>
           {otpErr && <p className="text-center text-xs text-[#E57373]">{otpErr}</p>}
-          <p className="text-xs leading-normal text-[#33443F]">{emailForOtp === DEMO_EMAIL ? "Akun uji lokal. Gunakan kode demo dari README." : "Periksa kotak masuk dan folder spam"}</p>
           <Button onClick={handleVerifyOtp} disabled={otpLoading} className="w-full rounded-full bg-[#4A6E54] px-4 py-5 mt-3 text-base font-bold text-white hover:bg-[#3D5C46]">
             {otpLoading ? "Memeriksa" : "Verifikasi"}
           </Button>

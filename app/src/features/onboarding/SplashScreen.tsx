@@ -77,7 +77,7 @@ export default function SplashScreen({ onDaftar, onMasuk, onAutoMasuk }: Props) 
               <div className="h-2 w-44 overflow-hidden rounded-full bg-[#FFE2E2]">
                 <div className="h-full rounded-full bg-[#4A6E54] transition-none" style={{ width: `${bar}%` }} />
               </div>
-              <p className="text-xs text-[#33443F]">Memuat data kehamilan</p>
+              <p className="text-xs text-[#33443F]">Memuat data kehamilan...</p>
             </div>
           ) : (
             <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 space-y-3">
