@@ -12,17 +12,19 @@ import {
 } from "lucide-react"
 
 const topik = [
-  { judul: "Awal kehamilan", keterangan: "Dari sel telur hingga implantasi", icon: Dna, siap: true },
-  { judul: "Perkembangan janin", keterangan: "Ikuti tumbuh kembang dari minggu ke minggu", icon: Baby },
+  { judul: "Awal kehamilan", keterangan: "Dari sel telur hingga implantasi", icon: Dna, screen: "fertilisasi" },
+  { judul: "Perkembangan janin", keterangan: "Ikuti tumbuh kembang dari minggu ke minggu", icon: Baby, screen: "janin" },
   { judul: "Plasenta", keterangan: "Tali pusat dan air ketuban", icon: Activity },
   { judul: "Perubahan tubuh", keterangan: "Adaptasi tubuh selama kehamilan", icon: HeartPulse },
   { judul: "Tanda bahaya", keterangan: "Kenali gejala yang perlu diperiksa", icon: ShieldAlert },
   { judul: "Emosi Bunda", keterangan: "Perubahan perasaan tiap trimester", icon: Brain },
   { judul: "Keluhan umum", keterangan: "Penyebab dan cara mengatasinya", icon: Stethoscope },
   { judul: "Persiapan persalinan", keterangan: "Rencana persalinan dan P4K", icon: BriefcaseMedical },
-] satisfies { judul: string; keterangan: string; icon: LucideIcon; siap?: boolean }[]
+] satisfies { judul: string; keterangan: string; icon: LucideIcon; screen?: "fertilisasi" | "janin" }[]
 
-export default function EdukasiMenuScreen({ onOpenFertilisasi }: { onOpenFertilisasi: () => void }) {
+type Props = { onOpenFertilisasi: () => void; onOpenJanin: () => void }
+
+export default function EdukasiMenuScreen({ onOpenFertilisasi, onOpenJanin }: Props) {
   return (
     <div className="-mx-4 -mt-5">
       <header className="relative isolate overflow-hidden rounded-b-[32px] bg-[#4A6E54] px-6 pb-11 pt-7 text-white">
@@ -45,12 +47,14 @@ export default function EdukasiMenuScreen({ onOpenFertilisasi }: { onOpenFertili
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          {topik.map(({ judul, keterangan, icon: Icon, siap }, index) => {
+          {topik.map(({ judul, keterangan, icon: Icon, screen }, index) => {
+            const siap = Boolean(screen)
+            const bukaTopik = screen === "fertilisasi" ? onOpenFertilisasi : onOpenJanin
             const isiTile = (
               <>
                 <span className={`grid h-[92px] place-items-center overflow-hidden rounded-[18px] ${index % 2 === 0 ? "bg-[#EAF4F0]" : "bg-[#FFF1E8]"}`}>
                   {index === 0 ? (
-                    <img src="/s-06/s-06a/3-Fertilisasi.png" alt="" aria-hidden="true" className="h-full w-full object-contain" />
+                    <img src="/s-06/s-06a/3-Fertilisasi.webp" alt="" aria-hidden="true" className="h-full w-full object-contain" />
                   ) : (
                     <Icon className="size-9 text-[#4A6E54]" strokeWidth={1.7} aria-hidden="true" />
                   )}
@@ -68,7 +72,7 @@ export default function EdukasiMenuScreen({ onOpenFertilisasi }: { onOpenFertili
               <button
                 key={judul}
                 type="button"
-                onClick={onOpenFertilisasi}
+                onClick={bukaTopik}
                 className="flex min-h-[210px] flex-col rounded-[24px] bg-white p-3.5 text-left ring-1 ring-[#D9E7E2] transition-transform active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4A6E54]"
               >
                 {isiTile}

@@ -37,9 +37,10 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 - [x] Akun Dummy lokal `dummy@siagabunda.test` dengan kode `246810`, usia 26 tahun dan kehamilan sekitar 10 minggu tersedia tanpa inbox; petunjuk dan batas demo dicatat di README (2026-10-06).
 - [x] Verifikasi fitur baru lolos: build frontend, pengecekan Deno pengirim push, check kalender/zona waktu/crop, serta uji Chrome untuk penolakan kode salah, login Dummy, lonceng, foto profil dan kartu pengingat kosong. Endpoint pengirim menolak panggilan tanpa autentikasi dengan HTTP 401 (2026-10-06).
 - [x] Edukasi tahap awal 2026-10-07: katalog S-06 dan alur baca bergambar lima tahap pada S-06a dipisah ke `EdukasiMenuScreen.tsx` dan `FertilisasiScreen.tsx`; `EdukasiPage.tsx` hanya mengatur perpindahan screen. Memakai lima ilustrasi fertilisasi dan tautan video materi.
+- [x] S-06b Perkembangan Janin per Minggu ditambahkan 2026-10-07 dengan selector trimester/minggu, default mengikuti HPHT profil ke minggu materi terdekat, 20 ilustrasi WebP, perkembangan, kondisi Bunda, kewaspadaan, dan tips pada `JaninWeekScreen.tsx` serta `janinWeekData.ts`.
 
 ### Belum selesai / perlu konfirmasi
-- [ ] S-06 Edukasi: S-06 dan S-06a adalah implementasi awal; tujuh topik S-06b–S-06h masih tampil sebagai “Segera hadir”. Lanjutkan desain/implementasi berdasarkan `docs/RENCANA_EDUKASI_S06_S06A.md`, `docs/EKSTRAK_EDUKASI_LOVABLE.md`, dan materi yang divalidasi stakeholder.
+- [ ] S-06 Edukasi: S-06, S-06a, dan S-06b sudah tersedia; lima topik S-06c–S-06h masih tampil sebagai “Segera hadir”. Lanjutkan desain/implementasi berdasarkan `docs/RENCANA_EDUKASI_S06_S06A.md`, `docs/EKSTRAK_EDUKASI_LOVABLE.md`, dan materi yang divalidasi stakeholder.
 - [ ] Validasi seluruh algoritma klinis oleh SpOG/bidan senior. Ambang dan rekomendasi belum boleh dianggap tervalidasi untuk pelayanan.
 - [ ] Ethical Clearance sebelum uji coba dengan partisipan.
 - [ ] QA end-to-end pada perangkat Android dan iOS: OTP/SMTP produksi, offline dan antrean sync, RLS, retensi data, reminder/notifikasi, mode nifas, chatbot, dan alur MERAH.

@@ -162,7 +162,7 @@ Pengguna segera memahami bahwa halaman ini berisi materi belajar dan dapat memil
 | Area | Rencana ilustrasi | Ketersediaan dan perlakuan |
 | --- | --- | --- |
 | Kanan header | Bunda dengan buku, sekitar 90–100 px | `app/public/illu/illu-08-diary.png` sudah tersedia; hanya aksen pendamping judul |
-| Tile Awal Kehamilan | Pertemuan sel telur dan sperma | Gunakan `s-06a/3-Fertilisasi.png` sebagai thumbnail; objek biologis tetap terlihat utuh |
+| Tile Awal Kehamilan | Pertemuan sel telur dan sperma | Gunakan `s-06a/3-Fertilisasi.webp` sebagai thumbnail; objek biologis tetap terlihat utuh |
 | Tile Perkembangan Janin | Siluet janin netral | Perlu cover tanpa angka minggu; `illu-03-janin.png` memuat teks 28 weeks sehingga bukan cover umum yang sesuai |
 | Tile Plasenta | Plasenta, tali pusat, dan kantung ketuban | Rencana cover flat dengan objek yang saling terhubung |
 | Tile Perubahan Tubuh | Bunda hamil dan penanda perubahan tubuh | Rencana cover sederhana tanpa banyak organ kecil |
@@ -252,11 +252,11 @@ Seluruh nama file berikut benar-benar tersedia dan telah diperiksa secara visual
 
 | Tahap | File | Letak dan tujuan | Perlakuan gambar |
 | --- | --- | --- | --- |
-| 1. Ovulasi | [1-Ovulasi.png](../app/public/s-06/s-06a/1-Ovulasi.png) | Tengah bidang ilustrasi tahap pertama; memperlihatkan sel telur dilepaskan dari ovarium | Pertahankan objek ovarium dan sel telur; tidak dijadikan latar teks |
-| 2. Perjalanan Sperma | [2-Perjalanan sperma.png](../app/public/s-06/s-06a/2-Perjalanan%20sperma.png) | Bidang ilustrasi tahap kedua; fokus pada sperma dan sel telur | Sel telur dan arah gerak sperma tetap terlihat; tidak dipotong menjadi satu objek saja |
-| 3. Fertilisasi | [3-Fertilisasi.png](../app/public/s-06/s-06a/3-Fertilisasi.png) | Bidang ilustrasi tahap ketiga; juga menjadi thumbnail tile S-06 | Pertahankan pertemuan sperma dengan sel telur; warna kuning pada gambar tidak diubah menjadi indikator status klinis |
-| 4. Pembelahan Zigot | [4-Pembelahan zigot.png](../app/public/s-06/s-06a/4-Pembelahan%20zigot.png) | Menggunakan hampir seluruh lebar bidang ilustrasi agar rangkaian sel terbaca | Trim area kosong di atas dan bawah pada turunan untuk tampilan; seluruh rangkaian dan panah harus tetap utuh |
-| 5. Implantasi | [5-Implantasi.png](../app/public/s-06/s-06a/5-Implantasi.png) | Bidang ilustrasi tahap kelima, dengan keterangan **Bentuk blastokista** | Gambar yang tersedia adalah blastokista, bukan gambar penempelan pada dinding rahim; penjelasan tertulis menerangkan proses penempelannya |
+| 1. Ovulasi | [1-Ovulasi.webp](../app/public/s-06/s-06a/1-Ovulasi.webp) | Tengah bidang ilustrasi tahap pertama; memperlihatkan sel telur dilepaskan dari ovarium | Pertahankan objek ovarium dan sel telur; tidak dijadikan latar teks |
+| 2. Perjalanan Sperma | [2-Perjalanan sperma.webp](../app/public/s-06/s-06a/2-Perjalanan%20sperma.webp) | Bidang ilustrasi tahap kedua; fokus pada sperma dan sel telur | Sel telur dan arah gerak sperma tetap terlihat; tidak dipotong menjadi satu objek saja |
+| 3. Fertilisasi | [3-Fertilisasi.webp](../app/public/s-06/s-06a/3-Fertilisasi.webp) | Bidang ilustrasi tahap ketiga; juga menjadi thumbnail tile S-06 | Pertahankan pertemuan sperma dengan sel telur; warna kuning pada gambar tidak diubah menjadi indikator status klinis |
+| 4. Pembelahan Zigot | [4-Pembelahan zigot.webp](../app/public/s-06/s-06a/4-Pembelahan%20zigot.webp) | Menggunakan hampir seluruh lebar bidang ilustrasi agar rangkaian sel terbaca | Trim area kosong di atas dan bawah pada turunan untuk tampilan; seluruh rangkaian dan panah harus tetap utuh |
+| 5. Implantasi | [5-Implantasi.webp](../app/public/s-06/s-06a/5-Implantasi.webp) | Bidang ilustrasi tahap kelima, dengan keterangan **Bentuk blastokista** | Gambar yang tersedia adalah blastokista, bukan gambar penempelan pada dinding rahim; penjelasan tertulis menerangkan proses penempelannya |
 
 ### Aturan penggunaan aset
 

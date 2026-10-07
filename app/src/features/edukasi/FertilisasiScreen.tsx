@@ -4,31 +4,31 @@ import { ArrowLeft, ArrowRight, BookOpen, Play, Share2, Stethoscope } from "luci
 const tahapFertilisasi = [
   {
     judul: "Ovulasi",
-    gambar: "/s-06/s-06a/1-Ovulasi.png",
+    gambar: "/s-06/s-06a/1-Ovulasi.webp",
     alt: "Sel telur dilepaskan dari ovarium dan bergerak menuju tuba falopi",
     isi: "Sel telur dilepaskan dari ovarium dan bergerak ke tuba falopi. Di sinilah perjalanan menuju pembuahan dimulai.",
   },
   {
     judul: "Perjalanan sperma",
-    gambar: "/s-06/s-06a/2-Perjalanan%20sperma.png",
+    gambar: "/s-06/s-06a/2-Perjalanan%20sperma.webp",
     alt: "Sperma bergerak menuju sel telur di tuba falopi",
     isi: "Sperma bergerak melalui saluran reproduksi menuju sel telur. Pertemuan keduanya dapat terjadi di tuba falopi.",
   },
   {
     judul: "Fertilisasi",
-    gambar: "/s-06/s-06a/3-Fertilisasi.png",
+    gambar: "/s-06/s-06a/3-Fertilisasi.webp",
     alt: "Satu sperma menembus sel telur dan memulai proses pembuahan",
     isi: "Satu sperma membuahi sel telur dan membentuk zigot. Zigot membawa materi genetik dari ibu dan ayah.",
   },
   {
     judul: "Pembelahan zigot",
-    gambar: "/s-06/s-06a/4-Pembelahan%20zigot.png",
+    gambar: "/s-06/s-06a/4-Pembelahan%20zigot.webp",
     alt: "Zigot membelah menjadi dua, empat, delapan, lalu lebih banyak sel",
     isi: "Zigot membelah menjadi beberapa sel sambil bergerak ke rahim. Kumpulan sel ini berkembang menjadi morula dan blastokista.",
   },
   {
     judul: "Implantasi",
-    gambar: "/s-06/s-06a/5-Implantasi.png",
+    gambar: "/s-06/s-06a/5-Implantasi.webp",
     alt: "Blastokista pada tahap awal sebelum melekat pada lapisan dalam rahim",
     isi: "Blastokista menempel pada lapisan dalam rahim. Proses penempelan ini disebut implantasi.",
   },
