@@ -36,9 +36,10 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 - [x] Pengirim push obat mengikuti jam/hari/periode, dan ANC H-2 serta H-1 pukul 09.00 sesuai zona perangkat; aktivasi melalui pengaturan Notifikasi (2026-10-06).
 - [x] Akun Dummy lokal `dummy@siagabunda.test` dengan kode `246810`, usia 26 tahun dan kehamilan sekitar 10 minggu tersedia tanpa inbox; petunjuk dan batas demo dicatat di README (2026-10-06).
 - [x] Verifikasi fitur baru lolos: build frontend, pengecekan Deno pengirim push, check kalender/zona waktu/crop, serta uji Chrome untuk penolakan kode salah, login Dummy, lonceng, foto profil dan kartu pengingat kosong. Endpoint pengirim menolak panggilan tanpa autentikasi dengan HTTP 401 (2026-10-06).
+- [x] Edukasi tahap awal 2026-10-07: katalog S-06 dan alur baca bergambar lima tahap pada S-06a dipisah ke `EdukasiMenuScreen.tsx` dan `FertilisasiScreen.tsx`; `EdukasiPage.tsx` hanya mengatur perpindahan screen. Memakai lima ilustrasi fertilisasi dan tautan video materi.
 
 ### Belum selesai / perlu konfirmasi
-- [ ] S-06 Edukasi: konten dan layar topik menunggu materi klinis dari stakeholder; `EdukasiPage.tsx` saat ini masih perlu ditinjau untuk kelengkapan produk.
+- [ ] S-06 Edukasi: S-06 dan S-06a adalah implementasi awal; tujuh topik S-06b–S-06h masih tampil sebagai “Segera hadir”. Lanjutkan desain/implementasi berdasarkan `docs/RENCANA_EDUKASI_S06_S06A.md`, `docs/EKSTRAK_EDUKASI_LOVABLE.md`, dan materi yang divalidasi stakeholder.
 - [ ] Validasi seluruh algoritma klinis oleh SpOG/bidan senior. Ambang dan rekomendasi belum boleh dianggap tervalidasi untuk pelayanan.
 - [ ] Ethical Clearance sebelum uji coba dengan partisipan.
 - [ ] QA end-to-end pada perangkat Android dan iOS: OTP/SMTP produksi, offline dan antrean sync, RLS, retensi data, reminder/notifikasi, mode nifas, chatbot, dan alur MERAH.
@@ -65,6 +66,6 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 ## Urutan kerja berikutnya
 1. QA dan perbaiki alur data profil/beranda serta kelahiran, lalu verifikasi sinkronisasi Supabase dan RLS.
 2. Finalisasi dokumen PDF dan review hasil bersama stakeholder/bidan.
-3. Terima materi S-06 dan implementasikan layar edukasi sesuai konten yang disetujui.
+3. Lengkapi S-06b–S-06h sesuai `docs/EKSTRAK_EDUKASI_LOVABLE.md` dan validasi klinis stakeholder.
 4. Jalankan validasi pakar, QA lintas perangkat, dan proses Ethical Clearance/UAT.
 5. Siapkan deployment produksi dan distribusi yang dipilih.
