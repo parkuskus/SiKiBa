@@ -66,6 +66,19 @@ minggu) · `illu-34-plasenta` (plasenta + tali pusat) · `s-06d/Thumbnail.webp`
 hati) · `illu-38-keluhan` (P3K + ibu) · `illu-39-p4k` (tas bersalin + donor
 darah). Prompt = gaya global + objek + `book cover illustration, 4:3`.
 
+### S-06 folder thumbnails
+
+Tiap folder layar Edukasi juga memiliki satu thumbnail kolase bernama `Thumbnail.webp`. Thumbnail ini terpisah dari diagram atau ilustrasi per materi.
+
+| Target file | Isi | Peran yang disarankan |
+|---|---|---|
+| `s-06a/Thumbnail.webp` | Bunda, pasangan, sel telur, dan rahim | Cover/preview Fertilisasi; layar detail tetap memakai lima ilustrasi tahap |
+| `s-06b/Thumbnail.webp` | Bunda dan beberapa ilustrasi tumbuh kembang janin | Cover/overview Perkembangan Janin |
+| `s-06c/Thumbnail.webp` | Bunda dan ilustrasi pendukung kehamilan | Cover/overview materi plasenta, tali pusat, dan ketuban |
+| `s-06d/Thumbnail.webp` | Bunda dan kolase sistem tubuh | Cover/overview perubahan fisiologi |
+
+Semua thumbnail S-06 berada di folder screen masing-masing dalam format WebP. PNG sumber sudah dihapus.
+
 ### S-06c internal diagrams
 
 Four generated illustrations used inside the screen, separate from the S-06c catalog cover above. Detailed composition and generation prompts are in `docs/RENCANA_EDUKASI_S06C.md`. The source PNGs were visually checked against the brief, converted to WebP, and the PNG copies removed.

@@ -1,6 +1,6 @@
 # Rencana Layar Edukasi S-06d
 
-**Status:** perencanaan layout diperbarui berdasarkan aset yang telah disediakan; screen belum diimplementasikan.
+**Status:** layout dan aset dipetakan; screen diimplementasikan di `app/src/features/edukasi/FisiologiScreen.tsx`. Validasi klinis dan review visual akhir masih perlu dilakukan.
 
 **Screen ID:** S-06d, Perubahan Fisiologi Kehamilan.
 
@@ -8,7 +8,7 @@
 
 ## Arah yang direkomendasikan
 
-Jadikan S-06d sebagai **indeks perubahan tubuh dengan pencarian dan 11 baris sistem yang dapat dibuka satu per satu**. `Thumbnail.webp` memberi konteks umum pada bagian pengantar. Setiap baris memakai ilustrasi sistem tubuh yang sesuai; saat dibuka, ilustrasi membesar dan informasi berubah menjadi uraian serta tips.
+Jadikan S-06d sebagai **indeks perubahan tubuh dengan pencarian dan 11 baris sistem yang dapat dibuka satu per satu**. `Thumbnail.webp` memberi konteks umum pada bagian pengantar. Setiap baris memakai ilustrasi sistem tubuh yang sesuai; saat dibuka, gambar diperbesar dan informasi berubah menjadi uraian serta tips.
 
 Sebelas ilustrasi khusus sekarang tersedia di `app/public/s-06/s-06d/`. Aset dipakai sesuai sistem yang digambarkan; gambar berfungsi sebagai materi visual, bukan sumber fakta klinis. Jangan tambahkan label anatomi atau klaim yang tidak disetujui pakar.
 
@@ -22,12 +22,12 @@ Sebelas ilustrasi khusus sekarang tersedia di `app/public/s-06/s-06d/`. Aset dip
 ## Hierarki layar
 
 1. App bar detail dengan tombol kembali ke katalog S-06.
-2. Header sage berisi judul **Perubahan tubuh**, pengantar singkat, dan ilustrasi Bunda.
-3. Sheet materi dengan deskripsi bahwa tubuh menyesuaikan diri selama kehamilan.
-4. Kolom pencarian **Cari perubahan tubuh**.
-5. Jumlah hasil pencarian saat kata kunci digunakan.
-6. Daftar 11 topik akordeon. Maksimal satu topik terbuka dalam satu waktu.
-7. Dalam topik terbuka: label sistem, perubahan utama, penjelasan dari sumber, dan tips bila tersedia.
+2. Header sage berisi judul **Perubahan tubuh** dan pengantar singkat.
+3. Sheet materi dimulai dengan `Thumbnail.webp` sebagai ilustrasi pengantar.
+4. Kolom pencarian **Cari perubahan tubuh** dan jumlah hasil bila digunakan.
+5. Daftar 11 sistem dalam tiga kelompok prototype: organ dan sirkulasi, pencernaan dan hormon, serta kulit, otot, dan imun.
+6. Setiap baris memiliki thumbnail sistem; maksimal satu baris dibuka pada satu waktu.
+7. Dalam topik terbuka: ilustrasi lebih besar, perubahan utama, penjelasan dari sumber, dan tips bila tersedia.
 8. Catatan singkat bahwa keluhan berat atau memburuk perlu dibahas dengan bidan atau dokter.
 9. Bagian sumber materi yang dapat dibuka.
 
@@ -39,21 +39,24 @@ Sebelas ilustrasi khusus sekarang tersedia di `app/public/s-06/s-06d/`. Aset dip
 │                                  │
 │ Tubuh Bunda beradaptasi selama    │
 │ kehamilan untuk mendukung janin.  │
-│                  [Thumbnail]      │
 └────────── header sage ────────────┘
              jarak seperti S-06a
 ┌────────── sheet materi ───────────┐
+│ [Thumbnail.webp, overview]         │
 │ Cari perubahan tubuh              │
 │ 11 sistem                          │
 │                                  │
+│ Organ dan sirkulasi                │
 │ [gambar] Rahim dan area intim   v │
 │ [gambar] Jantung dan pembuluh   > │
 │ [gambar] Darah Bunda            > │
 │ [gambar] Paru-paru              > │
+│ Pencernaan dan hormon              │
 │ [gambar] Sistem pencernaan      > │
 │ [gambar] Ginjal dan kandung ... > │
 │ [gambar] Metabolisme dan tiroid > │
 │ [gambar] Payudara               > │
+│ Kulit, otot, dan imun               │
 │ [gambar] Otot, tulang, dan sendi> │
 │ [gambar] Kulit dan rambut       > │
 │ [gambar] Sistem imun            > │
@@ -67,7 +70,7 @@ Sebelas ilustrasi khusus sekarang tersedia di `app/public/s-06/s-06d/`. Aset dip
        navigasi aplikasi tetap
 ```
 
-Saat baris dibuka, ringkasan perubahan muncul di bawah judul baris yang sama, dilanjutkan tips jika tersedia. Hindari menempatkan setiap baris ke dalam kartu besar tersendiri; daftar putih dengan pemisah lembut lebih hemat ruang dan mudah dipindai.
+Saat baris dibuka, gambar sistem diperbesar dan ringkasan perubahan muncul di bawah judul yang sama, dilanjutkan tips jika tersedia. Hindari menempatkan setiap baris ke dalam kartu besar tersendiri; daftar putih dengan pemisah lembut lebih hemat ruang dan mudah dipindai.
 
 ## Daftar 11 sistem dan ilustrasi
 
@@ -161,7 +164,7 @@ Seluruh aset memakai latar krem dengan warna coral/pink dan beberapa aksen sage.
 - Jangan salin label “Terverifikasi Bidan/Ahli” dari prototype kecuali proses verifikasi SIAGA Bunda benar-benar dilakukan.
 - S-06d adalah edukasi fisiologi. Klasifikasi keluhan dan triase tetap dipisah ke S-06g dan S-03c.
 
-## Checklist sebelum mockup/implementasi
+## Pemeriksaan sebelum finalisasi konten
 
 - [ ] Urutan 11 sistem dan judulnya disetujui.
 - [ ] Sumber untuk setiap penjelasan dan tips dapat ditelusuri.
@@ -173,7 +176,6 @@ Seluruh aset memakai latar krem dengan warna coral/pink dan beberapa aksen sage.
 
 ## Status berikutnya
 
-- Layout dan inventaris seluruh aset S-06d sudah diperbarui berdasarkan berkas yang tersedia.
-- Dua belas PNG sumber sudah dikonversi menjadi WebP; tidak perlu generasi atau pencarian aset tambahan untuk versi awal.
-- Naskah fisiologi dan tips perlu ditata serta ditinjau tenaga kesehatan.
-- Setelah isi dan ilustrasi ditinjau, implementasikan dalam `FisiologiScreen.tsx` dan sambungkan ke katalog S-06.
+- Screen, interaksi pencarian/akordeon, dan pemetaan ke-12 aset WebP sudah diterapkan.
+- Data copy masih perlu diverifikasi per sistem oleh tenaga kesehatan.
+- Periksa `Tulang.webp` pada layar aktual dan QA pembesaran teks sebelum rilis.

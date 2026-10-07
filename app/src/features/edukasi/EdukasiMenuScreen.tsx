@@ -15,16 +15,16 @@ const topik = [
   { judul: "Awal kehamilan", keterangan: "Dari sel telur hingga implantasi", icon: Dna, screen: "fertilisasi" },
   { judul: "Perkembangan janin", keterangan: "Ikuti tumbuh kembang dari minggu ke minggu", icon: Baby, screen: "janin" },
   { judul: "Plasenta", keterangan: "Tali pusat dan air ketuban", icon: Activity, screen: "s06c" },
-  { judul: "Perubahan tubuh", keterangan: "Adaptasi tubuh selama kehamilan", icon: HeartPulse },
+  { judul: "Perubahan tubuh", keterangan: "Adaptasi tubuh selama kehamilan", icon: HeartPulse, screen: "fisiologi" },
   { judul: "Tanda bahaya", keterangan: "Kenali gejala yang perlu diperiksa", icon: ShieldAlert },
   { judul: "Emosi Bunda", keterangan: "Perubahan perasaan tiap trimester", icon: Brain },
   { judul: "Keluhan umum", keterangan: "Penyebab dan cara mengatasinya", icon: Stethoscope },
   { judul: "Persiapan persalinan", keterangan: "Rencana persalinan dan P4K", icon: BriefcaseMedical },
-] satisfies { judul: string; keterangan: string; icon: LucideIcon; screen?: "fertilisasi" | "janin" | "s06c" }[]
+] satisfies { judul: string; keterangan: string; icon: LucideIcon; screen?: "fertilisasi" | "janin" | "s06c" | "fisiologi" }[]
 
-type Props = { onOpenFertilisasi: () => void; onOpenJanin: () => void; onOpenPlasenta: () => void }
+type Props = { onOpenFertilisasi: () => void; onOpenJanin: () => void; onOpenPlasenta: () => void; onOpenFisiologi: () => void }
 
-export default function EdukasiMenuScreen({ onOpenFertilisasi, onOpenJanin, onOpenPlasenta }: Props) {
+export default function EdukasiMenuScreen({ onOpenFertilisasi, onOpenJanin, onOpenPlasenta, onOpenFisiologi }: Props) {
   return (
     <div className="-mx-4 -mt-5">
       <header className="relative isolate overflow-hidden rounded-b-[32px] bg-[#4A6E54] px-6 pb-11 pt-7 text-white">
@@ -49,7 +49,7 @@ export default function EdukasiMenuScreen({ onOpenFertilisasi, onOpenJanin, onOp
         <div className="grid grid-cols-2 gap-3">
           {topik.map(({ judul, keterangan, icon: Icon, screen }, index) => {
             const siap = Boolean(screen)
-            const bukaTopik = screen === "fertilisasi" ? onOpenFertilisasi : screen === "janin" ? onOpenJanin : onOpenPlasenta
+            const bukaTopik = screen === "fertilisasi" ? onOpenFertilisasi : screen === "janin" ? onOpenJanin : screen === "s06c" ? onOpenPlasenta : onOpenFisiologi
             const isiTile = (
               <>
                 <span className={`grid h-[92px] place-items-center overflow-hidden rounded-[18px] ${index % 2 === 0 ? "bg-[#EAF4F0]" : "bg-[#FFF1E8]"}`}>

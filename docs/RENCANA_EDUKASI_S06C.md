@@ -64,7 +64,7 @@ Di layar sempit, semua materi mengalir satu kolom. Visual tampil sebelum rincian
 
 ## Inventaris ilustrasi
 
-Empat aset cukup untuk menyampaikan materi tanpa membuat halaman sesak. Tiga menjadi ilustrasi utama tab; satu berupa diagram lima contoh insersi tali pusat.
+Empat aset internal digunakan di dalam materi tanpa membuat halaman sesak. Tiga menjadi ilustrasi utama tab; satu berupa diagram lima contoh insersi tali pusat. Folder S-06c juga memiliki `Thumbnail.webp` untuk cover/preview katalog, yang terpisah dari empat ilustrasi dalam layar.
 
 | No. | Nama aset keluaran | Rasio | Letak | Isi visual |
 | ---: | --- | --- | --- | --- |

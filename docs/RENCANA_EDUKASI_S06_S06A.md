@@ -258,6 +258,8 @@ Seluruh nama file berikut benar-benar tersedia dan telah diperiksa secara visual
 | 4. Pembelahan Zigot | [4-Pembelahan zigot.webp](../app/public/s-06/s-06a/4-Pembelahan%20zigot.webp) | Menggunakan hampir seluruh lebar bidang ilustrasi agar rangkaian sel terbaca | Trim area kosong di atas dan bawah pada turunan untuk tampilan; seluruh rangkaian dan panah harus tetap utuh |
 | 5. Implantasi | [5-Implantasi.webp](../app/public/s-06/s-06a/5-Implantasi.webp) | Bidang ilustrasi tahap kelima, dengan keterangan **Bentuk blastokista** | Gambar yang tersedia adalah blastokista, bukan gambar penempelan pada dinding rahim; penjelasan tertulis menerangkan proses penempelannya |
 
+Thumbnail kolase `app/public/s-06/s-06a/Thumbnail.webp` juga tersedia untuk cover/preview katalog. Thumbnail tersebut bukan pengganti lima ilustrasi tahap dan saat ini belum dipakai pada tile katalog.
+
 ### Aturan penggunaan aset
 
 - Ilustrasi WebP mempunyai latar krem dan area kosong yang berbeda-beda. Tampilan utama memakai bidang gambar krem yang sengaja dibedakan dari sheet putih, sehingga latar gambar tidak tampak seperti kesalahan warna halaman.
