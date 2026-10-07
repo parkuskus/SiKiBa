@@ -80,7 +80,7 @@ Langkah konfirmasi
 Video dan sumber
 ```
 
-Kuat untuk pemahaman pertama: satu gambar menjelaskan satu kejadian. Seluruh tahap dapat dipilih langsung, sementara bacaan pendukung tetap tersedia lewat gulir vertikal. Ini memanfaatkan lima PNG yang tersedia tanpa menumpuk lima gambar penuh dalam satu halaman.
+Kuat untuk pemahaman pertama: satu gambar menjelaskan satu kejadian. Seluruh tahap dapat dipilih langsung, sementara bacaan pendukung tetap tersedia lewat gulir vertikal. Ini memanfaatkan lima ilustrasi WebP yang tersedia tanpa menumpuk lima gambar penuh dalam satu halaman.
 
 ## 3. Bahasa visual
 
@@ -260,7 +260,7 @@ Seluruh nama file berikut benar-benar tersedia dan telah diperiksa secara visual
 
 ### Aturan penggunaan aset
 
-- PNG mempunyai latar krem dan area kosong yang berbeda-beda. Tampilan utama memakai bidang gambar krem yang sengaja dibedakan dari sheet putih, sehingga latar raster tidak tampak seperti kesalahan warna halaman.
+- Ilustrasi WebP mempunyai latar krem dan area kosong yang berbeda-beda. Tampilan utama memakai bidang gambar krem yang sengaja dibedakan dari sheet putih, sehingga latar gambar tidak tampak seperti kesalahan warna halaman.
 - Gambar mempertahankan proporsi; objek tidak ditarik untuk memenuhi kotak.
 - Pemotongan hanya mengurangi ruang kosong di sekitar objek. Anatomi, sel, dan panah tidak dipotong.
 - Hindari penempatan teks di atas diagram. Judul dan keterangan berada di luar gambar.

@@ -61,10 +61,40 @@ app style like Heally UI kit, clean background, high quality, no text`
 ## 4. Edukasi S-06a–h (prioritas 3, cover 4:3)
 
 `illu-32-fertilisasi` (sperma + sel telur) · `illu-33-janin` (janin per
-minggu) · `illu-34-plasenta` (plasenta + tali pusat) · `illu-35-fisiologi`
-(organ ibu) · `illu-36-bahaya` (tanda bahaya) · `illu-37-psikologi` (kepala +
+minggu) · `illu-34-plasenta` (plasenta + tali pusat) · `s-06d/Thumbnail.webp`
+(thumbnail perubahan fisiologi) · `illu-36-bahaya` (tanda bahaya) · `illu-37-psikologi` (kepala +
 hati) · `illu-38-keluhan` (P3K + ibu) · `illu-39-p4k` (tas bersalin + donor
 darah). Prompt = gaya global + objek + `book cover illustration, 4:3`.
+
+### S-06c internal diagrams
+
+Four generated illustrations used inside the screen, separate from the S-06c catalog cover above. Detailed composition and generation prompts are in `docs/RENCANA_EDUKASI_S06C.md`. The source PNGs were visually checked against the brief, converted to WebP, and the PNG copies removed.
+
+| Target file | Placement | Content |
+|---|---|---|
+| `s-06c/ketuban.webp` | Air Ketuban tab | Simplified uterus cross-section with fetus inside amniotic sac |
+| `s-06c/tali-pusat.webp` | Tali Pusat tab | Cord attached to fetus and placenta, with inset cross-section of 2 arteries + 1 vein inside Wharton's jelly |
+| `s-06c/permukaan-plasenta.webp` | Plasenta tab | Side-by-side fetal and maternal surfaces of one placenta |
+| `s-06c/insersi-tali-pusat.webp` | Insersi sub-section | Five schematic insertion patterns in one wide comparison diagram |
+
+### S-06d internal illustrations
+
+Twelve supplied illustrations were converted from PNG to WebP: one overview thumbnail plus one illustration per system. Use the same system image in the closed row and expanded detail; see `docs/RENCANA_EDUKASI_S06D.md` for visual mapping and content hierarchy.
+
+| Target file | Placement |
+|---|---|
+| `s-06d/Thumbnail.webp` | Overview/hero and S-06d catalog tile |
+| `s-06d/Rahim.webp` | Rahim and area intim |
+| `s-06d/Jantung.webp` | Jantung and pembuluh darah |
+| `s-06d/Darah.webp` | Darah Bunda |
+| `s-06d/Paru-paru.webp` | Paru-paru |
+| `s-06d/Lambung.webp` | Sistem pencernaan |
+| `s-06d/Ginjal.webp` | Ginjal and kandung kemih |
+| `s-06d/Tiroid.webp` | Metabolisme and tiroid |
+| `s-06d/Payudara.webp` | Payudara and persiapan ASI |
+| `s-06d/Tulang.webp` | Otot, tulang, and sendi |
+| `s-06d/Kulit.webp` | Kulit and rambut |
+| `s-06d/Imun.webp` | Sistem imun |
 
 ## 5. Tracker + profil (prioritas 3)
 
