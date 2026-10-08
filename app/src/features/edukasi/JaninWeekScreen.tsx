@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, TriangleAlert } from "lucide-react"
 import { weeksFromHpht } from "@/clinical-rules/ukHpl"
 import { getCurrentProfile } from "@/data/currentUser"
 import { janinWeeks } from "./janinWeekData"
+import VideoBelajarCard from "./VideoBelajarCard"
 
 const trimesterList = [
   { id: 1, label: "Trimester 1", weeks: janinWeeks.filter((item) => item.trimester === 1) },
@@ -81,7 +82,14 @@ export default function JaninWeekScreen({ onBack }: { onBack: () => void }) {
       </header>
 
       <main className="relative mx-4 -mt-7 rounded-t-[32px] bg-[#FFFCF6] px-5 pb-36 pt-6">
-        <div className="mb-4 flex items-start justify-between gap-3">
+        <VideoBelajarCard
+          judul="Perkembangan Janin per Minggu"
+          deskripsi="Lihat bagaimana si Kecil tumbuh dan berkembang dari minggu ke minggu."
+          thumbnail="/s-06/s-06b/Thumbnail.webp"
+          sumber="/s-06/s-06b/S-06b%20-%20Perkembangan%20Janin.mp4"
+        />
+
+        <div className="mb-4 mt-5 flex items-start justify-between gap-3">
           <div>
             <h2 className="text-lg font-bold text-[#1D2B29]">Pilih minggu</h2>
             <div className="mt-1 text-sm leading-relaxed text-[#536961]">

@@ -167,7 +167,7 @@ Gunakan ejaan **Plasenta** pada judul layar meskipun daftar awal pengguna menuli
 ### Aset yang sudah tersedia
 
 - S-06a–S-06d mempunyai thumbnail WebP; S-06f mempunyai `Thumbnail.png`.
-- S-06e pada inventaris saat ini berisi video, belum ditemukan thumbnail.
+- S-06e kini memiliki `s-06e/Thumbnail.webp` sebagai cover katalog; aset disediakan pengguna dan dikonversi dari PNG.
 - S-06g menjadi form personal, bukan kartu materi edukasi. Untuk kartu Beranda, prioritaskan ikon/ilustrasi tas persalinan yang relevan; jangan ambil gambar stok tanpa lisensi.
 - Gunakan aset lokal dahulu sebelum mencari gambar tambahan. Periksa isi visual, crop, resolusi, lisensi, atribusi dan konsistensi merek sebelum bundling.
 
@@ -181,9 +181,8 @@ Gunakan ejaan **Plasenta** pada judul layar meskipun daftar awal pengguna menuli
 
 Gunakan sebagai brief/prompt awal dan sesuaikan dengan generator. Rasio cover 4:3, tanpa teks, ikon atau simbol medis yang menyatakan diagnosis, palet sage `#7AAE9A`/`#4A6E54`, cream `#FFFDEC`, blush lembut, suasana hangat, ilustrasi flat vector bersih, Bunda Indonesia berhijab dengan busana sage bila ada karakter manusia, komposisi sederhana dan terbaca pada thumbnail kecil.
 
-- **S-06e Tanda Bahaya:** “Ilustrasi edukasi kehamilan yang tenang dan mudah dipahami, Bunda hamil Indonesia bersama bidan yang sedang menjelaskan tanda untuk segera diperiksa, gestur suportif, simbol perhatian kecil non-alarmis, tanpa darah, tanpa adegan gawat, flat vector, palet sage-cream-blush SIAGA Bunda, cover 4:3, tanpa teks.”
 - **S-06g Birth Plan:** “Bunda hamil Indonesia dan pendamping menyiapkan tas persalinan, Buku KIA, checklist sederhana, dan kendaraan keluarga sebagai simbol rencana P4K, suasana siap dan optimistis, flat vector, palet sage-cream-blush SIAGA Bunda, cover 4:3, tanpa teks.”
-- **Cover yang belum cocok setelah review:** gunakan prompt generik di atas dengan objek spesifik sesuai materi; jangan menghasilkan anatomi klinis detail tanpa brief dan review pakar.
+- **Cover yang belum tersedia/cocok setelah review:** gunakan prompt generik di atas dengan objek spesifik sesuai materi; jangan menghasilkan anatomi klinis detail tanpa brief dan review pakar.
 
 ## 10. Sumber konten klinis dan guidebook/vector DB
 
@@ -211,6 +210,8 @@ Daftar ini indikatif. Sebelum implementasi, periksa ulang status working tree, m
 ## Progress implementasi
 
 - 2026-10-08: Judul katalog S-06a–S-06f diperbarui. Judul detail S-06a–S-06d diseragamkan, thumbnail S-06c dipasang pada header, dan thumbnail S-06f dipasang pada tile katalog. S-06f belum memiliki layar detail, jadi header detailnya tetap menunggu implementasi screen.
+- 2026-10-08: Card belajar video ditambahkan di bagian atas S-06a/S-06b dengan MP4 lokal, thumbnail, dan kontrol native. Prompt thumbnail S-06e ditambahkan ke `docs/ASSETS.md`. Persona chatbot diganti menjadi Kira dengan gambar karakter, copy/FAQ offline, dan prompt online yang selaras.
+- 2026-10-08: Thumbnail S-06e dari pengguna dikonversi ke WebP dan dipakai di tile katalog; prompt generator yang sebelumnya disiapkan untuk cover S-06e tidak lagi diperlukan.
 
 ## Kriteria penerimaan
 

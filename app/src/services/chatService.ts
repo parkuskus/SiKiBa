@@ -37,7 +37,7 @@ export async function tanyaChatbot(pesan: string): Promise<ChatReply> {
     return { answer, sources: (data.sources as string[]) ?? [], escalate: !!data.escalate, offline: false, verified: data.verified === true }
   } catch (e) {
     // online gagal (Edge Function belum deploy / belum login) -> fallback lokal biar UX tidak mati
-    console.warn("[siba] invoke chat gagal, pakai FAQ lokal:", e)
+    console.warn("[kira] invoke chat gagal, pakai FAQ lokal:", e)
     const local = jawabOffline(teks)
     return { answer: local.answer, sources: [], escalate: perluEskalasi(local.answer), offline: true, verified: local.verified }
   }

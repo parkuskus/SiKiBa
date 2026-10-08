@@ -45,6 +45,9 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 - [x] Katalog S-06 diperbarui: materi Keluhan Umum dihapus dan Birth Plan & Persiapan Persalinan (P4K) menjadi S-06g; tile S-06h duplikat dihilangkan (2026-10-07).
 - [x] Birth Plan dipindahkan dari katalog edukasi ke kartu akses cepat tersendiri di Beranda, mengikuti revisi layout (2026-10-07).
 - [x] Judul katalog S-06a–S-06f diseragamkan; header detail S-06a–S-06d diperbarui, thumbnail S-06c ditambahkan di header, dan thumbnail S-06f dipakai pada tile katalog karena layar detail S-06f belum tersedia (2026-10-08).
+- [x] Card “Pelajari lewat video” ditambahkan di atas materi S-06a dan S-06b dengan video MP4 lokal serta kontrol native; prompt thumbnail S-06e ditambahkan di `docs/ASSETS.md` (2026-10-08).
+- [x] Persona chatbot diperbarui menjadi Kira: avatar `gambar-karakter.png`, sapaan/FAQ offline, label UI, dan prompt Edge Function diselaraskan (2026-10-08).
+- [x] Thumbnail S-06e `Thumbnail.png` dikonversi menjadi `Thumbnail.webp` dan dipakai pada tile Tanda Bahaya Kehamilan (2026-10-08).
 
 ### Belum selesai / perlu konfirmasi
 - [ ] S-06 Edukasi: S-06 sampai S-06d sudah tersedia; S-06e–S-06g masih tampil sebagai “Segera hadir”. Lanjutkan desain/implementasi berdasarkan `docs/EKSTRAK_EDUKASI_LOVABLE.md` dan materi yang divalidasi stakeholder.

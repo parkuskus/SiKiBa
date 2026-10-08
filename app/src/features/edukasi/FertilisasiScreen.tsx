@@ -1,5 +1,6 @@
 import { useState } from "react"
-import { ArrowLeft, ArrowRight, BookOpen, Play, Share2, Stethoscope } from "lucide-react"
+import { ArrowLeft, ArrowRight, BookOpen, Share2, Stethoscope } from "lucide-react"
+import VideoBelajarCard from "./VideoBelajarCard"
 
 const tahapFertilisasi = [
   {
@@ -33,8 +34,6 @@ const tahapFertilisasi = [
     isi: "Blastokista menempel pada lapisan dalam rahim. Proses penempelan ini disebut implantasi.",
   },
 ] as const
-
-const videoFertilisasi = "https://youtu.be/_5OvgQW6FG4?si=sl7BZofIK3tihY_T"
 
 function BagikanMateri() {
   const [pesan, setPesan] = useState("")
@@ -102,7 +101,14 @@ export default function FertilisasiScreen({ onBack }: { onBack: () => void }) {
       </header>
 
       <main className="relative mx-4 mt-4 rounded-[32px] bg-[#FFFCF6] px-5 pb-36 pt-6">
-        <section aria-label="Tahap fertilisasi" className="rounded-[24px] bg-white p-4 ring-1 ring-[#D9E7E2]">
+        <VideoBelajarCard
+          judul="Terjadinya Kehamilan (Fertilisasi)"
+          deskripsi="Lihat bagaimana proses kehamilan terjadi, mulai dari ovulasi hingga implantasi."
+          thumbnail="/s-06/s-06a/Thumbnail.webp"
+          sumber="/s-06/s-06a/S-06a%20-%20Terjadinya%20kehamilan.mp4"
+        />
+
+        <section aria-label="Tahap fertilisasi" className="mt-5 rounded-[24px] bg-white p-4 ring-1 ring-[#D9E7E2]">
           <div className="flex items-center justify-between gap-2" role="group" aria-label="Pilih tahap fertilisasi">
             {tahapFertilisasi.map((item, index) => {
               const aktif = index === tahapAktif
@@ -175,26 +181,6 @@ export default function FertilisasiScreen({ onBack }: { onBack: () => void }) {
           <div className="mt-3 text-sm leading-relaxed text-[#33443F]">
             Setelah tes kehamilan menunjukkan hasil positif, jadwalkan pemeriksaan dengan bidan atau dokter untuk membahas usia kehamilan dan perawatan berikutnya.
           </div>
-        </section>
-
-        <section className="mt-7">
-          <h2 className="text-lg font-bold text-[#1D2B29]">Video fertilisasi</h2>
-          <div className="mt-1 text-sm text-[#536961]">Tonton penjelasan singkat tentang proses pembuahan.</div>
-          <a
-            href={videoFertilisasi}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-3 flex min-h-[76px] items-center gap-3 rounded-[20px] bg-white p-4 ring-1 ring-[#D9E7E2] transition-colors hover:bg-[#EAF4F0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4A6E54]"
-          >
-            <span className="grid size-11 shrink-0 place-items-center rounded-full bg-[#4A6E54] text-white">
-              <Play className="size-5 fill-current" aria-hidden="true" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-bold text-[#1D2B29]">Tonton di YouTube</span>
-              <span className="mt-0.5 block text-xs text-[#536961]">Video tentang fertilisasi</span>
-            </span>
-            <ArrowRight className="size-4 shrink-0 text-[#4A6E54]" aria-hidden="true" />
-          </a>
         </section>
 
         <details className="mt-6 rounded-[18px] bg-white px-4 py-3 ring-1 ring-[#D9E7E2]">

@@ -76,6 +76,7 @@ Tiap folder layar Edukasi juga memiliki satu thumbnail kolase bernama `Thumbnail
 | `s-06b/Thumbnail.webp` | Bunda dan beberapa ilustrasi tumbuh kembang janin | Cover/overview Perkembangan Janin |
 | `s-06c/Thumbnail.webp` | Bunda dan ilustrasi pendukung kehamilan | Cover/overview materi plasenta, tali pusat, dan ketuban |
 | `s-06d/Thumbnail.webp` | Bunda dan kolase sistem tubuh | Cover/overview perubahan fisiologi |
+| `s-06e/Thumbnail.webp` | Bunda berbincang dengan bidan tentang tanda bahaya | Thumbnail katalog Tanda Bahaya Kehamilan; dikonversi dari PNG yang disediakan pengguna |
 
 Semua thumbnail S-06 berada di folder screen masing-masing dalam format WebP. PNG sumber sudah dihapus.
 

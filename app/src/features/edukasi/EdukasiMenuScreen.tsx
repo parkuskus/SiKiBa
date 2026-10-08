@@ -14,7 +14,7 @@ const topik = [
   { judul: "Perkembangan Janin per Minggu", keterangan: "Ikuti tumbuh kembang dari minggu ke minggu", icon: Baby, thumbnail: "/s-06/s-06b/Thumbnail.webp", screen: "janin" },
   { judul: "Perkembangan Plasenta, Tali Pusat, dan Ketuban", keterangan: "Kenali fungsi organ pendukung kehamilan", icon: Activity, thumbnail: "/s-06/s-06c/Thumbnail.webp", screen: "s06c" },
   { judul: "Perubahan Fisiologi Kehamilan", keterangan: "Adaptasi tubuh selama kehamilan", icon: HeartPulse, thumbnail: "/s-06/s-06d/Thumbnail.webp", screen: "fisiologi" },
-  { judul: "Tanda Bahaya Kehamilan", keterangan: "Kenali gejala yang perlu diperiksa", icon: ShieldAlert },
+  { judul: "Tanda Bahaya Kehamilan", keterangan: "Kenali gejala yang perlu diperiksa", icon: ShieldAlert, thumbnail: "/s-06/s-06e/Thumbnail.webp" },
   { judul: "Perubahan Psikologi/Emosi", keterangan: "Perubahan perasaan tiap trimester", icon: Brain, thumbnail: "/s-06/s-06f/Thumbnail.png" },
 ] satisfies { judul: string; keterangan: string; icon: LucideIcon; thumbnail?: string; screen?: "fertilisasi" | "janin" | "s06c" | "fisiologi" }[]
 

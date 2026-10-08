@@ -6,7 +6,7 @@ import { getCurrentUserId } from "@/data/currentUser"
 import { shareViaWA } from "@/services/exportService"
 import { AVATAR, GELAR, NAMA, PLACEHOLDER, TYPING, sapaAcak } from "@/features/chatbot/personality"
 
-type Msg = { dari: "ibu" | "siba"; teks: string; verified?: boolean }
+type Msg = { dari: "ibu" | "kira"; teks: string; verified?: boolean }
 
 const TOPIK_CEPAT = ["Mual saat hamil", "Tanda bahaya", "Bayi kuning", "Rasa cemas"]
 
@@ -35,7 +35,7 @@ function pisahkanSubjudul(teks: string): string {
 }
 
 export default function ChatbotPage({ onClose }: { onClose: () => void }) {
-  const [msgs, setMsgs] = useState<Msg[]>(() => [{ dari: "siba", teks: sapaAcak() }])
+  const [msgs, setMsgs] = useState<Msg[]>(() => [{ dari: "kira", teks: sapaAcak() }])
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
   const [online, setOnline] = useState(() => typeof navigator === "undefined" || navigator.onLine)
@@ -67,10 +67,10 @@ export default function ChatbotPage({ onClose }: { onClose: () => void }) {
     setLoading(true)
     try {
       const reply = await tanyaChatbot(pesan)
-      setMsgs((current) => [...current, { dari: "siba", teks: reply.answer, verified: reply.verified }])
+      setMsgs((current) => [...current, { dari: "kira", teks: reply.answer, verified: reply.verified }])
       if (reply.escalate) setEmergency(true)
     } catch {
-      setMsgs((current) => [...current, { dari: "siba", teks: "Maaf Bunda, Siba belum bisa menjawab sekarang. Coba lagi sebentar lagi ya." }])
+      setMsgs((current) => [...current, { dari: "kira", teks: "Maaf Bunda, Kira belum bisa menjawab sekarang. Coba lagi sebentar lagi ya." }])
     } finally {
       setLoading(false)
     }
@@ -78,7 +78,7 @@ export default function ChatbotPage({ onClose }: { onClose: () => void }) {
 
   const mulaiBaru = () => {
     if (loading) return
-    setMsgs([{ dari: "siba", teks: sapaAcak() }])
+    setMsgs([{ dari: "kira", teks: sapaAcak() }])
     setInput("")
     setEmergency(false)
     setShareError(false)
@@ -98,7 +98,9 @@ export default function ChatbotPage({ onClose }: { onClose: () => void }) {
   return (
     <div className="relative flex h-full min-h-0 flex-col bg-[#FFFCF6]">
       <header className="flex shrink-0 items-center gap-3 bg-[#4A6E54] px-4 py-3 text-white">
-        <span className="grid size-11 shrink-0 place-items-center rounded-full bg-white text-xl ring-1 ring-white/40">{AVATAR}</span>
+        <span className="grid size-11 shrink-0 place-items-center overflow-hidden rounded-full bg-white ring-1 ring-white/40">
+          <img src={AVATAR} alt="" aria-hidden="true" className="h-full w-full object-cover object-[50%_28%]" />
+        </span>
         <div className="min-w-0 flex-1">
           <p className="text-base font-bold leading-tight">{NAMA}</p>
           <p className="mt-1 flex items-center gap-1.5 text-xs leading-none text-white/90">
@@ -118,9 +120,9 @@ export default function ChatbotPage({ onClose }: { onClose: () => void }) {
         <div className="space-y-4">
           {msgs.map((message, index) => (
             <div key={`${index}-${message.dari}`} className={`flex items-start gap-2.5 ${message.dari === "ibu" ? "justify-end" : "justify-start"}`}>
-              {message.dari === "siba" && <span aria-hidden className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full bg-[#EAF4F0] text-base">{AVATAR}</span>}
+              {message.dari === "kira" && <span aria-hidden className="mt-0.5 grid size-8 shrink-0 place-items-center overflow-hidden rounded-full bg-[#EAF4F0]"><img src={AVATAR} alt="" className="h-full w-full object-cover object-[50%_28%]" /></span>}
               <div className={`max-w-[90%] rounded-[20px] px-3.5 py-3 text-sm leading-relaxed ${message.dari === "ibu" ? "rounded-tr-[6px] bg-[#4A6E54] text-white" : "rounded-tl-[6px] bg-white text-[#1D2B29] ring-1 ring-[#D9E7E2] shadow-sm"}`}>
-                {message.dari === "siba" ? (
+                {message.dari === "kira" ? (
                   <div className="space-y-1">
                     <ReactMarkdown components={markdownComponents}>{pisahkanSubjudul(message.teks)}</ReactMarkdown>
                   </div>
@@ -137,7 +139,7 @@ export default function ChatbotPage({ onClose }: { onClose: () => void }) {
           ))}
           {loading && (
             <div className="flex items-start gap-2.5">
-              <span aria-hidden className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full bg-[#EAF4F0] text-base">{AVATAR}</span>
+              <span aria-hidden className="mt-0.5 grid size-8 shrink-0 place-items-center overflow-hidden rounded-full bg-[#EAF4F0]"><img src={AVATAR} alt="" className="h-full w-full object-cover object-[50%_28%]" /></span>
               <div aria-live="polite" className="rounded-[20px] rounded-tl-[6px] bg-white px-3.5 py-3 text-xs text-[#33443F] ring-1 ring-[#D9E7E2]">
                 {TYPING}
               </div>
@@ -147,7 +149,7 @@ export default function ChatbotPage({ onClose }: { onClose: () => void }) {
         </div>
       </div>
 
-      {msgs.every((message) => message.dari === "siba") && !loading && (
+      {msgs.every((message) => message.dari === "kira") && !loading && (
         <div className="flex shrink-0 flex-wrap gap-2 px-3 pb-3">
           {TOPIK_CEPAT.map((topic) => (
             <button key={topic} type="button" onClick={() => void kirim(topic)} className="min-h-10 rounded-full bg-white px-3.5 text-xs font-semibold text-[#4A6E54] ring-1 ring-[#B8CFC3] transition-colors hover:bg-[#EAF4F0] active:scale-[0.98]">
@@ -169,7 +171,7 @@ export default function ChatbotPage({ onClose }: { onClose: () => void }) {
             event.currentTarget.style.height = `${Math.min(event.currentTarget.scrollHeight, 128)}px`
           }}
           disabled={loading}
-          aria-label="Pesan untuk Siba"
+          aria-label="Pesan untuk Kira"
           placeholder={PLACEHOLDER}
           className="min-h-12 max-h-32 min-w-0 flex-1 resize-none overflow-y-auto rounded-[24px] border border-[#D9E7E2] bg-[#FFFCF6] px-4 py-3 text-sm leading-6 text-[#1D2B29] outline-none placeholder:text-[#6C757D] focus-visible:ring-2 focus-visible:ring-[#7AAE9A] disabled:opacity-60"
         />
@@ -179,11 +181,11 @@ export default function ChatbotPage({ onClose }: { onClose: () => void }) {
       </form>
 
       {emergency && (
-        <div className="absolute inset-0 z-20 grid place-items-center bg-[#1D2B29]/45 p-4" role="alertdialog" aria-modal="true" aria-labelledby="siba-emergency-title" aria-describedby="siba-emergency-description">
+        <div className="absolute inset-0 z-20 grid place-items-center bg-[#1D2B29]/45 p-4" role="alertdialog" aria-modal="true" aria-labelledby="kira-emergency-title" aria-describedby="kira-emergency-description">
           <div className="w-full max-w-[360px] rounded-[24px] bg-white p-5 shadow-xl ring-1 ring-[#E57373]/40">
             <span className="grid size-12 place-items-center rounded-full bg-[#FDECEC] text-[#C62828]"><Siren className="size-6" /></span>
-            <h2 id="siba-emergency-title" className="mt-3 text-lg font-bold text-[#1D2B29]">Segera cari bantuan</h2>
-            <p id="siba-emergency-description" className="mt-1.5 text-sm leading-relaxed text-[#33443F]">Keluhan yang Bunda ceritakan bisa menjadi tanda bahaya. Segera hubungi bidan atau pergi ke IGD maupun puskesmas PONED terdekat.</p>
+            <h2 id="kira-emergency-title" className="mt-3 text-lg font-bold text-[#1D2B29]">Segera cari bantuan</h2>
+            <p id="kira-emergency-description" className="mt-1.5 text-sm leading-relaxed text-[#33443F]">Keluhan yang Bunda ceritakan bisa menjadi tanda bahaya. Segera hubungi bidan atau pergi ke IGD maupun puskesmas PONED terdekat.</p>
             {shareError && <p role="alert" className="mt-2 text-xs text-[#C62828]">Ringkasan belum dapat dibagikan. Coba lagi sebentar lagi.</p>}
             <div className="mt-4 grid grid-cols-2 gap-2">
               <a href={petaDarurat} target="_blank" rel="noreferrer" className="flex min-h-11 items-center justify-center gap-1.5 rounded-full bg-[#C62828] px-2 text-xs font-bold text-white"><MapPin className="size-3.5" /> Buka Peta</a>

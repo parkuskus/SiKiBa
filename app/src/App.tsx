@@ -118,10 +118,10 @@ export default function App() {
 
       {showBottomNav && <BottomNav active={tab} onChange={setTab} />}
 
-      {/* ponytail: FAB Siba — sheet overlay, BottomNav 5 tab tidak berubah */}
+      {/* ponytail: FAB Kira — sheet overlay, BottomNav 5 tab tidak berubah */}
       {showBottomNav && (
         <button
-          aria-label="Tanya Siba"
+          aria-label="Tanya Kira"
           onClick={() => setShowChat(true)}
           className="fixed bottom-24 right-[max(1rem,calc(50%-240px+1rem))] z-40 grid size-[56px] place-items-center rounded-full bg-[#DB2777] text-white shadow-lg active:scale-95"
         >
