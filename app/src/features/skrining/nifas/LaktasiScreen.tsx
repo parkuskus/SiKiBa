@@ -63,10 +63,10 @@ export default function LaktasiScreen({
           <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Pola menyusu</h2>
           <div className="grid grid-cols-2 gap-2.5">
             {[
-              { key: "usiaBayiHari", label: "Usia bayi hari", value: form.usiaBayiHari },
-              { key: "frekuensiMenyusuPerHari", label: "Menyusu per hari", value: form.frekuensiMenyusuPerHari },
-              { key: "durasiMenyusuMenit", label: "Durasi per sesi menit", value: form.durasiMenyusuMenit },
-              { key: "bakPerHari", label: "BAK bayi per hari", value: form.bakPerHari },
+              { key: "usiaBayiHari", label: "Usia bayi (hari)", value: form.usiaBayiHari },
+              { key: "frekuensiMenyusuPerHari", label: "Menyusu (kali per hari)", value: form.frekuensiMenyusuPerHari },
+              { key: "durasiMenyusuMenit", label: "Durasi per sesi (menit)", value: form.durasiMenyusuMenit },
+              { key: "bakPerHari", label: "BAK bayi (kali per hari)", value: form.bakPerHari },
             ].map((field) => (
               <div key={field.key} className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
                 <label className="block text-xs text-[#33443F]">{field.label}</label>

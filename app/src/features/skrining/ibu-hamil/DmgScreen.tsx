@@ -30,9 +30,9 @@ export default function DmgScreen({ onBack, onSuccess }: { onBack: () => void; o
           <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Data Ibu</h2>
           <div className="grid grid-cols-2 gap-2.5">
             {[
-              { key: "usia", label: "Usia tahun", value: form.usia },
+              { key: "usia", label: "Usia (tahun)", value: form.usia },
               { key: "imtPre", label: "IMT sebelum hamil", value: form.imtPre },
-              { key: "ukMinggu", label: "Usia kehamilan minggu", value: form.ukMinggu },
+              { key: "ukMinggu", label: "Usia kehamilan (minggu)", value: form.ukMinggu },
             ].map((field) => (
               <div key={field.key} className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
                 <label className="block text-xs text-[#33443F]">{field.label}</label>
@@ -46,7 +46,7 @@ export default function DmgScreen({ onBack, onSuccess }: { onBack: () => void; o
           <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Faktor Risiko</h2>
           {[
             { key: "riwayatDMG", label: "Pernah diabetes saat hamil sebelumnya" },
-            { key: "riwayatMakrosomia", label: "Riwayat melahirkan bayi besar di atas 4 kg (makrosomia)" },
+            { key: "riwayatMakrosomia", label: "Riwayat melahirkan bayi besar (makrosomia, lebih dari 4 kg)" },
             { key: "riwayatDMKeluarga", label: "Riwayat keluarga ada diabetes" },
             { key: "glikosuria", label: "Gula dalam pemeriksaan urine (glikosuria)" },
             { key: "pcos", label: "Riwayat PCOS (polisistik ovarium)" },

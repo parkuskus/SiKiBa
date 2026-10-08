@@ -71,14 +71,14 @@ export default function NifasScreen({
           <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Pemantauan ibu</h2>
           <div className="grid grid-cols-2 gap-2.5">
             {[
-              { key: "hariKe", label: "Hari nifas", value: form.hariKe },
-              { key: "suhu", label: "Suhu tubuh °C", value: form.suhu, step: "0.1" },
-              { key: "sistolik", label: "Sistolik mmHg", value: form.sistolik },
-              { key: "diastolik", label: "Diastolik mmHg", value: form.diastolik },
-              { key: "nadi", label: "Nadi per menit", value: form.nadi },
-              { key: "spo2", label: "SpO2 persen", value: form.spo2 },
-              { key: "perdarahanMl", label: "Perdarahan ml", value: form.perdarahanMl },
-              { key: "nyeriSkala", label: "Nyeri skala 0–10", value: form.nyeriSkala },
+              { key: "hariKe", label: "Hari nifas (hari)", value: form.hariKe },
+              { key: "suhu", label: "Suhu tubuh (°C)", value: form.suhu, step: "0.1" },
+              { key: "sistolik", label: "Sistolik (mmHg)", value: form.sistolik },
+              { key: "diastolik", label: "Diastolik (mmHg)", value: form.diastolik },
+              { key: "nadi", label: "Nadi (kali per menit)", value: form.nadi },
+              { key: "spo2", label: "SpO2 (%)", value: form.spo2 },
+              { key: "perdarahanMl", label: "Perdarahan (mL)", value: form.perdarahanMl },
+              { key: "nyeriSkala", label: "Skala nyeri (0–10)", value: form.nyeriSkala },
             ].map((field) => (
               <div key={field.key} className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
                 <label className="block text-xs text-[#33443F]">{field.label}</label>

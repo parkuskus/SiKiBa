@@ -9,6 +9,9 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 - [x] Onboarding S-00, S-01, S-01b dengan email OTP Supabase, pembuatan profil berbasis Auth UUID, dan template email.
 - [x] Beranda S-02 dengan mode hamil/nifas, kartu profil, aksi cepat, ringkasan reminder, dan pencatatan kelahiran.
 - [x] Skrining kehamilan S-03a–S-03g: faktor risiko, gizi, tanda bahaya, preeklamsia, DMG, EPDS, dan hasil traffic light.
+- [x] Form Status Gizi mempertahankan angka sebagai teks saat diketik agar input desimal tidak terpotong; preview IMT-LILA langsung di form dihapus sesuai permintaan karena hasil lengkap tampil setelah skrining disimpan (2026-10-08).
+- [x] Satuan pada label input form diseragamkan ke dalam tanda kurung, misalnya `(kg)`, `(cm)`, `(mmHg)`, `(hari)`, dan `(tahun)` (2026-10-08).
+- [x] Satuan pada label dan pesan validasi form diubah ke format tanda kurung, termasuk BB/TB/LILA, tekanan darah, suhu, usia, hari, dan volume (2026-10-08).
 - [x] Skrining nifas/laktasi S-04 dan S-04a, serta bayi S-05a dan S-05b. S-05c dibatalkan stakeholder.
 - [x] Logika tracker S-07–S-07d untuk berat badan, suplemen, ANC, diary, dan timeline; UI tracker tersedia.
 - [x] Profil: edit/detail, riwayat, pengaturan notifikasi dan penyimpanan, serta ekspor PDF dasar.

@@ -25,8 +25,8 @@ export default function BirthDialog({
     const bbNum = Number(bb)
     const pbNum = Number(pb)
     if (!tanggal) return setErr("Tanggal lahir wajib diisi")
-    if (bbNum < 1000 || bbNum > 6000) return setErr("Berat lahir 1000–6000 gram")
-    if (pbNum < 30 || pbNum > 60) return setErr("Panjang lahir 30–60 cm")
+    if (bbNum < 1000 || bbNum > 6000) return setErr("Berat lahir (gram) harus 1.000–6.000")
+    if (pbNum < 30 || pbNum > 60) return setErr("Panjang lahir (cm) harus 30–60")
     setErr(null)
     onSave({ tanggal, jam, bb: bbNum, pb: pbNum })
   }
@@ -59,11 +59,11 @@ export default function BirthDialog({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="min-w-0 space-y-1.5">
-              <Label className="text-[13px] font-medium text-[#33443F]">Berat lahir gram</Label>
+              <Label className="text-[13px] font-medium text-[#33443F]">Berat lahir (gram)</Label>
               <Input type="number" value={bb} onChange={(e) => setBb(e.target.value)} className="h-10 rounded-[14px] border-[#D9E7E2] bg-[#FFFEFC] px-3 text-sm" />
             </div>
             <div className="min-w-0 space-y-1.5">
-              <Label className="text-[13px] font-medium text-[#33443F]">Panjang lahir sentimeter</Label>
+              <Label className="text-[13px] font-medium text-[#33443F]">Panjang lahir (cm)</Label>
               <Input type="number" value={pb} onChange={(e) => setPb(e.target.value)} className="h-10 rounded-[14px] border-[#D9E7E2] bg-[#FFFEFC] px-3 text-sm" />
             </div>
           </div>

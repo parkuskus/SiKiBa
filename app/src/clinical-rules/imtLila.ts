@@ -23,3 +23,14 @@ export function warnaGizi(imtKat: IMTKategori, lilaKat: 'KEK' | 'Normal', kenaik
   if (kenaikanKurang) return 'KUNING'
   return 'HIJAU'
 }
+
+export function evaluasiGizi(input: { bbPreKg: number; tbCm: number; lilaCm: number; bbSekarangKg: number; ukMinggu: number }) {
+  const imt = calcIMT(input.bbPreKg, input.tbCm)
+  const { kat: imtKat, targetKg } = kategoriIMT(imt)
+  const lilaKat = kategoriLILA(input.lilaCm)
+  const kenaikanAktual = Math.round((input.bbSekarangKg - input.bbPreKg) * 10) / 10
+  const targetProp = ((targetKg[0] + targetKg[1]) / 2) * (input.ukMinggu / 40)
+  const kenaikanKurang = kenaikanAktual < targetProp - 1
+  const trajectory = kenaikanKurang ? 'kurang' : kenaikanAktual > targetProp + 2 ? 'lebih' : 'sesuai'
+  return { imt, imtKat, targetKg, lilaKat, kenaikanAktual, targetProp, kenaikanKurang, trajectory, warna: warnaGizi(imtKat, lilaKat, kenaikanKurang) }
+}

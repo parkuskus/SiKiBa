@@ -92,9 +92,9 @@ export default function PreeklamsiaScreen({ onBack, onSuccess }: { onBack: () =>
 
   const nextFrom1 = () => {
     setErr(null)
-    if (!sistolik || Number(sistolik) < 70 || Number(sistolik) > 250) return setErr("Isi sistolik 70–250 mmHg")
-    if (!diastolik || Number(diastolik) < 40 || Number(diastolik) > 150) return setErr("Isi diastolik 40–150 mmHg")
-    if (!ukMinggu || Number(ukMinggu) < 0 || Number(ukMinggu) > 45) return setErr("Isi usia kehamilan 0–45 minggu")
+    if (!sistolik || Number(sistolik) < 70 || Number(sistolik) > 250) return setErr("Sistolik (mmHg) harus 70–250")
+    if (!diastolik || Number(diastolik) < 40 || Number(diastolik) > 150) return setErr("Diastolik (mmHg) harus 40–150")
+    if (!ukMinggu || Number(ukMinggu) < 0 || Number(ukMinggu) > 45) return setErr("Usia kehamilan (minggu) harus 0–45")
     setStep(2)
   }
 
@@ -153,20 +153,20 @@ export default function PreeklamsiaScreen({ onBack, onSuccess }: { onBack: () =>
         {step === 1 ? (
           <div className="space-y-3.5">
             <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
-              <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Tekanan Darah & Data Kehamilan</h2>
+              <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Tekanan Darah dan Data Kehamilan</h2>
               <div className="grid grid-cols-2 gap-2.5">
                 {[
-                  { label: "Sistolik mmHg", value: sistolik, set: setSistolik },
-                  { label: "Diastolik mmHg", value: diastolik, set: setDiastolik },
-                  { label: "UK pekan", value: ukMinggu, set: setUkMinggu },
-                  { label: "Usia ibu", value: usia, set: setUsia },
+                  { label: "Sistolik (mmHg)", value: sistolik, set: setSistolik },
+                  { label: "Diastolik (mmHg)", value: diastolik, set: setDiastolik },
+                  { label: "Usia kehamilan (minggu)", value: ukMinggu, set: setUkMinggu },
+                  { label: "Usia ibu (tahun)", value: usia, set: setUsia },
                   { label: "IMT pra-hamil", value: imtPre, set: setImtPre },
-                  { label: "Jarak hamil lalu, tahun", value: jarak, set: setJarak },
+                  { label: "Jarak kehamilan sebelumnya (tahun)", value: jarak, set: setJarak },
                 ].map((field) => (
                   <div key={field.label} className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
                     <label className="block text-xs text-[#33443F]">{field.label}</label>
                     <Input type="number" aria-label={field.label} value={field.value} onChange={(event) => field.set(event.target.value)} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
-                    {(field.label === "UK pekan" || field.label === "Usia ibu") && <span className="text-[11px] text-[#33443F]">Otomatis dari profil</span>}
+                    {(field.label === "Usia kehamilan (minggu)" || field.label === "Usia ibu (tahun)") && <span className="text-[11px] text-[#33443F]">Otomatis dari profil</span>}
                   </div>
                 ))}
               </div>
@@ -176,7 +176,7 @@ export default function PreeklamsiaScreen({ onBack, onSuccess }: { onBack: () =>
               <section className="flex min-h-[72px] items-center gap-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
                 <span className="grid size-12 shrink-0 place-items-center rounded-[16px] bg-white text-[#4A6E54]"><Activity className="size-6" /></span>
                 <div>
-                  <p className="text-[13px] font-bold text-[#1D2B29]">MAP {map} mmHg</p>
+                  <p className="text-[13px] font-bold text-[#1D2B29]">MAP {map} (mmHg)</p>
                   <p className="text-xs text-[#33443F]">{mapKat === "HIJAU" ? "Normal" : mapKat === "KUNING" ? "Waspada" : "Risiko tinggi"}</p>
                 </div>
               </section>

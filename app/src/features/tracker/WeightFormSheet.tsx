@@ -55,7 +55,7 @@ export default function WeightFormSheet({
     if (!tanggal) return setErr("Isi tanggal")
     if (tanggal > todayStr()) return setErr("Tanggal tidak boleh di masa depan")
     if (tanggal === todayStr() && jam > nowTime()) return setErr("Jam tidak boleh lewat dari sekarang")
-    if (!v || v < 20 || v > 250) return setErr("Berat 20 sampai 250 kg")
+    if (!v || v < 20 || v > 250) return setErr("Berat (kg) harus 20–250")
     setLoading(true)
     try {
       const uid = userId || (await getCurrentUserId())
@@ -119,18 +119,18 @@ export default function WeightFormSheet({
         </div>
 
         <div className="mt-4 flex items-stretch justify-center gap-2">
-          <select value={intPart} onChange={(e) => setIntPart(e.target.value)} aria-label="Kilogram" className="h-16 flex-1 rounded-2xl bg-white text-center text-[28px] font-extrabold text-[#1E2326] ring-1 ring-[#EAE6E0] focus:outline-none focus:ring-[#7AAE9A]">
+          <select value={intPart} onChange={(e) => setIntPart(e.target.value)} aria-label="Angka utuh berat (kg)" className="h-16 flex-1 rounded-2xl bg-white text-center text-[28px] font-extrabold text-[#1E2326] ring-1 ring-[#EAE6E0] focus:outline-none focus:ring-[#7AAE9A]">
             {INTS.map((n) => (
               <option key={n} value={n}>{n}</option>
             ))}
           </select>
           <span className="self-center text-[28px] font-extrabold text-[#1E2326]">.</span>
-          <select value={decPart} onChange={(e) => setDecPart(e.target.value)} aria-label="Desimal" className="h-16 flex-1 rounded-2xl bg-white text-center text-[28px] font-extrabold text-[#1E2326] ring-1 ring-[#EAE6E0] focus:outline-none focus:ring-[#7AAE9A]">
+          <select value={decPart} onChange={(e) => setDecPart(e.target.value)} aria-label="Angka desimal berat (kg)" className="h-16 flex-1 rounded-2xl bg-white text-center text-[28px] font-extrabold text-[#1E2326] ring-1 ring-[#EAE6E0] focus:outline-none focus:ring-[#7AAE9A]">
             {DECS.map((n) => (
               <option key={n} value={n}>{n}</option>
             ))}
           </select>
-          <span className="self-center text-sm font-semibold text-[#6C757D]">kg</span>
+          <span className="self-center text-sm font-semibold text-[#6C757D]">(kg)</span>
         </div>
 
         {err && <p className="mt-3 text-center text-xs text-[#E57373]">{err}</p>}

@@ -30,8 +30,8 @@ export function lochiaStage(hariKe: number): 'rubra' | 'serosa' | 'alba' {
 export function validateNifas(v: NifasInput): Record<string, string> {
   const e: Record<string, string> = {}
   if (!v.userId) e.userId = 'userId wajib'
-  if (v.hariKe < 0 || v.hariKe > 42) e.hariKe = 'hariKe 0-42'
-  if (v.suhu < 34 || v.suhu > 42) e.suhu = 'suhu 34-42'
+  if (v.hariKe < 0 || v.hariKe > 42) e.hariKe = 'Hari nifas (hari) harus 0–42'
+  if (v.suhu < 34 || v.suhu > 42) e.suhu = 'Suhu tubuh (°C) harus 34–42'
   return e
 }
 

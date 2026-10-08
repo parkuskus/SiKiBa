@@ -142,8 +142,8 @@ export default function RiskFactorScreen({
 
   const nextFrom1 = () => {
     setError(null)
-    if (!usia || Number(usia) < 10 || Number(usia) > 60) return setError("Isi usia Bunda 10–60 tahun")
-    if (!ukMinggu || Number(ukMinggu) < 0 || Number(ukMinggu) > 45) return setError("Isi usia kehamilan 0–45 minggu")
+    if (!usia || Number(usia) < 10 || Number(usia) > 60) return setError("Usia Bunda (tahun) harus berada pada rentang 10–60.")
+    if (!ukMinggu || Number(ukMinggu) < 0 || Number(ukMinggu) > 45) return setError("Usia kehamilan (minggu) harus berada pada rentang 0–45.")
     if (!paritas) return setError("Pilih status paritas")
     if (!jarak) return setError("Pilih jarak kehamilan terakhir")
     setStep(2)
@@ -202,24 +202,21 @@ export default function RiskFactorScreen({
 
         {step === 1 && (
           <section className="space-y-3.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
-            <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Data Kehamilan</h2>
+            <h2 className="text-sm font-bold text-[#1D2B29]">Data Kehamilan</h2>
             <div className="grid grid-cols-2 gap-2.5">
               <div className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
-                <label className="block text-xs text-[#33443F]">Usia ibu</label>
+                <label className="block text-xs text-[#33443F]">Usia ibu (tahun)</label>
                 <div className="flex items-center gap-1">
-                  <Input type="number" aria-label="Usia ibu dalam tahun" value={usia} onChange={(e) => setUsia(e.target.value)} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
-                  <span className="text-sm font-bold text-[#DB2777]">th</span>
+                  <Input type="number" aria-label="Usia ibu (tahun)" value={usia} onChange={(e) => setUsia(e.target.value)} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
                 </div>
               </div>
               <div className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
-                <label className="block text-xs text-[#33443F]">UK pekan</label>
+                <label className="block text-xs text-[#33443F]">Usia kehamilan (minggu)</label>
                 <div className="flex items-center gap-1">
-                  <Input type="number" aria-label="Usia kehamilan dalam minggu" value={ukMinggu} onChange={(e) => setUkMinggu(e.target.value)} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
-                  <span className="text-sm font-bold text-[#DB2777]">mg</span>
+                  <Input type="number" aria-label="Usia kehamilan (minggu)" value={ukMinggu} onChange={(e) => setUkMinggu(e.target.value)} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
                 </div>
               </div>
             </div>
-            <p className="text-xs text-[#33443F]">Otomatis dari profil dan HPHT</p>
 
             <div className="space-y-2.5">
               <p className="text-[13px] font-bold text-[#1D2B29]">Status Paritas</p>
@@ -229,9 +226,9 @@ export default function RiskFactorScreen({
             </div>
 
             <div className="space-y-2.5">
-              <p className="text-[13px] font-bold text-[#1D2B29]">Jarak Hamil Terakhir</p>
-              <RadioRow selected={jarak === "lt2"} label="Kurang dari 2 tahun" onClick={() => setJarak("lt2")} />
-              <RadioRow selected={jarak === "gte2"} label="2 tahun atau lebih" onClick={() => setJarak("gte2")} />
+              <p className="text-[13px] font-bold text-[#1D2B29]">Jarak kehamilan terakhir (tahun)</p>
+              <RadioRow selected={jarak === "lt2"} label="Kurang dari 2" onClick={() => setJarak("lt2")} />
+              <RadioRow selected={jarak === "gte2"} label="2 atau lebih" onClick={() => setJarak("gte2")} />
               <RadioRow selected={jarak === "belum"} label="Belum pernah hamil sebelumnya" onClick={() => setJarak("belum")} />
             </div>
           </section>
@@ -267,15 +264,15 @@ export default function RiskFactorScreen({
               <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Pemeriksaan Fisik</h2>
               <div className="grid grid-cols-2 gap-2.5">
                 {[
-                  { label: "Sistolik", value: sistolik, set: setSistolik, unit: "mmHg", key: "sistolik" },
-                  { label: "Diastolik", value: diastolik, set: setDiastolik, unit: "mmHg", key: "diastolik" },
-                  { label: "Tinggi cm", value: tbCm, set: setTbCm, unit: "cm", key: "tbCm" },
-                  { label: "Berat kg", value: bbKg, set: setBbKg, unit: "kg", key: "bbKg" },
+                  { label: "Sistolik (mmHg)", value: sistolik, set: setSistolik, key: "sistolik" },
+                  { label: "Diastolik (mmHg)", value: diastolik, set: setDiastolik, key: "diastolik" },
+                  { label: "Tinggi (cm)", value: tbCm, set: setTbCm, key: "tbCm" },
+                  { label: "Berat (kg)", value: bbKg, set: setBbKg, key: "bbKg" },
                 ].map((field) => (
                   <div key={field.key} className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
                     <label className="block text-xs text-[#33443F]">{field.label}</label>
                     <div className="flex items-center gap-1">
-                      <Input type="number" aria-label={`${field.label} ${field.unit}`} value={field.value} onChange={(e) => field.set(e.target.value)} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
+                      <Input type="number" aria-label={field.label} value={field.value} onChange={(e) => field.set(e.target.value)} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
                     </div>
                     {fieldErrs[field.key] && <p className="text-[11px] text-[#E57373]">{fieldErrs[field.key]}</p>}
                   </div>

@@ -55,12 +55,12 @@ export default function IkterusScreen({
           <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Waktu dan usia bayi</h2>
           <div className="grid grid-cols-2 gap-2.5">
             <div className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
-              <label className="block text-xs text-[#33443F]">Usia bayi hari</label>
-              <Input type="number" aria-label="Usia bayi hari" value={form.usiaBayiHari} onChange={(event) => setForm((current) => ({ ...current, usiaBayiHari: Number(event.target.value) }))} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
+              <label className="block text-xs text-[#33443F]">Usia bayi (hari)</label>
+              <Input type="number" aria-label="Usia bayi (hari)" value={form.usiaBayiHari} onChange={(event) => setForm((current) => ({ ...current, usiaBayiHari: Number(event.target.value) }))} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
             </div>
             <div className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
-              <label className="block text-xs text-[#33443F]">Kuning muncul jam ke</label>
-              <Input type="number" aria-label="Kuning muncul pada jam ke" value={form.onsetJam} onChange={(event) => setForm((current) => ({ ...current, onsetJam: Number(event.target.value) }))} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
+              <label className="block text-xs text-[#33443F]">Usia saat kuning muncul (jam)</label>
+              <Input type="number" aria-label="Usia saat kuning muncul (jam)" value={form.onsetJam} onChange={(event) => setForm((current) => ({ ...current, onsetJam: Number(event.target.value) }))} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
             </div>
           </div>
         </section>

@@ -279,7 +279,7 @@ export default function BirthPlanScreen({ userId, readOnly = false, onClose }: P
 
             <StepCard nomor={3} judul="Persiapan Biaya" id="persiapanBiaya" icon={<Wallet className="size-5" />}>
               <label id="estimasiDana-field" className="block">
-                <span className="mb-1.5 block text-sm font-medium text-[#33443F]">Estimasi dana persalinan</span>
+                <span className="mb-1.5 block text-sm font-medium text-[#33443F]">Estimasi dana persalinan (Rp)</span>
                 {readOnly ? <span className="flex min-h-12 items-center rounded-[16px] bg-[#FFFCF6] px-3.5 text-sm text-[#33443F] ring-1 ring-[#E7DED1]">{draft.estimasiDana === null ? "Belum diisi" : new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(draft.estimasiDana)}</span> : (
                   <input id="estimasiDana" type="number" min="0" step="1000" value={draft.estimasiDana ?? ""} placeholder="0" onChange={(event) => { const value = event.target.value; ubah({ estimasiDana: value === "" ? null : Math.max(0, Number(value)), danaDikonfirmasi: value !== "" }) }} className="min-h-12 w-full rounded-[16px] border border-[#E7DED1] bg-[#FFFCF6] px-3.5 text-sm text-[#1D2B29] outline-none placeholder:text-[#66736F] focus-visible:ring-2 focus-visible:ring-[#4A6E54]" />
                 )}

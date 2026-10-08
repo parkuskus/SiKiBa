@@ -321,7 +321,7 @@ export default function PengingatPage({ setShowBottomNav }: { setShowBottomNav: 
             <div className="mt-3">
               {editingTarget ? (
                 <div className="flex gap-2">
-                  <Input type="number" value={targetDraft} onChange={(e) => setTargetDraft(e.target.value)} placeholder="Target kg" className="h-12 flex-1 rounded-[14px] border-[#D9E7E2] bg-white px-4" />
+                  <Input type="number" value={targetDraft} onChange={(e) => setTargetDraft(e.target.value)} placeholder="Target (kg)" aria-label="Target berat badan (kg)" className="h-12 flex-1 rounded-[14px] border-[#D9E7E2] bg-white px-4" />
                   <Button className="min-h-11 rounded-full bg-[#4A6E54] px-6 text-white hover:bg-[#3D5C46]" onClick={handleSaveTarget}>Simpan</Button>
                 </div>
               ) : (

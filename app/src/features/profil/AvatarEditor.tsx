@@ -117,13 +117,13 @@ export default function AvatarEditor({ profile, onBack, onSaved }: { profile: Pr
         {image && (
           <div className="space-y-3 rounded-[20px] bg-[#EAF4F0] p-4 text-sm font-semibold text-[#1D2B29]">
             <label className="block">
-              <span className="flex items-center justify-between"><span>Ukuran foto</span><span>{zoom.toFixed(1)}×</span></span>
-              <input disabled={saving} type="range" min="1" max="2.5" step="0.05" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} className="min-h-11 w-full accent-[#4A6E54]" aria-label="Atur ukuran foto" />
+              <span className="flex items-center justify-between"><span>Ukuran foto (kali)</span><span>({zoom.toFixed(1)}×)</span></span>
+              <input disabled={saving} type="range" min="1" max="2.5" step="0.05" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} className="min-h-11 w-full accent-[#4A6E54]" aria-label="Atur ukuran foto (kali)" />
             </label>
             {(["x", "y"] as const).map((axis) => (
               <label key={axis} className="block">
-                <span>{axis === "x" ? "Geser horizontal" : "Geser vertikal"}</span>
-                <input disabled={saving} type="range" min="0" max="100" value={position[axis]} onChange={(event) => setPosition((prev) => ({ ...prev, [axis]: Number(event.target.value) }))} className="min-h-11 w-full accent-[#4A6E54]" aria-label={axis === "x" ? "Geser horizontal" : "Geser vertikal"} />
+                <span>{axis === "x" ? "Geser horizontal (%)" : "Geser vertikal (%)"}</span>
+                <input disabled={saving} type="range" min="0" max="100" value={position[axis]} onChange={(event) => setPosition((prev) => ({ ...prev, [axis]: Number(event.target.value) }))} className="min-h-11 w-full accent-[#4A6E54]" aria-label={axis === "x" ? "Geser horizontal (%)" : "Geser vertikal (%)"} />
               </label>
             ))}
           </div>

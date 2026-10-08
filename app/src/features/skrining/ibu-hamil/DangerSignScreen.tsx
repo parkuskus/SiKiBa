@@ -9,7 +9,7 @@ const GEJALA: { k: string; l: string; Icon: LucideIcon; tint?: boolean; hint?: s
   { k: "perdarahan", l: "Perdarahan per vagina", Icon: Droplets, tint: true },
   { k: "nyeriKepalaHebat", l: "Nyeri kepala hebat", Icon: Zap },
   { k: "pandanganKabur", l: "Pandangan kabur", Icon: Eye },
-  { k: "demamTinggi", l: "Demam di atas 38°C", Icon: Thermometer, hint: "Suhu tubuh lebih dari 38°C" },
+  { k: "demamTinggi", l: "Demam tinggi (di atas 38 °C)", Icon: Thermometer, hint: "Suhu tubuh lebih dari 38 °C" },
   { k: "ketubanPecah", l: "Ketuban pecah dini", Icon: Waves, hint: "Cairan merembes sebelum waktunya" },
   { k: "nyeriAbdomenHebat", l: "Nyeri perut hebat menetap", Icon: Activity },
   { k: "bengkakWajahTangan", l: "Bengkak wajah dan tangan", Icon: Hand },

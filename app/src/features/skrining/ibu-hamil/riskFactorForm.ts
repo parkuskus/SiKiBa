@@ -28,14 +28,14 @@ export type RiskFactorInput = {
 export function validateRiskFactor(v: RiskFactorInput): Record<string, string> {
   const e: Record<string, string> = {}
   if (!v.userId) e.userId = 'userId wajib'
-  if (v.usia < 10 || v.usia > 60) e.usia = 'Usia 10-60 tahun'
+  if (v.usia < 10 || v.usia > 60) e.usia = 'Usia (tahun) harus 10–60'
   if (v.paritas < 0 || v.paritas > 15) e.paritas = 'Paritas 0-15'
-  if (v.jarakTahun !== undefined && (v.jarakTahun < 0 || v.jarakTahun > 20)) e.jarakTahun = 'Jarak 0-20 th'
-  if (v.ukMinggu !== undefined && (v.ukMinggu < 0 || v.ukMinggu > 45)) e.ukMinggu = 'UK 0-45 minggu'
-  if (v.sistolik !== undefined && (v.sistolik < 70 || v.sistolik > 250)) e.sistolik = 'Sistolik 70-250'
-  if (v.diastolik !== undefined && (v.diastolik < 40 || v.diastolik > 150)) e.diastolik = 'Diastolik 40-150'
-  if (v.tbCm !== undefined && (v.tbCm < 100 || v.tbCm > 200)) e.tbCm = 'TB 100-200 cm'
-  if (v.bbKg !== undefined && (v.bbKg < 20 || v.bbKg > 250)) e.bbKg = 'BB 20-250 kg'
+  if (v.jarakTahun !== undefined && (v.jarakTahun < 0 || v.jarakTahun > 20)) e.jarakTahun = 'Jarak kehamilan (tahun) harus 0–20'
+  if (v.ukMinggu !== undefined && (v.ukMinggu < 0 || v.ukMinggu > 45)) e.ukMinggu = 'Usia kehamilan (minggu) harus 0–45'
+  if (v.sistolik !== undefined && (v.sistolik < 70 || v.sistolik > 250)) e.sistolik = 'Sistolik (mmHg) harus 70–250'
+  if (v.diastolik !== undefined && (v.diastolik < 40 || v.diastolik > 150)) e.diastolik = 'Diastolik (mmHg) harus 40–150'
+  if (v.tbCm !== undefined && (v.tbCm < 100 || v.tbCm > 200)) e.tbCm = 'Tinggi (cm) harus 100–200'
+  if (v.bbKg !== undefined && (v.bbKg < 20 || v.bbKg > 250)) e.bbKg = 'Berat (kg) harus 20–250'
   return e
 }
 
