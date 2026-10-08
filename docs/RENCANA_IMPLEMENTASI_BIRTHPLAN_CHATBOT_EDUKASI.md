@@ -208,6 +208,10 @@ Gunakan sebagai brief/prompt awal dan sesuaikan dengan generator. Rasio cover 4:
 
 Daftar ini indikatif. Sebelum implementasi, periksa ulang status working tree, migration Supabase terakhir yang sudah diterapkan, dan perubahan lokal pengguna.
 
+## Progress implementasi
+
+- 2026-10-08: Judul katalog S-06a–S-06f diperbarui. Judul detail S-06a–S-06d diseragamkan, thumbnail S-06c dipasang pada header, dan thumbnail S-06f dipasang pada tile katalog. S-06f belum memiliki layar detail, jadi header detailnya tetap menunggu implementasi screen.
+
 ## Kriteria penerimaan
 
 ### Birth Plan

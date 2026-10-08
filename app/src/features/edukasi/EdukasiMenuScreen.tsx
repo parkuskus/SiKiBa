@@ -10,13 +10,13 @@ import {
 } from "lucide-react"
 
 const topik = [
-  { judul: "Awal kehamilan", keterangan: "Dari sel telur hingga implantasi", icon: Dna, screen: "fertilisasi" },
-  { judul: "Perkembangan janin", keterangan: "Ikuti tumbuh kembang dari minggu ke minggu", icon: Baby, screen: "janin" },
-  { judul: "Plasenta", keterangan: "Tali pusat dan air ketuban", icon: Activity, screen: "s06c" },
-  { judul: "Perubahan tubuh", keterangan: "Adaptasi tubuh selama kehamilan", icon: HeartPulse, screen: "fisiologi" },
-  { judul: "Tanda bahaya", keterangan: "Kenali gejala yang perlu diperiksa", icon: ShieldAlert },
-  { judul: "Emosi Bunda", keterangan: "Perubahan perasaan tiap trimester", icon: Brain },
-] satisfies { judul: string; keterangan: string; icon: LucideIcon; screen?: "fertilisasi" | "janin" | "s06c" | "fisiologi" }[]
+  { judul: "Terjadinya Kehamilan (Fertilisasi)", keterangan: "Dari sel telur hingga implantasi", icon: Dna, thumbnail: "/s-06/s-06a/Thumbnail.webp", screen: "fertilisasi" },
+  { judul: "Perkembangan Janin per Minggu", keterangan: "Ikuti tumbuh kembang dari minggu ke minggu", icon: Baby, thumbnail: "/s-06/s-06b/Thumbnail.webp", screen: "janin" },
+  { judul: "Perkembangan Plasenta, Tali Pusat, dan Ketuban", keterangan: "Kenali fungsi organ pendukung kehamilan", icon: Activity, thumbnail: "/s-06/s-06c/Thumbnail.webp", screen: "s06c" },
+  { judul: "Perubahan Fisiologi Kehamilan", keterangan: "Adaptasi tubuh selama kehamilan", icon: HeartPulse, thumbnail: "/s-06/s-06d/Thumbnail.webp", screen: "fisiologi" },
+  { judul: "Tanda Bahaya Kehamilan", keterangan: "Kenali gejala yang perlu diperiksa", icon: ShieldAlert },
+  { judul: "Perubahan Psikologi/Emosi", keterangan: "Perubahan perasaan tiap trimester", icon: Brain, thumbnail: "/s-06/s-06f/Thumbnail.png" },
+] satisfies { judul: string; keterangan: string; icon: LucideIcon; thumbnail?: string; screen?: "fertilisasi" | "janin" | "s06c" | "fisiologi" }[]
 
 type Props = { onOpenFertilisasi: () => void; onOpenJanin: () => void; onOpenPlasenta: () => void; onOpenFisiologi: () => void }
 
@@ -43,14 +43,14 @@ export default function EdukasiMenuScreen({ onOpenFertilisasi, onOpenJanin, onOp
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          {topik.map(({ judul, keterangan, icon: Icon, screen }, index) => {
+          {topik.map(({ judul, keterangan, icon: Icon, thumbnail, screen }, index) => {
             const siap = Boolean(screen)
             const bukaTopik = screen === "fertilisasi" ? onOpenFertilisasi : screen === "janin" ? onOpenJanin : screen === "s06c" ? onOpenPlasenta : onOpenFisiologi
             const isiTile = (
               <>
                 <span className={`grid h-[92px] place-items-center overflow-hidden rounded-[18px] ${index % 2 === 0 ? "bg-[#EAF4F0]" : "bg-[#FFF1E8]"}`}>
-                  {index === 0 ? (
-                    <img src="/s-06/s-06a/3-Fertilisasi.webp" alt="" aria-hidden="true" className="h-full w-full object-contain" />
+                  {thumbnail ? (
+                    <img src={thumbnail} alt="" aria-hidden="true" className="h-full w-full object-cover" />
                   ) : (
                     <Icon className="size-9 text-[#4A6E54]" strokeWidth={1.7} aria-hidden="true" />
                   )}

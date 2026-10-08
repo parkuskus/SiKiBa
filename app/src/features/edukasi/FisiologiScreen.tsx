@@ -29,7 +29,7 @@ export default function FisiologiScreen({ onBack }: { onBack: () => void }) {
             <ArrowLeft className="size-5" aria-hidden="true" />
           </button>
           <div className="min-w-0 flex-1">
-            <h1 className="!m-0 text-xl font-extrabold leading-tight">Perubahan tubuh</h1>
+            <h1 className="!m-0 text-xl font-extrabold leading-tight">Perubahan Fisiologi Kehamilan</h1>
             <div className="mt-1 text-sm leading-relaxed text-white/90">Kenali adaptasi tubuh Bunda selama kehamilan.</div>
           </div>
           <img

@@ -74,7 +74,7 @@ export default function JaninWeekScreen({ onBack }: { onBack: () => void }) {
             <ArrowLeft className="size-5" aria-hidden="true" />
           </button>
           <div className="min-w-0 flex-1">
-            <h1 className="!m-0 text-xl font-extrabold leading-tight">Perkembangan janin</h1>
+            <h1 className="!m-0 text-xl font-extrabold leading-tight">Perkembangan Janin per Minggu</h1>
             <div className="mt-1 text-sm leading-relaxed text-white/90">Lihat perubahan si Kecil dari minggu ke minggu.</div>
           </div>
         </div>

@@ -96,7 +96,7 @@ export default function FertilisasiScreen({ onBack }: { onBack: () => void }) {
           <BagikanMateri />
         </div>
         <div className="mt-5 max-w-[320px]">
-          <h1 className="!m-0 text-[26px] font-extrabold leading-tight">Terjadinya kehamilan</h1>
+            <h1 className="!m-0 text-[26px] font-extrabold leading-tight">Terjadinya Kehamilan (Fertilisasi)</h1>
           <div className="mt-2 text-sm leading-relaxed text-white/90">Kenali perjalanan sel telur hingga awal kehamilan.</div>
         </div>
       </header>

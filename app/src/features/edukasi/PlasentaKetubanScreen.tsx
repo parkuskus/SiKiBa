@@ -52,9 +52,15 @@ export default function PlasentaKetubanScreen({ onBack }: Props) {
           </button>
           <div className="min-w-0 flex-1">
             <div className="text-xs font-semibold text-white/80">Materi 3</div>
-            <h1 className="!m-0 mt-0.5 text-xl font-extrabold leading-tight">Pendukung janin</h1>
-            <div className="mt-1 text-sm leading-relaxed text-white/90">Ketuban, tali pusat, dan plasenta selama kehamilan.</div>
+            <h1 className="!m-0 mt-0.5 text-lg font-extrabold leading-tight">Perkembangan Plasenta, Tali Pusat, dan Ketuban</h1>
+            <div className="mt-1 text-sm leading-relaxed text-white/90">Kenali fungsi organ pendukung kehamilan.</div>
           </div>
+          <img
+            src="/s-06/s-06c/Thumbnail.webp"
+            alt=""
+            aria-hidden="true"
+            className="h-[76px] w-[76px] shrink-0 rounded-[16px] bg-[#FFFDEC] object-cover sm:h-[88px] sm:w-[104px]"
+          />
         </div>
       </header>
 
