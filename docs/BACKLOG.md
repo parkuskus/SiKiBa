@@ -59,6 +59,7 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 - [x] Seluruh raster image di `app/public` dan ikon vektor obat dikonversi ke WebP; referensi kode, favicon, ikon manifest, push, dan precache diperbarui (2026-10-08).
 - [x] Birth Plan P4K diimplementasikan: Dexie v6, antrean upsert Supabase dan migration 009 dengan RLS, form autosave 25 butir di Beranda mode hamil, pemilihan versi saat konflik lokal/cloud, tampilan Profil read-only, serta PDF bagikan/unduh (2026-10-08).
 - [x] Migration `009_birth_plans.sql` diterapkan ke proyek Supabase SIAGA Bunda. Smoke test RLS transaksional memverifikasi select/insert/update milik sendiri, penolakan akses lintas pengguna, akses baca authenticated, dan penolakan baca anon; seluruh data uji di-rollback. Skrip uji tersimpan di `supabase/tests/009_birth_plans_rls.sql` (2026-10-08).
+- [x] Sesi akun Dummy dipertahankan setelah refresh; inisialisasi sesi anonim tidak lagi menghapus identitas Dummy, dan pemilihan profil tidak lagi jatuh ke profil pertama di perangkat (2026-10-08).
 
 ### Belum selesai / perlu konfirmasi
 - [ ] S-06 Edukasi: S-06a–S-06f tersedia; S-06g belum dibuat. Tinjau tanda dari ekstraksi yang belum memiliki video relevan sebelum menambahkannya ke S-06e; materi nifas dan laktasi diarahkan ke S-04/S-04a.

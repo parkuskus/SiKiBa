@@ -1,7 +1,7 @@
 import { supabase } from "./supabase"
 import { db, type Profile } from "./db"
 
-// ponytail: single source of truth untuk userId — Supabase auth uid jika ada, fallback ke Dexie pertama, terakhir demo-siti untuk dev tanpa login
+// ponytail: identitas eksplisit menang; jangan pernah memilih profil pertama karena bisa membuka data akun lain.
 export async function getCurrentUserId(): Promise<string> {
   try {
     const demoId = localStorage.getItem("siaga_demo_user_id")
@@ -19,8 +19,6 @@ export async function getCurrentUserId(): Promise<string> {
   try {
     const cachedId = localStorage.getItem("siaga_active_user_id")
     if (cachedId && await db.profiles.get(cachedId)) return cachedId
-    const profiles = await db.profiles.toArray()
-    if (profiles.length) return profiles[0].id
   } catch {
     // ignore
   }
@@ -89,6 +87,5 @@ export async function getCurrentProfile(): Promise<Profile | null> {
   } catch {
     // ignore — offline atau belum sync
   }
-  const all = await db.profiles.toArray()
-  return all[0] ?? null
+  return null
 }

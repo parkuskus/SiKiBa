@@ -42,10 +42,13 @@ export default function App() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "INITIAL_SESSION" && session?.user) {
+        let demoMode = false
         try {
-          localStorage.removeItem("siaga_logged_out")
-          localStorage.removeItem("siaga_demo_user_id")
-          localStorage.setItem("siaga_active_user_id", session.user.id)
+          demoMode = localStorage.getItem("siaga_demo_user_id") === "demo-dummy"
+          if (!demoMode) {
+            localStorage.removeItem("siaga_logged_out")
+            localStorage.setItem("siaga_active_user_id", session.user.id)
+          }
         } catch {}
         setOnboarding("app")
       }
