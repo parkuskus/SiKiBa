@@ -11,6 +11,7 @@ import QuickActionGrid from "./components/QuickActionGrid"
 import LastCheckCard from "./components/LastCheckCard"
 import TodayReminderCard from "./components/TodayReminderCard"
 import ProfileAvatar from "@/features/profil/ProfileAvatar"
+import BirthPlanScreen from "./BirthPlanScreen"
 import { daysUntil, medicineTimes, normalizeTime } from "../../../../supabase/functions/_shared/reminderSchedule"
 
 type Props = {
@@ -21,6 +22,7 @@ type Props = {
   setIsPostpartum: (v: boolean) => void
   setShowBirth: (v: boolean) => void
   setTab: (t: "beranda" | "skrining" | "edukasi" | "tracker" | "profil") => void
+  setShowBottomNav: (visible: boolean) => void
 }
 
 function formatHpl(hpht: string): string {
@@ -32,7 +34,7 @@ function hariIniLabel(): string {
 }
 
 // S-02 Beranda — stage sage + hero illu-12 + sheet (ikut Figma 23:1098)
-export default function BerandaPage({ uk: ukProp, progress: progressProp, countdown: countdownProp, isPostpartum, setIsPostpartum, setShowBirth, setTab }: Props) {
+export default function BerandaPage({ uk: ukProp, progress: progressProp, countdown: countdownProp, isPostpartum, setIsPostpartum, setShowBirth, setTab, setShowBottomNav }: Props) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [hariNifas, setHariNifas] = useState(1)
   const [beratLahir, setBeratLahir] = useState<number | null>(null)
@@ -42,6 +44,13 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
   const [nextAncLabel, setNextAncLabel] = useState<string | null>(null)
   const [showReminders, setShowReminders] = useState(false)
   const [clock, setClock] = useState(() => Date.now())
+  const [showBirthPlan, setShowBirthPlan] = useState(false)
+  const [birthPlanUserId, setBirthPlanUserId] = useState("")
+
+  useEffect(() => {
+    setShowBottomNav(!showBirthPlan)
+    return () => setShowBottomNav(true)
+  }, [showBirthPlan, setShowBottomNav])
 
   useEffect(() => {
     void (async () => {
@@ -116,6 +125,8 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
   const lastLabel = last ? `${last.kategori === "HIJAU" ? "Kondisi aman" : last.kategori === "KUNING" ? "Skrining Terakhir (Waspada)" : "Skrining Terakhir (Bahaya)"}` : "Belum ada skrining"
   const lastDate = last ? new Date(last.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short" }) : "Lakukan skrining pertama"
 
+  if (showBirthPlan) return <BirthPlanScreen userId={birthPlanUserId} onClose={() => setShowBirthPlan(false)} />
+
   return (
     <div>
       <div className="-mx-4 -mt-5 rounded-b-[32px] bg-[#4A6E54] px-6 pb-6 pt-7 text-white">
@@ -164,14 +175,14 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
           onReminder={() => setTab("tracker")}
           onEdukasi={() => setTab("edukasi")}
         />
-        <button onClick={() => setTab("edukasi")} className="flex w-full items-center gap-3 rounded-[24px] bg-white p-4 text-left ring-1 ring-[#D9E7E2] transition active:scale-[0.99]">
+        {!isPostpartum && <button onClick={() => { void getCurrentUserId().then((id) => { setBirthPlanUserId(id); setShowBirthPlan(true) }) }} className="flex w-full items-center gap-3 rounded-[24px] bg-white p-4 text-left ring-1 ring-[#D9E7E2] transition active:scale-[0.99]">
           <span className="grid size-12 shrink-0 place-items-center rounded-full bg-[#FFF1E8] text-[#9A5B00]"><ClipboardList className="size-6" /></span>
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-bold text-[#1D2B29]">Birth Plan dan Persiapan Persalinan (P4K)</span>
             <span className="block text-xs text-[#536961]">Rencanakan persalinan dan checklist P4K</span>
           </span>
           <ChevronRight className="size-5 shrink-0 text-[#536961]" />
-        </button>
+        </button>}
         <p className="text-[15px] font-bold py-2 text-[#1D2B29]">Skrining Kesehatan</p>
         <LastCheckCard label={lastLabel} dateLabel={lastDate} kategori={last?.kategori} onLihat={() => setTab("skrining")} />
         <button onClick={() => setTab("tracker")} className="flex w-full items-center gap-3 rounded-[24px] bg-white p-4 text-left ring-2 ring-[#FFCFCF] active:scale-[0.99] transition">

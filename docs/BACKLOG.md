@@ -49,9 +49,11 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 - [x] Persona chatbot diperbarui menjadi Kira: avatar `gambar-karakter.png`, sapaan/FAQ offline, label UI, dan prompt Edge Function diselaraskan (2026-10-08).
 - [x] Thumbnail S-06e `Thumbnail.png` dikonversi menjadi `Thumbnail.webp` dan dipakai pada tile Tanda Bahaya Kehamilan (2026-10-08).
 - [x] Layar S-06e Tanda Bahaya Kehamilan dibuat dengan pencarian, tiga kelompok gejala, kartu buka/tutup, dan video inline otomatis untuk 11 tanda kehamilan yang memiliki video relevan (2026-10-08).
+- [x] Birth Plan P4K diimplementasikan: Dexie v6, antrean upsert Supabase dan migration 009 dengan RLS, form autosave 25 butir di Beranda mode hamil, pemilihan versi saat konflik lokal/cloud, tampilan Profil read-only, serta PDF bagikan/unduh (2026-10-08).
 
 ### Belum selesai / perlu konfirmasi
 - [ ] S-06 Edukasi: S-06a–S-06e tersedia; S-06f–S-06g masih “Segera hadir”. Tinjau tanda dari ekstraksi yang belum memiliki video relevan sebelum menambahkannya ke S-06e; materi nifas dan laktasi diarahkan ke S-04/S-04a.
+- [ ] Terapkan migration `009_birth_plans.sql` pada Supabase yang dituju, lalu verifikasi RLS, antrean sync offline, dan pemulihan cloud pada akun uji sebelum rilis.
 - [ ] Validasi seluruh algoritma klinis oleh SpOG/bidan senior. Ambang dan rekomendasi belum boleh dianggap tervalidasi untuk pelayanan.
 - [ ] Ethical Clearance sebelum uji coba dengan partisipan.
 - [ ] QA end-to-end pada perangkat Android dan iOS: OTP/SMTP produksi, offline dan antrean sync, RLS, retensi data, reminder/notifikasi, mode nifas, chatbot, dan alur MERAH.
@@ -76,8 +78,8 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 - Konten edukasi, validasi klinis, dan persetujuan etik bergantung pada stakeholder/peneliti.
 
 ## Urutan kerja berikutnya
-1. Implementasikan Birth Plan, sinkronisasi lokal/cloud, PDF, dan tampilan read-only Profil sesuai `docs/RENCANA_IMPLEMENTASI_BIRTHPLAN_CHATBOT_EDUKASI.md`.
-2. Selaraskan chatbot menjadi Kira dan implementasikan aset/arah persona di dokumen rencana; pertahankan fallback offline dan eskalasi darurat.
-3. Lengkapi S-06f–S-06g dan tinjau tanda S-06e yang belum memiliki video relevan; lakukan review aset serta validasi klinis sebelum publikasi.
+1. Terapkan migration `009_birth_plans.sql` di Supabase, lalu QA autosave, RLS, sinkronisasi offline, konflik dua versi, PDF, dan mode kehamilan/nifas.
+2. Implementasikan layar S-06f Perubahan Psikologi/Emosi dengan sumber dan materi yang ditinjau pakar.
+3. Lanjutkan review seluruh konten edukasi dan validasi klinis, lalu QA lintas perangkat dan proses Ethical Clearance/UAT.
 4. QA lintas perangkat, mode kehamilan/nifas, offline/sync/RLS, PDF dan alur darurat; lanjutkan proses validasi pakar dan Ethical Clearance/UAT.
 5. Siapkan deployment produksi dan distribusi yang dipilih.

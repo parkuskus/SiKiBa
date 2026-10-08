@@ -1,4 +1,4 @@
-import { db } from './db'
+import { db, type BirthPlan } from './db'
 import { supabase } from './supabase'
 
 // ponytail: offline queue — Dexie syncQueue + flush on online, never block local.
@@ -157,4 +157,24 @@ export function syncBbl(e: { id: string; userId: string; dataLahir: string; apga
   void fireOrQueue('bbl_profiles', 'insert', {
     id: e.id, user_id: e.userId, data_lahir: e.dataLahir || null, apgar: e.apgar ?? null, usia_gestasi: e.usiaGestasi ?? null,
   })
+}
+
+export function syncBirthPlan(plan: BirthPlan): Promise<void> {
+  return fireOrQueue('birth_plans', 'upsert', {
+    user_id: plan.userId,
+    penolong: plan.penolong,
+    tempat_bersalin: plan.tempatBersalin,
+    pendamping: plan.pendamping,
+    hp_bidan_siaga: plan.hpBidanSiaga,
+    donor1_nama: plan.donor1Nama,
+    donor1_golongan_darah: plan.donor1GolonganDarah || null,
+    donor2_nama: plan.donor2Nama,
+    donor2_golongan_darah: plan.donor2GolonganDarah || null,
+    transportasi: plan.transportasi,
+    estimasi_dana: plan.estimasiDana,
+    checklist_perlengkapan: plan.checklistPerlengkapan,
+    tanda_persalinan_dipahami: plan.tandaPersalinanDipahami,
+    created_at: plan.createdAt,
+    updated_at: plan.updatedAt,
+  }, 'user_id')
 }

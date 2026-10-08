@@ -14,7 +14,9 @@ import ProfileDetailScreen from "@/features/profil/ProfileDetailScreen"
 import AvatarEditor from "@/features/profil/AvatarEditor"
 import ProfileAvatar from "@/features/profil/ProfileAvatar"
 import { disablePushNotifications } from "@/services/pushNotifications"
-import type { Profile, ScreeningResult } from "@/data/db"
+import type { BirthPlan, Profile, ScreeningResult } from "@/data/db"
+import BirthPlanScreen from "@/features/beranda/BirthPlanScreen"
+import { getBirthPlan } from "@/features/beranda/birthPlanService"
 
 type Props = { uk: number; hplLabel: string; setShowBottomNav: (visible: boolean) => void }
 
@@ -31,11 +33,13 @@ function MenuRow({ icon, label, onClick, last }: { icon: React.ReactNode; label:
 export default function ProfilPage({ uk: ukProp, hplLabel: hplProp, setShowBottomNav }: Props) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [history, setHistory] = useState<ScreeningResult[]>([])
+  const [birthPlan, setBirthPlan] = useState<BirthPlan | null>(null)
   const [exporting, setExporting] = useState(false)
   const [showNotif, setShowNotif] = useState(false)
   const [showStorage, setShowStorage] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
+  const [showBirthPlan, setShowBirthPlan] = useState(false)
   const [showDetail, setShowDetail] = useState(false)
   const [showAvatarEditor, setShowAvatarEditor] = useState(false)
   const [showExport, setShowExport] = useState(false)
@@ -48,6 +52,8 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp, setShowBotto
     if (p) setProfile(p)
     const id = p?.id ?? (await getCurrentUserId())
     setUid(id)
+    const plan = await getBirthPlan(id)
+    setBirthPlan(plan.plan)
     const h = await db.screeningResults.where("userId").equals(id).toArray()
     h.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     setHistory(h)
@@ -62,9 +68,9 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp, setShowBotto
   }, [])
 
   useEffect(() => {
-    setShowBottomNav(!showAvatarEditor)
+    setShowBottomNav(!showAvatarEditor && !showBirthPlan)
     return () => setShowBottomNav(true)
-  }, [showAvatarEditor, setShowBottomNav])
+  }, [showAvatarEditor, showBirthPlan, setShowBottomNav])
 
   const hpht = profile?.hpht?.trim() || ""
   const hasHpht = Boolean(hpht)
@@ -143,6 +149,7 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp, setShowBotto
         onDeleteAccount={() => void handleDeleteAccount()}
       />
     )
+  if (showBirthPlan && birthPlan) return <BirthPlanScreen userId={uid} readOnly onClose={() => setShowBirthPlan(false)} />
 
   return (
     <div className="-mx-4 -mt-5">
@@ -172,6 +179,7 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp, setShowBotto
           <h2 className="px-1 text-sm font-bold text-[#1D2B29]">Data Saya</h2>
           <div className="overflow-hidden rounded-[24px] bg-white ring-1 ring-[#D9E7E2]">
             <MenuRow icon={<ClipboardList className="size-[18px]" />} label={`Riwayat skrining${history.length ? ` (${history.length})` : ""}`} onClick={() => setShowHistory(true)} />
+            {birthPlan && <MenuRow icon={<ClipboardList className="size-[18px]" />} label="Rencana persalinan (P4K)" onClick={() => setShowBirthPlan(true)} />}
             <MenuRow icon={<Share2 className="size-[18px]" />} label="Bagikan ke bidan" onClick={() => setShowExport((value) => !value)} last />
             {showExport && (
               <div className="grid grid-cols-2 gap-2 border-t border-[#E8EFEB] bg-[#FFFCF6] p-3">

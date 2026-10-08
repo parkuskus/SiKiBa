@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf'
-import { db } from '@/data/db'
+import { db, type BirthPlan } from '@/data/db'
 
 const C = {
   sage: [74, 110, 84] as [number, number, number],
@@ -163,4 +163,141 @@ export async function shareViaWA(userId: string): Promise<void> {
     a.click()
     URL.revokeObjectURL(url)
   }
+}
+
+export async function generateBirthPlanPDF(plan: BirthPlan): Promise<Blob> {
+  const profile = await db.profiles.get(plan.userId)
+  const doc = new jsPDF({ format: 'a4', unit: 'mm' })
+  const W = doc.internal.pageSize.getWidth()
+  const H = doc.internal.pageSize.getHeight()
+  const left = 16
+  const right = W - 16
+  const width = right - left
+  let y = 0
+  const filled = [plan.penolong, plan.tempatBersalin, plan.pendamping, plan.hpBidanSiaga, plan.donor1Nama, plan.donor1GolonganDarah, plan.donor2Nama, plan.donor2GolonganDarah, plan.transportasi].filter((value) => value.trim()).length
+    + Number(plan.danaDikonfirmasi && plan.estimasiDana !== null)
+    + Object.values(plan.checklistPerlengkapan).filter(Boolean).length
+    + Object.values(plan.tandaPersalinanDipahami).filter(Boolean).length
+  const money = plan.estimasiDana === null ? 'Belum diisi' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(plan.estimasiDana)
+  const header = () => {
+    doc.setFillColor(...C.sage)
+    doc.roundedRect(left, 13, width, 34, 5, 5, 'F')
+    doc.setTextColor(255, 255, 255)
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(17)
+    doc.text('SIAGA Bunda', left + 7, 24)
+    doc.setFontSize(12)
+    doc.text('Rencana Persalinan Bunda', left + 7, 33)
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(8)
+    doc.text(`Dibuat ${fmtDate(new Date().toISOString())}`, right - 7, 24, { align: 'right' })
+    y = 55
+  }
+  const newPage = () => { doc.addPage(); header() }
+  const ensure = (height: number) => { if (y + height > H - 20) newPage() }
+  const section = (title: string) => {
+    ensure(14)
+    doc.setFillColor(...C.sageSoft)
+    doc.roundedRect(left, y, width, 9, 3, 3, 'F')
+    doc.setTextColor(...C.sage)
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(10)
+    doc.text(title, left + 4, y + 6.1)
+    y += 13
+  }
+  const row = (label: string, value: string) => {
+    const lines = doc.splitTextToSize(`${label}  ${value || 'Belum diisi'}`, width - 10) as string[]
+    const height = Math.max(7, lines.length * 4.6 + 2)
+    ensure(height + 2)
+    doc.setFillColor(255, 255, 255)
+    doc.setDrawColor(...C.border)
+    doc.roundedRect(left, y, width, height, 2, 2, 'FD')
+    doc.setTextColor(...C.ink)
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(8.5)
+    doc.text(lines, left + 4, y + 4.7)
+    y += height + 2
+  }
+
+  header()
+  doc.setTextColor(...C.ink)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(11)
+  doc.text(profile?.nama ? `Nama Bunda  ${profile.nama}` : 'Nama Bunda  Belum diisi', left, y)
+  y += 7
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(9)
+  doc.setTextColor(...C.muted)
+  doc.text(`Kelengkapan ${filled} dari 25 butir  (${Math.round(filled / 25 * 100)}%)`, left, y)
+  y += 9
+
+  section('Informasi Persalinan')
+  row('Tempat bersalin', plan.tempatBersalin)
+  row('Penolong', plan.penolong)
+  row('Pendamping', plan.pendamping)
+  row('Nomor HP bidan atau dokter siaga', plan.hpBidanSiaga)
+
+  section('Persiapan Darurat')
+  row('Calon donor darah 1', [plan.donor1Nama, plan.donor1GolonganDarah && `Golongan darah ${plan.donor1GolonganDarah}`].filter(Boolean).join(', '))
+  row('Calon donor darah 2', [plan.donor2Nama, plan.donor2GolonganDarah && `Golongan darah ${plan.donor2GolonganDarah}`].filter(Boolean).join(', '))
+  row('Transportasi', plan.transportasi)
+  section('Persiapan Biaya')
+  row('Estimasi dana persalinan', money)
+
+  const stillMissing = [
+    ['Penolong persalinan', plan.penolong], ['Tempat bersalin', plan.tempatBersalin], ['Pendamping', plan.pendamping],
+    ['Nomor HP bidan atau dokter siaga', plan.hpBidanSiaga], ['Nama calon donor darah 1', plan.donor1Nama],
+    ['Golongan darah donor 1', plan.donor1GolonganDarah], ['Nama calon donor darah 2', plan.donor2Nama],
+    ['Golongan darah donor 2', plan.donor2GolonganDarah], ['Transportasi', plan.transportasi],
+  ].filter(([, value]) => !String(value).trim())
+  if (!plan.danaDikonfirmasi || plan.estimasiDana === null) stillMissing.push(['Estimasi dana persalinan', ''])
+  if (stillMissing.length) {
+    section('Masih perlu dilengkapi')
+    for (const [label] of stillMissing) row(label, 'Belum diisi')
+    const readyItems = Object.values(plan.checklistPerlengkapan).filter(Boolean).length
+    const understoodSigns = Object.values(plan.tandaPersalinanDipahami).filter(Boolean).length
+    if (readyItems < 10) row('Perlengkapan ibu dan bayi', `${readyItems} dari 10 siap`)
+    if (understoodSigns < 5) row('Tanda persalinan', `${understoodSigns} dari 5 dipahami`)
+  }
+
+  section('Checklist Perlengkapan Ibu dan Bayi')
+  for (const [key, label] of Object.entries({ bukuKia: 'Buku KIA', ktpBpjs: 'KTP dan BPJS', pakaianIbu: 'Pakaian ibu', pakaianBayi: 'Pakaian bayi', popok: 'Popok', pembalutNifas: 'Pembalut nifas', selimutBayi: 'Selimut bayi', perlengkapanMandi: 'Perlengkapan mandi', peralatanMenyusui: 'Peralatan menyusui', tasPersalinan: 'Tas persalinan sudah siap' })) {
+    row(label, plan.checklistPerlengkapan[key] ? 'Siap' : 'Belum disiapkan')
+  }
+
+  section('Tanda Persalinan yang Dipahami')
+  for (const [key, label] of Object.entries({ kontraksiTeratur: 'Kontraksi teratur', lendirDarah: 'Keluar lendir bercampur darah', ketubanPecah: 'Ketuban pecah', pantauGerakan: 'Gerakan janin tetap dipantau', tahuFasilitas: 'Mengetahui kapan harus ke fasilitas kesehatan' })) {
+    row(label, plan.tandaPersalinanDipahami[key] ? 'Sudah dipahami' : 'Belum dipahami')
+  }
+
+  section('Catatan penting')
+  row('Tindakan', 'Hubungi bidan atau fasilitas kesehatan bila muncul tanda bahaya. Rencana ini membantu persiapan dan tidak menggantikan pemeriksaan tenaga kesehatan.')
+
+  const pages = doc.getNumberOfPages()
+  for (let page = 1; page <= pages; page++) {
+    doc.setPage(page)
+    doc.setDrawColor(...C.border)
+    doc.line(left, H - 13, right, H - 13)
+    doc.setTextColor(...C.muted)
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(7)
+    doc.text('SIAGA Bunda  |  Siaga menjaga bunda dan buah hati', left, H - 8)
+    doc.text(`${page} / ${pages}`, right, H - 8, { align: 'right' })
+  }
+  return doc.output('blob')
+}
+
+export async function shareBirthPlanPDF(plan: BirthPlan): Promise<void> {
+  const blob = await generateBirthPlanPDF(plan)
+  const file = new File([blob], 'Rencana-Persalinan-SIAGA-Bunda.pdf', { type: 'application/pdf' })
+  if (navigator.canShare?.({ files: [file] })) {
+    await navigator.share({ files: [file], title: 'Rencana Persalinan SIAGA Bunda' })
+    return
+  }
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = file.name
+  anchor.click()
+  URL.revokeObjectURL(url)
 }

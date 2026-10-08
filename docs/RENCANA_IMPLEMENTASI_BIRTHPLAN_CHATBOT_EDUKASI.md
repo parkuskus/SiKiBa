@@ -214,6 +214,7 @@ Daftar ini indikatif. Sebelum implementasi, periksa ulang status working tree, m
 - 2026-10-08: Card belajar video ditambahkan di bagian atas S-06a/S-06b dengan MP4 lokal, thumbnail, dan kontrol native. Prompt thumbnail S-06e ditambahkan ke `docs/ASSETS.md`. Persona chatbot diganti menjadi Kira dengan gambar karakter, copy/FAQ offline, dan prompt online yang selaras.
 - 2026-10-08: Thumbnail S-06e dari pengguna dikonversi ke WebP dan dipakai di tile katalog; prompt generator yang sebelumnya disiapkan untuk cover S-06e tidak lagi diperlukan.
 - 2026-10-08: S-06e kini membuka layar dengan pencarian dan tiga kelompok gejala; satu kartu dapat terbuka pada satu waktu dan video gejala yang sesuai mulai diputar muted, inline, dengan kontrol native. Video laktasi tidak dipasang pada materi tanda bahaya kehamilan.
+- 2026-10-08: Birth Plan P4K selesai diimplementasikan pada Dexie v6 dan migration Supabase 009. Form mendukung autosave dan pemulihan draft, sinkronisasi antrean, pilihan saat versi perangkat/cloud berbeda, akses edit hanya dari Beranda mode kehamilan, tampilan Profil read-only, serta PDF bagikan/unduh. Migration masih perlu diterapkan pada proyek Supabase yang dituju dan diuji melalui akun nyata.
 
 ## Kriteria penerimaan
 

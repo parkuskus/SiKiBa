@@ -37,6 +37,26 @@ export interface ANCVisit { id: string; userId: string; tanggalTerjadwal: string
 export interface DiaryEntry { id: string; userId: string; tanggal: string; teks: string; mood: number; judul?: string }
 export interface NifasScreening { id: string; userId: string; hariKe: number; parameterVital: Record<string, unknown>; status: string; createdAt: string }
 export interface BBLProfile { id: string; userId: string; dataLahir: string; apgar?: number; usiaGestasi?: number }
+export type BloodGroup = 'A' | 'B' | 'AB' | 'O' | ''
+export interface BirthPlan {
+  id: string
+  userId: string
+  penolong: string
+  tempatBersalin: string
+  pendamping: string
+  hpBidanSiaga: string
+  donor1Nama: string
+  donor1GolonganDarah: BloodGroup
+  donor2Nama: string
+  donor2GolonganDarah: BloodGroup
+  transportasi: string
+  estimasiDana: number | null
+  danaDikonfirmasi: boolean
+  checklistPerlengkapan: Record<string, boolean>
+  tandaPersalinanDipahami: Record<string, boolean>
+  createdAt: string
+  updatedAt: string
+}
 export interface SyncQueueItem { id?: number; table: string; op: 'insert' | 'upsert' | 'delete'; payload: Record<string, unknown>; onConflict?: string; createdAt: string }
 
 export class SIAGADB extends Dexie {
@@ -49,6 +69,7 @@ export class SIAGADB extends Dexie {
   nifasScreenings!: Table<NifasScreening, string>
   bblProfiles!: Table<BBLProfile, string>
   doseLogs!: Table<DoseLog, string>
+  birthPlans!: Table<BirthPlan, string>
   syncQueue!: Table<SyncQueueItem, number>
 
   constructor() {
@@ -74,6 +95,9 @@ export class SIAGADB extends Dexie {
     })
     this.version(5).stores({
       profiles: 'id, hpht, noHp, email',
+    })
+    this.version(6).stores({
+      birthPlans: 'id, userId, updatedAt',
     })
   }
 }

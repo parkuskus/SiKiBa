@@ -107,6 +107,7 @@ export default function App() {
               setIsPostpartum={setIsPostpartum}
               setShowBirth={setShowBirth}
               setTab={setTab}
+              setShowBottomNav={setShowBottomNav}
             />
           )}
           {tab === "skrining" && <SkriningPage setTab={setTab} setShowBirth={setShowBirth} isPostpartum={isPostpartum} setShowBottomNav={setShowBottomNav} />}
