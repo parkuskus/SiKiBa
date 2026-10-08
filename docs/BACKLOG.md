@@ -71,8 +71,8 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 - Konten edukasi, validasi klinis, dan persetujuan etik bergantung pada stakeholder/peneliti.
 
 ## Urutan kerja berikutnya
-1. QA dan perbaiki alur data profil/beranda serta kelahiran, lalu verifikasi sinkronisasi Supabase dan RLS.
-2. Finalisasi dokumen PDF dan review hasil bersama stakeholder/bidan.
-3. Lengkapi S-06b–S-06g sesuai `docs/EKSTRAK_EDUKASI_LOVABLE.md` dan validasi klinis stakeholder; P4K kini memakai ID S-06g.
-4. Jalankan validasi pakar, QA lintas perangkat, dan proses Ethical Clearance/UAT.
+1. Implementasikan Birth Plan, sinkronisasi lokal/cloud, PDF, dan tampilan read-only Profil sesuai `docs/RENCANA_IMPLEMENTASI_BIRTHPLAN_CHATBOT_EDUKASI.md`.
+2. Selaraskan chatbot menjadi Kira dan implementasikan aset/arah persona di dokumen rencana; pertahankan fallback offline dan eskalasi darurat.
+3. Perbarui header/video/thumbnail S-06a–S-06f dan judul edukasi sesuai dokumen rencana; lakukan review aset serta validasi klinis sebelum publikasi.
+4. QA lintas perangkat, mode kehamilan/nifas, offline/sync/RLS, PDF dan alur darurat; lanjutkan proses validasi pakar dan Ethical Clearance/UAT.
 5. Siapkan deployment produksi dan distribusi yang dipilih.
