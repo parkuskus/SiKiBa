@@ -134,7 +134,7 @@ Gunakan label lengkap berikut pada katalog/detail dan konsistenkan istilah di do
 | S-06b | Perkembangan Janin per Minggu | `s-06b/Thumbnail.webp`; card belajar video sebelum materi |
 | S-06c | Perkembangan Plasenta, Tali Pusat, dan Ketuban | `s-06c/Thumbnail.webp` di kanan header |
 | S-06d | Perubahan Fisiologi Kehamilan | `s-06d/Thumbnail.webp` sudah ada; periksa crop/rasio |
-| S-06e | Tanda Bahaya Kehamilan | perlu cover/thumbnail katalog; video per tanda yang tersedia |
+| S-06e | Tanda Bahaya Kehamilan | `s-06e/Thumbnail.webp`; video inline per gejala yang memiliki aset relevan |
 | S-06f | Perubahan Psikologi/Emosi | `s-06f/Thumbnail.png` di pojok kanan atas header |
 | S-06g | Birth Plan & Persiapan Persalinan (P4K) | kartu Beranda menjadi pintu masuk form; bukan materi artikel katalog |
 
@@ -157,6 +157,7 @@ Gunakan ejaan **Plasenta** pada judul layar meskipun daftar awal pengguna menuli
 
 - Inventarisasi 12 video yang saat ini ada di `app/public/s-06/s-06e/`: perdarahan, pandangan kabur, nyeri ulu hati, nyeri perut, nyeri payudara, nyeri kepala, napas pendek, masalah kejiwaan, ketuban pecah, jantung berdebar, gerakan janin berkurang, dan demam.
 - Cocokkan video dengan kartu tanda bahaya yang tepat; mapping tidak boleh ditebak hanya dari nama file. Simpan mapping lokal pada data konten setelah validasi pakar.
+- Tampilkan video untuk tanda kehamilan yang cocok. `nyeri payudara.mp4` berkaitan dengan laktasi dan disimpan untuk materi S-04a; tanda dari ekstraksi yang belum memiliki video relevan tidak boleh dipasangkan secara paksa.
 - Ketika pengguna membuka/expand satu kartu, tampilkan videonya inline seperti gambar 7 dan mulai otomatis dalam keadaan muted serta `playsInline`, dengan controls terlihat. Coba `play()` dan tangani penolakan browser secara senyap dengan tombol putar yang tetap terlihat.
 - Hanya satu video yang boleh aktif. Ketika kartu ditutup, pindah tanda, atau meninggalkan layar, pause video dan kembalikan ke awal. Jangan autoplay semua video saat render atau ketika kartu masih tertutup.
 - Sediakan label/caption, poster bila ada, alt/teks pendamping, dan tetap tampilkan penjelasan gejala/tindakan. Video bukan satu-satunya penyampai informasi.
@@ -212,6 +213,7 @@ Daftar ini indikatif. Sebelum implementasi, periksa ulang status working tree, m
 - 2026-10-08: Judul katalog S-06a–S-06f diperbarui. Judul detail S-06a–S-06d diseragamkan, thumbnail S-06c dipasang pada header, dan thumbnail S-06f dipasang pada tile katalog. S-06f belum memiliki layar detail, jadi header detailnya tetap menunggu implementasi screen.
 - 2026-10-08: Card belajar video ditambahkan di bagian atas S-06a/S-06b dengan MP4 lokal, thumbnail, dan kontrol native. Prompt thumbnail S-06e ditambahkan ke `docs/ASSETS.md`. Persona chatbot diganti menjadi Kira dengan gambar karakter, copy/FAQ offline, dan prompt online yang selaras.
 - 2026-10-08: Thumbnail S-06e dari pengguna dikonversi ke WebP dan dipakai di tile katalog; prompt generator yang sebelumnya disiapkan untuk cover S-06e tidak lagi diperlukan.
+- 2026-10-08: S-06e kini membuka layar dengan pencarian dan tiga kelompok gejala; satu kartu dapat terbuka pada satu waktu dan video gejala yang sesuai mulai diputar muted, inline, dengan kontrol native. Video laktasi tidak dipasang pada materi tanda bahaya kehamilan.
 
 ## Kriteria penerimaan
 

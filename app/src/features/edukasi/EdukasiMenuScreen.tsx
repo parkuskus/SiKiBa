@@ -14,13 +14,13 @@ const topik = [
   { judul: "Perkembangan Janin per Minggu", keterangan: "Ikuti tumbuh kembang dari minggu ke minggu", icon: Baby, thumbnail: "/s-06/s-06b/Thumbnail.webp", screen: "janin" },
   { judul: "Perkembangan Plasenta, Tali Pusat, dan Ketuban", keterangan: "Kenali fungsi organ pendukung kehamilan", icon: Activity, thumbnail: "/s-06/s-06c/Thumbnail.webp", screen: "s06c" },
   { judul: "Perubahan Fisiologi Kehamilan", keterangan: "Adaptasi tubuh selama kehamilan", icon: HeartPulse, thumbnail: "/s-06/s-06d/Thumbnail.webp", screen: "fisiologi" },
-  { judul: "Tanda Bahaya Kehamilan", keterangan: "Kenali gejala yang perlu diperiksa", icon: ShieldAlert, thumbnail: "/s-06/s-06e/Thumbnail.webp" },
+  { judul: "Tanda Bahaya Kehamilan", keterangan: "Kenali gejala yang perlu diperiksa", icon: ShieldAlert, thumbnail: "/s-06/s-06e/Thumbnail.webp", screen: "bahaya" },
   { judul: "Perubahan Psikologi/Emosi", keterangan: "Perubahan perasaan tiap trimester", icon: Brain, thumbnail: "/s-06/s-06f/Thumbnail.png" },
-] satisfies { judul: string; keterangan: string; icon: LucideIcon; thumbnail?: string; screen?: "fertilisasi" | "janin" | "s06c" | "fisiologi" }[]
+] satisfies { judul: string; keterangan: string; icon: LucideIcon; thumbnail?: string; screen?: "fertilisasi" | "janin" | "s06c" | "fisiologi" | "bahaya" }[]
 
-type Props = { onOpenFertilisasi: () => void; onOpenJanin: () => void; onOpenPlasenta: () => void; onOpenFisiologi: () => void }
+type Props = { onOpenFertilisasi: () => void; onOpenJanin: () => void; onOpenPlasenta: () => void; onOpenFisiologi: () => void; onOpenBahaya: () => void }
 
-export default function EdukasiMenuScreen({ onOpenFertilisasi, onOpenJanin, onOpenPlasenta, onOpenFisiologi }: Props) {
+export default function EdukasiMenuScreen({ onOpenFertilisasi, onOpenJanin, onOpenPlasenta, onOpenFisiologi, onOpenBahaya }: Props) {
   return (
     <div className="-mx-4 -mt-5">
       <header className="relative isolate overflow-hidden rounded-b-[32px] bg-[#4A6E54] px-6 pb-11 pt-7 text-white">
@@ -45,7 +45,7 @@ export default function EdukasiMenuScreen({ onOpenFertilisasi, onOpenJanin, onOp
         <div className="grid grid-cols-2 gap-3">
           {topik.map(({ judul, keterangan, icon: Icon, thumbnail, screen }, index) => {
             const siap = Boolean(screen)
-            const bukaTopik = screen === "fertilisasi" ? onOpenFertilisasi : screen === "janin" ? onOpenJanin : screen === "s06c" ? onOpenPlasenta : onOpenFisiologi
+            const bukaTopik = screen === "fertilisasi" ? onOpenFertilisasi : screen === "janin" ? onOpenJanin : screen === "s06c" ? onOpenPlasenta : screen === "bahaya" ? onOpenBahaya : onOpenFisiologi
             const isiTile = (
               <>
                 <span className={`grid h-[92px] place-items-center overflow-hidden rounded-[18px] ${index % 2 === 0 ? "bg-[#EAF4F0]" : "bg-[#FFF1E8]"}`}>

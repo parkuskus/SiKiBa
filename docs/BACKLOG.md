@@ -45,12 +45,13 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 - [x] Katalog S-06 diperbarui: materi Keluhan Umum dihapus dan Birth Plan & Persiapan Persalinan (P4K) menjadi S-06g; tile S-06h duplikat dihilangkan (2026-10-07).
 - [x] Birth Plan dipindahkan dari katalog edukasi ke kartu akses cepat tersendiri di Beranda, mengikuti revisi layout (2026-10-07).
 - [x] Judul katalog S-06a–S-06f diseragamkan; header detail S-06a–S-06d diperbarui, thumbnail S-06c ditambahkan di header, dan thumbnail S-06f dipakai pada tile katalog karena layar detail S-06f belum tersedia (2026-10-08).
-- [x] Card “Pelajari lewat video” ditambahkan di atas materi S-06a dan S-06b dengan video MP4 lokal serta kontrol native; prompt thumbnail S-06e ditambahkan di `docs/ASSETS.md` (2026-10-08).
+- [x] Card “Pelajari lewat video” ditambahkan di atas materi S-06a dan S-06b dengan video MP4 lokal serta kontrol native (2026-10-08).
 - [x] Persona chatbot diperbarui menjadi Kira: avatar `gambar-karakter.png`, sapaan/FAQ offline, label UI, dan prompt Edge Function diselaraskan (2026-10-08).
 - [x] Thumbnail S-06e `Thumbnail.png` dikonversi menjadi `Thumbnail.webp` dan dipakai pada tile Tanda Bahaya Kehamilan (2026-10-08).
+- [x] Layar S-06e Tanda Bahaya Kehamilan dibuat dengan pencarian, tiga kelompok gejala, kartu buka/tutup, dan video inline otomatis untuk 11 tanda kehamilan yang memiliki video relevan (2026-10-08).
 
 ### Belum selesai / perlu konfirmasi
-- [ ] S-06 Edukasi: S-06 sampai S-06d sudah tersedia; S-06e–S-06g masih tampil sebagai “Segera hadir”. Lanjutkan desain/implementasi berdasarkan `docs/EKSTRAK_EDUKASI_LOVABLE.md` dan materi yang divalidasi stakeholder.
+- [ ] S-06 Edukasi: S-06a–S-06e tersedia; S-06f–S-06g masih “Segera hadir”. Tinjau tanda dari ekstraksi yang belum memiliki video relevan sebelum menambahkannya ke S-06e; materi nifas dan laktasi diarahkan ke S-04/S-04a.
 - [ ] Validasi seluruh algoritma klinis oleh SpOG/bidan senior. Ambang dan rekomendasi belum boleh dianggap tervalidasi untuk pelayanan.
 - [ ] Ethical Clearance sebelum uji coba dengan partisipan.
 - [ ] QA end-to-end pada perangkat Android dan iOS: OTP/SMTP produksi, offline dan antrean sync, RLS, retensi data, reminder/notifikasi, mode nifas, chatbot, dan alur MERAH.
@@ -77,6 +78,6 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 ## Urutan kerja berikutnya
 1. Implementasikan Birth Plan, sinkronisasi lokal/cloud, PDF, dan tampilan read-only Profil sesuai `docs/RENCANA_IMPLEMENTASI_BIRTHPLAN_CHATBOT_EDUKASI.md`.
 2. Selaraskan chatbot menjadi Kira dan implementasikan aset/arah persona di dokumen rencana; pertahankan fallback offline dan eskalasi darurat.
-3. Perbarui header/video/thumbnail S-06a–S-06f dan judul edukasi sesuai dokumen rencana; lakukan review aset serta validasi klinis sebelum publikasi.
+3. Lengkapi S-06f–S-06g dan tinjau tanda S-06e yang belum memiliki video relevan; lakukan review aset serta validasi klinis sebelum publikasi.
 4. QA lintas perangkat, mode kehamilan/nifas, offline/sync/RLS, PDF dan alur darurat; lanjutkan proses validasi pakar dan Ethical Clearance/UAT.
 5. Siapkan deployment produksi dan distribusi yang dipilih.
