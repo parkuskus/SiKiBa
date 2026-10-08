@@ -157,9 +157,9 @@ Pengguna segera memahami bahwa halaman ini berisi materi belajar dan dapat memil
 
 | Area | Rencana ilustrasi | Ketersediaan dan perlakuan |
 | --- | --- | --- |
-| Kanan header | Bunda dengan buku, sekitar 90–100 px | `app/public/illu/illu-08-diary.png` sudah tersedia; hanya aksen pendamping judul |
+| Kanan header | Bunda dengan buku, sekitar 90–100 px | `app/public/illu/illu-08-diary.webp` sudah tersedia; hanya aksen pendamping judul |
 | Tile Awal Kehamilan | Pertemuan sel telur dan sperma | Gunakan `s-06a/3-Fertilisasi.webp` sebagai thumbnail; objek biologis tetap terlihat utuh |
-| Tile Perkembangan Janin | Siluet janin netral | Perlu cover tanpa angka minggu; `illu-03-janin.png` memuat teks 28 weeks sehingga bukan cover umum yang sesuai |
+| Tile Perkembangan Janin | Siluet janin netral | Perlu cover tanpa angka minggu; `illu-03-janin.webp` memuat teks 28 weeks sehingga bukan cover umum yang sesuai |
 | Tile Plasenta | Plasenta, tali pusat, dan kantung ketuban | Rencana cover flat dengan objek yang saling terhubung |
 | Tile Perubahan Tubuh | Bunda hamil dan penanda perubahan tubuh | Rencana cover sederhana tanpa banyak organ kecil |
 | Tile Tanda Bahaya | Buku KIA dan simbol perhatian | Rencana cover edukasi, tidak menyerupai hasil darurat pengguna |

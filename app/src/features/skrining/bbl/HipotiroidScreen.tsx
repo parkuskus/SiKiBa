@@ -49,7 +49,7 @@ export default function HipotiroidScreen({
   }
 
   return (
-    <SkriningFormShell title="Hipotiroid Kongenital" subtitle="Cek TSH dan gejala pada bayi" onBack={onBack} illustration="/illu/illu-55-skrining-hipotiroid.png">
+    <SkriningFormShell title="Hipotiroid Kongenital" subtitle="Cek TSH dan gejala pada bayi" onBack={onBack} illustration="/illu/illu-55-skrining-hipotiroid.webp">
       <div className="space-y-3.5">
         <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
           <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Pemeriksaan TSH</h2>

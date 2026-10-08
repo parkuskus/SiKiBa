@@ -4,8 +4,8 @@ self.addEventListener("push", (event) => {
   const title = message.title || "Pengingat SIAGA Bunda";
   const options = {
     body: message.body || "Ada pengingat kesehatan untuk Bunda.",
-    icon: "/logo-pwa-512x512.png",
-    badge: "/logo-pwa-512x512.png",
+    icon: "/logo-pwa-512x512.webp",
+    badge: "/logo-pwa-512x512.webp",
     tag: message.tag || "siaga-reminder",
     data: { url: message.url || "/" },
   };

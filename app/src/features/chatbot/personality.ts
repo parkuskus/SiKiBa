@@ -7,7 +7,7 @@ export const NAMA = "Kira"
 export const GELAR = "Bidan Virtual SIAGA Bunda"
 export const TYPING = "Kira sedang mengetik..."
 export const PLACEHOLDER = "Ceritakan keluhan Bunda di sini"
-export const AVATAR = "/gambar-karakter.png"
+export const AVATAR = "/gambar-karakter.webp"
 export const JAWABAN_KEAMANAN = "Kira belum bisa memberi arahan yang berisiko. Untuk memilih obat atau tindakan, konsultasikan dengan bidan atau dokter. Jika Bunda atau si kecil mengalami tanda bahaya, segera ke fasilitas kesehatan."
 
 // Sapaan pembuka — dipilih acak biar tidak monoton

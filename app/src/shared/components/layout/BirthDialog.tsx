@@ -43,7 +43,7 @@ export default function BirthDialog({
             <DialogDescription className="min-w-0 flex-1 text-[13px] leading-relaxed text-[#33443F]">
               Isi tanggal dan data bayi agar kami dapat membuka cek nifas dan bayi.
             </DialogDescription>
-            <img src="/illu/illu-09-dialog.png" alt="Ibu memeluk bayi dengan hangat" className="h-[104px] w-[44%] shrink-0 object-contain object-center" />
+            <img src="/illu/illu-09-dialog.webp" alt="Ibu memeluk bayi dengan hangat" className="h-[104px] w-[44%] shrink-0 object-contain object-center" />
           </div>
         </DialogHeader>
         <div className="space-y-3.5 p-5 pt-4">

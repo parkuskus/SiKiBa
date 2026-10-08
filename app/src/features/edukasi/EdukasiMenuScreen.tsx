@@ -15,7 +15,7 @@ const topik = [
   { judul: "Perkembangan Plasenta, Tali Pusat, dan Ketuban", keterangan: "Kenali fungsi organ pendukung kehamilan", icon: Activity, thumbnail: "/s-06/s-06c/Thumbnail.webp", screen: "s06c" },
   { judul: "Perubahan Fisiologi Kehamilan", keterangan: "Adaptasi tubuh selama kehamilan", icon: HeartPulse, thumbnail: "/s-06/s-06d/Thumbnail.webp", screen: "fisiologi" },
   { judul: "Tanda Bahaya Kehamilan", keterangan: "Kenali gejala yang perlu diperiksa", icon: ShieldAlert, thumbnail: "/s-06/s-06e/Thumbnail.webp", screen: "bahaya" },
-  { judul: "Perubahan Psikologi/Emosi", keterangan: "Perubahan perasaan tiap trimester", icon: Brain, thumbnail: "/s-06/s-06f/Thumbnail.png", screen: "psikologi" },
+  { judul: "Perubahan Psikologi/Emosi", keterangan: "Perubahan perasaan tiap trimester", icon: Brain, thumbnail: "/s-06/s-06f/Thumbnail.webp", screen: "psikologi" },
 ] satisfies { judul: string; keterangan: string; icon: LucideIcon; thumbnail?: string; screen?: "fertilisasi" | "janin" | "s06c" | "fisiologi" | "bahaya" | "psikologi" }[]
 
 type Props = { onOpenFertilisasi: () => void; onOpenJanin: () => void; onOpenPlasenta: () => void; onOpenFisiologi: () => void; onOpenBahaya: () => void; onOpenPsikologi: () => void }
@@ -29,7 +29,7 @@ export default function EdukasiMenuScreen({ onOpenFertilisasi, onOpenJanin, onOp
           <div className="mt-2 text-sm leading-relaxed text-white/90">Kenali kehamilan dan siapkan langkah Bunda bersama si Kecil.</div>
         </div>
         <img
-          src="/illu/illu-08-diary.png"
+          src="/illu/illu-08-diary.webp"
           alt=""
           aria-hidden="true"
           className="pointer-events-none absolute -right-2 bottom-0 h-[138px] w-[140px] object-contain object-bottom"

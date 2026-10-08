@@ -166,7 +166,7 @@ export default function SkriningResultScreen({
       </main>
 
       <div className="relative mx-auto mt-auto w-full max-w-[480px]">
-        <img src="/illu/illu-11-florist-2.png" alt="" aria-hidden className="pointer-events-none w-full select-none object-cover" />
+        <img src="/illu/illu-11-florist-2.webp" alt="" aria-hidden className="pointer-events-none w-full select-none object-cover" />
       </div>
     </div>
   )

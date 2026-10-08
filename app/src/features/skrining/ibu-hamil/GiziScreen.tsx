@@ -44,7 +44,7 @@ export default function GiziScreen({ onBack, onSuccess }: { onBack: () => void; 
   }
 
   return (
-    <SkriningFormShell title="Status Gizi" subtitle="IMT LILA dan BB" onBack={onBack} illustration="/illu/illu-47-skrining-gizi.png">
+    <SkriningFormShell title="Status Gizi" subtitle="IMT LILA dan BB" onBack={onBack} illustration="/illu/illu-47-skrining-gizi.webp">
       <div className="space-y-3.5">
         <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
           <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Pengukuran</h2>

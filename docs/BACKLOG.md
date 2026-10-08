@@ -22,9 +22,9 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 - [x] Kartu menu skrining memilih hasil tersimpan terbaru per tipe, bukan hanya hasil hari ini; progress harian tetap dihitung dari tanggal hasil terbaru (2026-10-06).
 - [x] Brief prompt ilustrasi dan variasi layout header untuk 10 form skrining dibuat di `docs/SCREENING_HEADER_ILLUSTRATIONS.md` (2026-10-06); generate aset dan implementasi header masih pending.
 - [x] Sepuluh ilustrasi header skrining yang dibuat pengguna diurutkan dan dinamai `illu-46` sampai `illu-55` sesuai `docs/SCREENING_HEADER_ILLUSTRATIONS.md`.
-- [x] Header S-03a Faktor Risiko memakai komposisi asimetris dan ilustrasi `illu-46-skrining-risiko.png`; logo dihapus dari header agar ilustrasi tidak tertutup.
+- [x] Header S-03a Faktor Risiko memakai komposisi asimetris dan ilustrasi `illu-46-skrining-risiko.webp`; logo dihapus dari header agar ilustrasi tidak tertutup.
 - [x] Header S-03a dipisahkan dari sheet form tanpa overlap negatif agar ilustrasi dan konten form tidak bertabrakan.
-- [x] Header S-03b Status Gizi memakai layout header berilustrasi dengan aset `illu-47-skrining-gizi.png`.
+- [x] Header S-03b Status Gizi memakai layout header berilustrasi dengan aset `illu-47-skrining-gizi.webp`.
 - [x] Header berilustrasi dengan dekorasi lingkaran diterapkan ke seluruh 10 form skrining sesuai pasangan aset `illu-46` sampai `illu-55`.
 - [x] Ikon jadwal obat mengikuti status dosis: centang hijau, silang merah, dan tanda tanya abu-abu.
 - [x] Field judul diary dan placeholder-nya disamakan ukurannya dengan isi diary; judul tampil tebal saat placeholder maupun saat diketik.
@@ -46,12 +46,14 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 - [x] Birth Plan dipindahkan dari katalog edukasi ke kartu akses cepat tersendiri di Beranda, mengikuti revisi layout (2026-10-07).
 - [x] Judul katalog S-06a–S-06f diseragamkan; thumbnail S-06f dipakai di katalog saat layar detailnya belum tersedia (2026-10-08).
 - [x] Card “Pelajari lewat video” ditambahkan di atas materi S-06a dan S-06b dengan video MP4 lokal serta kontrol native (2026-10-08).
-- [x] Persona chatbot diperbarui menjadi Kira: avatar `gambar-karakter.png`, sapaan/FAQ offline, label UI, dan prompt Edge Function diselaraskan (2026-10-08).
-- [x] Thumbnail S-06e `Thumbnail.png` dikonversi menjadi `Thumbnail.webp` dan dipakai pada tile Tanda Bahaya Kehamilan (2026-10-08).
+- [x] Persona chatbot diperbarui menjadi Kira: avatar `gambar-karakter.webp`, sapaan/FAQ offline, label UI, dan prompt Edge Function diselaraskan (2026-10-08).
+- [x] Thumbnail S-06e dikonversi menjadi WebP dan dipakai pada tile Tanda Bahaya Kehamilan (2026-10-08).
 - [x] Layar S-06e Tanda Bahaya Kehamilan dibuat dengan pencarian, tiga kelompok gejala, kartu buka/tutup, dan video inline otomatis untuk 11 tanda kehamilan yang memiliki video relevan (2026-10-08).
 - [x] Layar S-06f Perubahan Psikologi/Emosi dibuat dengan tab trimester, perasaan, penyebab, dukungan keluarga, tanda perlu mencari bantuan, thumbnail katalog, berbagi catatan, dan tautan langsung ke EPDS S-03f (2026-10-08).
 - [x] Header detail S-06a–S-06f diseragamkan mengikuti referensi: panel sage, navigasi kembali, nomor dan label materi di tengah, tombol bagikan, judul dan deskripsi; thumbnail tetap dipakai pada katalog, bukan header detail (2026-10-08).
 - [x] Margin atas pada panel konten katalog dan S-06a–S-06f dihapus agar konten langsung mengikuti header tanpa bertumpuk (2026-10-08).
+- [x] Asset `illu-13-header-pengingat.webp` dipasang di kanan bawah header Pengingat dengan pola ilustrasi header Belajar (2026-10-08).
+- [x] Seluruh raster image di `app/public` dan ikon vektor obat dikonversi ke WebP; referensi kode, favicon, ikon manifest, push, dan precache diperbarui (2026-10-08).
 - [x] Birth Plan P4K diimplementasikan: Dexie v6, antrean upsert Supabase dan migration 009 dengan RLS, form autosave 25 butir di Beranda mode hamil, pemilihan versi saat konflik lokal/cloud, tampilan Profil read-only, serta PDF bagikan/unduh (2026-10-08).
 - [x] Migration `009_birth_plans.sql` diterapkan ke proyek Supabase SIAGA Bunda. Smoke test RLS transaksional memverifikasi select/insert/update milik sendiri, penolakan akses lintas pengguna, akses baca authenticated, dan penolakan baca anon; seluruh data uji di-rollback. Skrip uji tersimpan di `supabase/tests/009_birth_plans_rls.sql` (2026-10-08).
 

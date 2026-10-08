@@ -24,7 +24,7 @@ export default function DmgScreen({ onBack, onSuccess }: { onBack: () => void; o
   }
 
   return (
-    <SkriningFormShell title="Diabetes Gestasional" subtitle="Skrining risiko gula darah" onBack={onBack} illustration="/illu/illu-50-skrining-dmg.png">
+    <SkriningFormShell title="Diabetes Gestasional" subtitle="Skrining risiko gula darah" onBack={onBack} illustration="/illu/illu-50-skrining-dmg.webp">
       <div className="space-y-3.5">
         <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
           <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Data Ibu</h2>

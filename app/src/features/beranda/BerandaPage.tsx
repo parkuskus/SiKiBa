@@ -144,7 +144,7 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
             <h1 className="text-[30px] font-extrabold tracking-tight leading-none" style={{ color: "#fff", margin: 0, marginTop: 10 }}>Halo, {nama}</h1>
             <p className="text-[14px] leading-relaxed text-white/90" style={{ margin: 0, marginTop: 15}}>Yuk, jaga kesehatan diri dan si kecil di setiap tahap kehamilan</p>
           </div>
-          <img src="/illu/illu-12-hero-2.png" alt="Bunda hamil" className="h-[170px] w-[130px] shrink-0 rounded-[20px] object-cover" />
+          <img src="/illu/illu-12-hero-2.webp" alt="Bunda hamil" className="h-[170px] w-[130px] shrink-0 rounded-[20px] object-cover" />
         </div>
         
       </div>

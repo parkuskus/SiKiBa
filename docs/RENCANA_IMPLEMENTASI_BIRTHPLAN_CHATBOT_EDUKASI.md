@@ -5,7 +5,7 @@ Rencana kerja lanjutan untuk SIAGA Bunda. Dokumen ini memetakan perubahan UI, da
 ## Tujuan dan batasan
 
 1. Birth Plan/P4K menjadi form pribadi yang bisa diedit dari kartu khusus di Beranda saat mode kehamilan, tersimpan otomatis, dapat dilanjutkan saat dibuka kembali, dibagikan sebagai PDF, dan ditampilkan read-only di Profil.
-2. Chatbot memakai ilustrasi karakter baru dan persona bidan virtual bernama Kira sesuai `docs/karakter-chatbot.png`; gambar karakter polos berada di `app/public/gambar-karakter.png`.
+2. Chatbot memakai ilustrasi karakter baru dan persona bidan virtual bernama Kira sesuai `docs/karakter-chatbot.png`; gambar karakter polos berada di `app/public/gambar-karakter.webp`.
 3. Perbarui header dan materi S-06a–S-06f, judul enam materi yang sudah disebutkan, pemutaran video tanda bahaya, dan thumbnail yang konsisten.
 4. Gunakan sumber klinis yang dapat ditelusuri dan ditinjau pakar. Panduan kesehatan tidak ditulis sebagai diagnosis atau pengganti bidan/dokter.
 
@@ -111,11 +111,11 @@ type BirthPlan = {
 
 ### Observasi karakter
 
-`docs/karakter-chatbot.png` memberi persona **Kira · Bidan Virtual SIAGA Bunda**, dengan peran keluhan ibu dan respons awal. Karakter mendengarkan, memberi informasi awal yang aman, lalu mengarahkan langkah berikutnya. `app/public/gambar-karakter.png` adalah ilustrasi karakter tanpa teks dan lebih sesuai untuk avatar/header UI. Hindari menjanjikan diagnosis atau menggambarkan Kira sebagai pengganti bidan manusia.
+`docs/karakter-chatbot.png` memberi persona **Kira · Bidan Virtual SIAGA Bunda**, dengan peran keluhan ibu dan respons awal. Karakter mendengarkan, memberi informasi awal yang aman, lalu mengarahkan langkah berikutnya. `app/public/gambar-karakter.webp` adalah ilustrasi karakter tanpa teks dan lebih sesuai untuk avatar/header UI. Hindari menjanjikan diagnosis atau menggambarkan Kira sebagai pengganti bidan manusia.
 
 ### Perubahan rencana
 
-- Ganti emoji avatar di `personality.ts` dan avatar chat pada `ChatbotPage.tsx` dengan `<img src="/gambar-karakter.png">`; gunakan crop object-fit agar wajah/stetoskop terlihat pada ukuran header dan bubble.
+- Ganti emoji avatar di `personality.ts` dan avatar chat pada `ChatbotPage.tsx` dengan `<img src="/gambar-karakter.webp">`; gunakan crop object-fit agar wajah/stetoskop terlihat pada ukuran header dan bubble.
 - Ubah nama, sapaan, label typing, placeholder, jawaban FAQ, empty/fallback, error dan aksesibilitas dari Siba menjadi Kira. Pastikan aturan copy SIAGA Bunda tetap berlaku.
 - Ubah `SYSTEM_PROMPT` di `supabase/functions/chat/index.ts` mengikuti persona visual: dengarkan keluhan, akui perasaan tanpa menghakimi, berikan informasi umum ringkas, beri satu atau lebih langkah aman, dan arahkan pemeriksaan bila perlu.
 - Pertahankan batas klinis yang ada: tidak mendiagnosis, tidak menetapkan obat/dosis, menyarankan tenaga kesehatan untuk keputusan klinis, dan tanda gawat langsung ke fasilitas kesehatan. Eskalasi chatbot harus memakai overlay darurat yang sama sesuai backlog, bukan hanya teks biasa.
@@ -167,7 +167,7 @@ Gunakan ejaan **Plasenta** pada judul layar meskipun daftar awal pengguna menuli
 
 ### Aset yang sudah tersedia
 
-- S-06a–S-06d mempunyai thumbnail WebP; S-06f mempunyai `Thumbnail.png`.
+- Seluruh image asset di `app/public` sekarang menggunakan WebP.
 - S-06e kini memiliki `s-06e/Thumbnail.webp` sebagai cover katalog; aset disediakan pengguna dan dikonversi dari PNG.
 - S-06g menjadi form personal, bukan kartu materi edukasi. Untuk kartu Beranda, prioritaskan ikon/ilustrasi tas persalinan yang relevan; jangan ambil gambar stok tanpa lisensi.
 - Gunakan aset lokal dahulu sebelum mencari gambar tambahan. Periksa isi visual, crop, resolusi, lisensi, atribusi dan konsistensi merek sebelum bundling.
@@ -202,7 +202,7 @@ Gunakan sebagai brief/prompt awal dan sesuaikan dengan generator. Rasio cover 4:
 | Sync | `app/src/data/sync.ts`, `syncBirthPlan` dan enqueue upsert |
 | Birth Plan | fitur baru di `app/src/features/birth-plan/` atau fitur edukasi sesuai pola navigasi; card dari `BerandaPage.tsx`; read-only dari `ProfilPage.tsx` |
 | PDF | `app/src/services/exportService.ts` atau helper modul Birth Plan yang memakai jsPDF terpasang |
-| Chatbot | `personality.ts`, `ChatbotPage.tsx`, `supabase/functions/chat/index.ts`, asset `app/public/gambar-karakter.png` |
+| Chatbot | `personality.ts`, `ChatbotPage.tsx`, `supabase/functions/chat/index.ts`, asset `app/public/gambar-karakter.webp` |
 | Edukasi | `FertilisasiScreen.tsx`, `JaninWeekScreen.tsx`, `PlasentaKetubanScreen.tsx`, `FisiologiScreen.tsx`, komponen/data S-06e dan S-06f, katalog, `docs/ASSETS.md` |
 | Panduan | dokumen ini, `docs/BACKLOG.md`, referensi konten yang disetujui |
 
@@ -218,6 +218,7 @@ Daftar ini indikatif. Sebelum implementasi, periksa ulang status working tree, m
 - 2026-10-08: Migration 009 diterapkan ke proyek Supabase SIAGA Bunda. Smoke test RLS transaksional sukses untuk pembacaan dan perubahan data sendiri, penolakan lintas pengguna, serta akses anon; seluruh perubahan uji di-rollback. Skrip dapat dijalankan ulang lewat `supabase/tests/009_birth_plans_rls.sql`. Sinkronisasi client offline/multi-device masih menunggu QA aplikasi.
 - 2026-10-08: Layar S-06f dibuat dengan thumbnail katalog, tiga pilihan trimester, bagian perasaan/penyebab/dukungan, panduan mencari bantuan, bagikan catatan emosi, dan deep link langsung ke EPDS S-03f saat mode kehamilan. Pada mode nifas, tombol EPDS tidak ditampilkan karena skrining tersebut hanya tersedia di mode kehamilan saat ini.
 - 2026-10-08: Header detail S-06a–S-06f diperbarui menjadi satu komponen/pola mengikuti referensi terbaru. Thumbnail tetap tampil di katalog dan video S-06a/S-06b, tidak di header detail.
+- 2026-10-08: Semua image asset dalam `app/public` dikonversi ke WebP dan referensi aplikasi/PWA diperbarui. WebP ikut dicakup precache service worker.
 
 ## Kriteria penerimaan
 

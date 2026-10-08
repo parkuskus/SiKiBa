@@ -53,11 +53,11 @@ export default function SplashScreen({ onDaftar, onMasuk, onAutoMasuk }: Props) 
     <div className="min-h-[100dvh] bg-[#FFFCF6] flex flex-col">
       <div className="rounded-b-[32px] bg-[#4A6E54] px-6 pb-8 pt-[max(1.75rem,env(safe-area-inset-top))] mx-auto w-full max-w-[480px]">
         <div className="mx-auto flex w-full max-w-[480px] items-center justify-center gap-2">
-          <img src="/logo-siaga-transparent.png" alt="Logo SIAGA Bunda" className="size-9 rounded-xl bg-white p-1 object-contain" />
+          <img src="/logo-siaga-transparent.webp" alt="Logo SIAGA Bunda" className="size-9 rounded-xl bg-white p-1 object-contain" />
           <p className="text-lg font-extrabold tracking-tight text-white">SIAGA Bunda</p>
         </div>
         <div className="mx-auto mt-4 w-full max-w-[480px]">
-          <img src="/illu/illu-01-hero.png" alt="Bunda hamil" className="mx-auto h-56 w-auto object-contain" />
+          <img src="/illu/illu-01-hero.webp" alt="Bunda hamil" className="mx-auto h-56 w-auto object-contain" />
           <h1 className="mt-4 text-center text-[30px] font-extrabold tracking-tight leading-tight" style={{ color: "#ffffff", marginBottom: 2 }}>SIAGA Bunda</h1>
           <p className="mt-1 text-center text-sm text-white/90">Siaga menjaga Bunda dan buah hati</p>
         </div>
@@ -94,7 +94,7 @@ export default function SplashScreen({ onDaftar, onMasuk, onAutoMasuk }: Props) 
       </div>
 
       <div className="relative mx-auto mt-auto w-full max-w-[480px]">
-        <img src="/illu/illu-11-florist-2.png" alt="" aria-hidden className="pointer-events-none w-full select-none object-cover" />
+        <img src="/illu/illu-11-florist-2.webp" alt="" aria-hidden className="pointer-events-none w-full select-none object-cover" />
         <p className="absolute inset-x-0 bottom-4 left-4 text-center text-[8px] text-[#33443F]">Versi 1.0.0 Penelitian Poltekkes Bandung 2026</p>
       </div>
     </div>

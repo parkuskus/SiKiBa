@@ -43,7 +43,7 @@ export default function SkriningFormShell({
       )}
       <div className={`relative z-20 mx-auto flex w-full max-w-[480px] flex-1 flex-col pb-5 ${illustration ? "rounded-t-[30px] bg-[#FFFCF6] px-5 pt-5" : "px-6 pt-5"}`}>{children}</div>
       <div className="relative mx-auto mt-auto w-full max-w-[480px]">
-        <img src="/illu/illu-11-florist-2.png" alt="" aria-hidden className="pointer-events-none w-full select-none object-cover" />
+        <img src="/illu/illu-11-florist-2.webp" alt="" aria-hidden className="pointer-events-none w-full select-none object-cover" />
       </div>
     </div>
   )

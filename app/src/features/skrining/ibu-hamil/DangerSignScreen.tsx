@@ -65,7 +65,7 @@ export default function DangerSignScreen({ onBack, onSuccess }: { onBack: () => 
   }
 
   return (
-    <SkriningFormShell title="Tanda Bahaya" subtitle="Cek mandiri tanda bahaya" onBack={onBack} illustration="/illu/illu-48-skrining-bahaya.png">
+    <SkriningFormShell title="Tanda Bahaya" subtitle="Cek mandiri tanda bahaya" onBack={onBack} illustration="/illu/illu-48-skrining-bahaya.webp">
       <div className="space-y-2.5">
         <p className="px-1 text-[13px] text-[#33443F]">Tandai gejala yang Bunda rasakan</p>
         {GEJALA.map((item, index) => {

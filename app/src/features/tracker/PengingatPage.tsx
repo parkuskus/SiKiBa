@@ -224,9 +224,12 @@ export default function PengingatPage({ setShowBottomNav }: { setShowBottomNav: 
 
   return (
     <div className="-mx-4 -mt-5">
-      <header className="rounded-b-[32px] bg-[#4A6E54] px-6 pb-6 pt-7 text-white">
-        <h1 className="!m-0 text-3xl font-bold leading-tight">Pengingat</h1>
-        <p className="mt-1 text-xs leading-relaxed text-white/90">Cek perjalanan kehamilan, pengingat obat, dan lain lain</p>
+      <header className="relative isolate overflow-hidden rounded-b-[32px] bg-[#4A6E54] px-6 pb-11 pt-7 text-white">
+        <div className="relative z-10 max-w-[220px]">
+          <h1 className="!m-0 text-[28px] font-extrabold leading-tight">Pengingat</h1>
+          <p className="mt-2 text-sm leading-relaxed text-white/90">Cek perjalanan kehamilan, obat, dan jadwal penting lainnya.</p>
+        </div>
+        <img src="/illu/illu-13-header-pengingat.webp" alt="" aria-hidden="true" className="pointer-events-none absolute -right-2 bottom-0 h-[138px] w-[140px] object-contain object-bottom" />
       </header>
 
       <div className="space-y-5 px-4 pb-6 pt-5">

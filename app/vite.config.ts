@@ -22,12 +22,12 @@ export default defineConfig({
         start_url: '/',
         scope: '/',
         icons: [
-          { src: 'logo-pwa-512x512.png', sizes: '192x192 512x512', type: 'image/png', purpose: 'any maskable' },
+          { src: 'logo-pwa-512x512.webp', sizes: '192x192 512x512', type: 'image/webp', purpose: 'any maskable' },
         ],
       },
       workbox: {
         importScripts: ['push-sw.js'],
-        globPatterns: ['**/*.{js,css,html,woff2,png,svg}'],
+        globPatterns: ['**/*.{js,css,html,woff2,webp}'],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/maps\.googleapis\.com\/.*/i,

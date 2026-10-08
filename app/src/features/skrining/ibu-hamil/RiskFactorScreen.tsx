@@ -188,7 +188,7 @@ export default function RiskFactorScreen({
   const back = () => step === 1 ? onBack() : setStep((step - 1) as 1 | 2 | 3)
 
   return (
-    <SkriningFormShell title="Faktor Risiko" subtitle="Skor Poedji Rochjati" onBack={back} illustration="/illu/illu-46-skrining-risiko.png">
+    <SkriningFormShell title="Faktor Risiko" subtitle="Skor Poedji Rochjati" onBack={back} illustration="/illu/illu-46-skrining-risiko.webp">
       <div className="space-y-3.5">
         <div className="px-1">
           <div className="flex items-center justify-between text-xs text-[#33443F]">

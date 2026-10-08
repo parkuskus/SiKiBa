@@ -40,7 +40,7 @@ export default function MentalScreen({ onBack, onSuccess }: { onBack: () => void
   }
 
   return (
-    <SkriningFormShell title="Kesehatan Mental" subtitle="Kuesioner EPDS" onBack={onBack} illustration="/illu/illu-51-skrining-mental.png">
+    <SkriningFormShell title="Kesehatan Mental" subtitle="Kuesioner EPDS" onBack={onBack} illustration="/illu/illu-51-skrining-mental.webp">
       <div className="space-y-3.5">
         <section className="space-y-2 rounded-[24px] bg-[#EAF4F0] p-3.5">
           <div className="flex items-end justify-between gap-2">

@@ -321,8 +321,8 @@ export default function SkriningPage({
         : []
 
   const emptyMessage = skriningTab === "nifas"
-    ? { image: "/illu/illu-06-nifas.png", alt: "Ibu dan bayi pada masa nifas", title: "Cek nifas akan terbuka setelah melahirkan" }
-    : { image: "/illu/illu-07-bayi.png", alt: "Bayi baru lahir", title: "Cek bayi akan terbuka setelah melahirkan" }
+    ? { image: "/illu/illu-06-nifas.webp", alt: "Ibu dan bayi pada masa nifas", title: "Cek nifas akan terbuka setelah melahirkan" }
+    : { image: "/illu/illu-07-bayi.webp", alt: "Bayi baru lahir", title: "Cek bayi akan terbuka setelah melahirkan" }
 
   return (
     <div className="-mx-4 -mt-5">

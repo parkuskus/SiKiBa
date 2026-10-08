@@ -23,16 +23,16 @@ Create a warm, polished flat-vector illustration for SIAGA Bunda, an Indonesian 
 
 | ID | Nama layar | File aset yang disarankan | Variasi header |
 |---|---|---|---|
-| S-03a | Faktor Risiko Kehamilan | `app/public/illu/illu-46-skrining-risiko.png` | Arch pelindung di kanan, judul rata kiri |
-| S-03b | Status Gizi | `app/public/illu/illu-47-skrining-gizi.png` | Ilustrasi tile peach mengambang di bawah judul |
-| S-03c | Tanda Bahaya Kehamilan | `app/public/illu/illu-48-skrining-bahaya.png` | Komposisi diagonal lembut dan ikon peringatan netral |
-| S-03d | Preeklamsia | `app/public/illu/illu-49-skrining-preeklamsia.png` | Bentuk monitor melengkung di kanan, ruang judul lega |
-| S-03e | Diabetes Gestasional | `app/public/illu/illu-50-skrining-dmg.png` | Pola titik/glukosa abstrak dengan ilustrasi dalam lingkaran |
-| S-03f | Kesehatan Mental | `app/public/illu/illu-51-skrining-mental.png` | Halo pink-peach dan ekspresi suportif |
-| S-04 | Skrining Masa Nifas | `app/public/illu/illu-52-skrining-nifas.png` | Ilustrasi ibu dan bayi dalam siluet lengkung |
-| S-04a | Laktasi dan Menyusui | `app/public/illu/illu-53-skrining-laktasi.png` | Komposisi horizontal intim, ibu dan bayi di sisi kanan |
-| S-05a | Ikterus Neonatal | `app/public/illu/illu-54-skrining-ikterus.png` | Sunburst cream, bayi nyaman, tanpa kulit kuning berlebihan |
-| S-05b | Hipotiroid Kongenital | `app/public/illu/illu-55-skrining-hipotiroid.png` | Kartu skrining abstrak dan bayi, gaya klinis yang lembut |
+| S-03a | Faktor Risiko Kehamilan | `app/public/illu/illu-46-skrining-risiko.webp` | Arch pelindung di kanan, judul rata kiri |
+| S-03b | Status Gizi | `app/public/illu/illu-47-skrining-gizi.webp` | Ilustrasi tile peach mengambang di bawah judul |
+| S-03c | Tanda Bahaya Kehamilan | `app/public/illu/illu-48-skrining-bahaya.webp` | Komposisi diagonal lembut dan ikon peringatan netral |
+| S-03d | Preeklamsia | `app/public/illu/illu-49-skrining-preeklamsia.webp` | Bentuk monitor melengkung di kanan, ruang judul lega |
+| S-03e | Diabetes Gestasional | `app/public/illu/illu-50-skrining-dmg.webp` | Pola titik/glukosa abstrak dengan ilustrasi dalam lingkaran |
+| S-03f | Kesehatan Mental | `app/public/illu/illu-51-skrining-mental.webp` | Halo pink-peach dan ekspresi suportif |
+| S-04 | Skrining Masa Nifas | `app/public/illu/illu-52-skrining-nifas.webp` | Ilustrasi ibu dan bayi dalam siluet lengkung |
+| S-04a | Laktasi dan Menyusui | `app/public/illu/illu-53-skrining-laktasi.webp` | Komposisi horizontal intim, ibu dan bayi di sisi kanan |
+| S-05a | Ikterus Neonatal | `app/public/illu/illu-54-skrining-ikterus.webp` | Sunburst cream, bayi nyaman, tanpa kulit kuning berlebihan |
+| S-05b | Hipotiroid Kongenital | `app/public/illu/illu-55-skrining-hipotiroid.webp` | Kartu skrining abstrak dan bayi, gaya klinis yang lembut |
 
 ## Prompt ilustrasi per skrining
 

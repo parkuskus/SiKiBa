@@ -138,7 +138,7 @@ export default function PreeklamsiaScreen({ onBack, onSuccess }: { onBack: () =>
   const back = () => step === 1 ? onBack() : setStep(1)
 
   return (
-    <SkriningFormShell title="Preeklamsia" subtitle="Tekanan darah dan faktor risiko" onBack={back} illustration="/illu/illu-49-skrining-preeklamsia.png">
+    <SkriningFormShell title="Preeklamsia" subtitle="Tekanan darah dan faktor risiko" onBack={back} illustration="/illu/illu-49-skrining-preeklamsia.webp">
       <div className="space-y-3.5">
         <div className="px-1">
           <div className="flex items-center justify-between text-xs text-[#33443F]">
