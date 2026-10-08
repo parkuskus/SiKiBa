@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
-import { ArrowLeft, Search, ShieldAlert, TriangleAlert, Video } from "lucide-react"
+import { Search, ShieldAlert, TriangleAlert, Video } from "lucide-react"
+import EdukasiDetailHeader from "./EdukasiDetailHeader"
 
 const kelompok = ["Ibu dan janin", "Kondisi tubuh", "Kesehatan jiwa"] as const
 type Kelompok = (typeof kelompok)[number]
@@ -24,7 +25,6 @@ function TandaCard({ item, terbuka, onToggle }: { item: (typeof tanda)[number]; 
 
   useEffect(() => {
     if (!terbuka) return
-    setAutoplayGagal(false)
     void video.current?.play().catch(() => setAutoplayGagal(true))
   }, [terbuka])
 
@@ -34,7 +34,7 @@ function TandaCard({ item, terbuka, onToggle }: { item: (typeof tanda)[number]; 
         type="button"
         aria-expanded={terbuka}
         aria-controls={`tanda-${item.id}`}
-        onClick={onToggle}
+        onClick={() => { setAutoplayGagal(false); onToggle() }}
         className="flex min-h-[76px] w-full items-center gap-3 p-3.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#4A6E54]"
       >
         <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#FFF1E8] text-[#7A4310]"><TriangleAlert className="size-5" aria-hidden="true" /></span>
@@ -72,20 +72,9 @@ export default function TandaBahayaScreen({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="-mx-4 -mt-5">
-      <header className="rounded-b-[32px] bg-[#4A6E54] px-5 pb-11 pt-6 text-white">
-        <div className="flex items-center gap-3">
-          <button type="button" onClick={() => { onBack(); window.scrollTo({ top: 0, behavior: "smooth" }) }} aria-label="Kembali ke materi edukasi" className="grid size-11 shrink-0 place-items-center rounded-full bg-white/12 text-white hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
-            <ArrowLeft className="size-5" aria-hidden="true" />
-          </button>
-          <div className="min-w-0 flex-1">
-            <h1 className="!m-0 text-xl font-extrabold leading-tight">Tanda Bahaya Kehamilan</h1>
-            <p className="mt-1 text-sm leading-relaxed text-white/90">Kenali gejala yang perlu segera diperiksa.</p>
-          </div>
-          <img src="/s-06/s-06e/Thumbnail.webp" alt="" aria-hidden="true" className="h-[76px] w-[76px] shrink-0 rounded-[16px] bg-[#FFFDEC] object-cover sm:h-[88px] sm:w-[104px]" />
-        </div>
-      </header>
+      <EdukasiDetailHeader nomor={5} label="Tanda Bahaya" judul="Tanda Bahaya Kehamilan" deskripsi="Kenali gejala yang perlu segera diperiksa." teksBagikan="Baca materi Tanda Bahaya Kehamilan di SIAGA Bunda." onBack={onBack} />
 
-      <main className="relative mx-4 -mt-7 rounded-t-[32px] bg-[#FFFCF6] px-5 pb-36 pt-6">
+      <main className="relative mx-4 rounded-[32px] bg-[#FFFCF6] px-5 pb-36 pt-6">
         <div className="flex items-start gap-3 rounded-[20px] bg-[#FFE2E2] p-4 text-[#8E2424]">
           <ShieldAlert className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
           <p className="text-sm font-semibold leading-relaxed">Jika Bunda mengalami salah satu gejala di bawah ini, segera hubungi bidan atau dokter. Jangan menunggu gejala memburuk.</p>

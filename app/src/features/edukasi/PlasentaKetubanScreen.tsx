@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { ArrowLeft, CircleHelp, Droplets, Shield, Thermometer, Wind } from "lucide-react"
+import EdukasiDetailHeader from "./EdukasiDetailHeader"
 
 type Props = { onBack: () => void }
 type TabId = "ketuban" | "tali-pusat" | "plasenta"
@@ -40,31 +41,9 @@ export default function PlasentaKetubanScreen({ onBack }: Props) {
 
   return (
     <div className="-mx-4 -mt-5">
-      <header className="rounded-b-[32px] bg-[#4A6E54] px-5 pb-11 pt-6 text-white">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => { onBack(); window.scrollTo({ top: 0, behavior: "smooth" }) }}
-            aria-label="Kembali ke materi edukasi"
-            className="grid size-11 shrink-0 place-items-center rounded-full bg-white/12 text-white transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-          >
-            <ArrowLeft className="size-5" aria-hidden="true" />
-          </button>
-          <div className="min-w-0 flex-1">
-            <div className="text-xs font-semibold text-white/80">Materi 3</div>
-            <h1 className="!m-0 mt-0.5 text-lg font-extrabold leading-tight">Perkembangan Plasenta, Tali Pusat, dan Ketuban</h1>
-            <div className="mt-1 text-sm leading-relaxed text-white/90">Kenali fungsi organ pendukung kehamilan.</div>
-          </div>
-          <img
-            src="/s-06/s-06c/Thumbnail.webp"
-            alt=""
-            aria-hidden="true"
-            className="h-[76px] w-[76px] shrink-0 rounded-[16px] bg-[#FFFDEC] object-cover sm:h-[88px] sm:w-[104px]"
-          />
-        </div>
-      </header>
+      <EdukasiDetailHeader nomor={3} label="Organ Pendukung" judul="Perkembangan Plasenta, Tali Pusat, dan Ketuban" deskripsi="Kenali fungsi organ pendukung kehamilan." teksBagikan="Baca materi tentang plasenta, tali pusat, dan ketuban di SIAGA Bunda." onBack={onBack} />
 
-      <main className="relative mx-4 mt-4 rounded-[32px] bg-[#FFFCF6] px-5 pb-36 pt-6">
+      <main className="relative mx-4 rounded-[32px] bg-[#FFFCF6] px-5 pb-36 pt-6">
         <div role="tablist" aria-label="Pilih materi" className="grid grid-cols-3 rounded-full bg-[#EAF4F0] p-1">
           {tabs.map((item) => {
             const active = item.id === tab

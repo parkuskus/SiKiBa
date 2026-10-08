@@ -41,19 +41,22 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 - [x] Rencana layout dan 4 prompt ilustrasi internal S-06c dibuat di `docs/RENCANA_EDUKASI_S06C.md`; empat aset S-06c telah dibuat, ditinjau secara visual, dikonversi ke WebP, dan PNG sumber dihapus.
 - [x] S-06c diimplementasikan sebagai satu layar tab ketuban, tali pusat, dan plasenta pada `PlasentaKetubanScreen.tsx`, menggunakan empat ilustrasi WebP yang direncanakan (2026-10-07).
 - [x] Rencana layout S-06d dan pemetaan 12 ilustrasi (thumbnail + 11 sistem) diperbarui di `docs/RENCANA_EDUKASI_S06D.md`; 12 PNG dari folder S-06d dikonversi ke WebP dan dimasukkan ke katalog aset.
-- [x] S-06d Perubahan Fisiologi diimplementasikan sebagai daftar 11 sistem dengan pencarian, ilustrasi accordion, thumbnail header, dan navigasi dari katalog pada `FisiologiScreen.tsx` serta `fisiologiData.ts`.
+- [x] S-06d Perubahan Fisiologi diimplementasikan sebagai daftar 11 sistem dengan pencarian, ilustrasi accordion, ilustrasi pada materi, dan navigasi dari katalog pada `FisiologiScreen.tsx` serta `fisiologiData.ts`.
 - [x] Katalog S-06 diperbarui: materi Keluhan Umum dihapus dan Birth Plan & Persiapan Persalinan (P4K) menjadi S-06g; tile S-06h duplikat dihilangkan (2026-10-07).
 - [x] Birth Plan dipindahkan dari katalog edukasi ke kartu akses cepat tersendiri di Beranda, mengikuti revisi layout (2026-10-07).
-- [x] Judul katalog S-06a–S-06f diseragamkan; header detail S-06a–S-06d diperbarui, thumbnail S-06c ditambahkan di header, dan thumbnail S-06f dipakai pada tile katalog karena layar detail S-06f belum tersedia (2026-10-08).
+- [x] Judul katalog S-06a–S-06f diseragamkan; thumbnail S-06f dipakai di katalog saat layar detailnya belum tersedia (2026-10-08).
 - [x] Card “Pelajari lewat video” ditambahkan di atas materi S-06a dan S-06b dengan video MP4 lokal serta kontrol native (2026-10-08).
 - [x] Persona chatbot diperbarui menjadi Kira: avatar `gambar-karakter.png`, sapaan/FAQ offline, label UI, dan prompt Edge Function diselaraskan (2026-10-08).
 - [x] Thumbnail S-06e `Thumbnail.png` dikonversi menjadi `Thumbnail.webp` dan dipakai pada tile Tanda Bahaya Kehamilan (2026-10-08).
 - [x] Layar S-06e Tanda Bahaya Kehamilan dibuat dengan pencarian, tiga kelompok gejala, kartu buka/tutup, dan video inline otomatis untuk 11 tanda kehamilan yang memiliki video relevan (2026-10-08).
+- [x] Layar S-06f Perubahan Psikologi/Emosi dibuat dengan tab trimester, perasaan, penyebab, dukungan keluarga, tanda perlu mencari bantuan, thumbnail katalog, berbagi catatan, dan tautan langsung ke EPDS S-03f (2026-10-08).
+- [x] Header detail S-06a–S-06f diseragamkan mengikuti referensi: panel sage, navigasi kembali, nomor dan label materi di tengah, tombol bagikan, judul dan deskripsi; thumbnail tetap dipakai pada katalog, bukan header detail (2026-10-08).
+- [x] Margin atas pada panel konten katalog dan S-06a–S-06f dihapus agar konten langsung mengikuti header tanpa bertumpuk (2026-10-08).
 - [x] Birth Plan P4K diimplementasikan: Dexie v6, antrean upsert Supabase dan migration 009 dengan RLS, form autosave 25 butir di Beranda mode hamil, pemilihan versi saat konflik lokal/cloud, tampilan Profil read-only, serta PDF bagikan/unduh (2026-10-08).
 - [x] Migration `009_birth_plans.sql` diterapkan ke proyek Supabase SIAGA Bunda. Smoke test RLS transaksional memverifikasi select/insert/update milik sendiri, penolakan akses lintas pengguna, akses baca authenticated, dan penolakan baca anon; seluruh data uji di-rollback. Skrip uji tersimpan di `supabase/tests/009_birth_plans_rls.sql` (2026-10-08).
 
 ### Belum selesai / perlu konfirmasi
-- [ ] S-06 Edukasi: S-06a–S-06e tersedia; S-06f–S-06g masih “Segera hadir”. Tinjau tanda dari ekstraksi yang belum memiliki video relevan sebelum menambahkannya ke S-06e; materi nifas dan laktasi diarahkan ke S-04/S-04a.
+- [ ] S-06 Edukasi: S-06a–S-06f tersedia; S-06g belum dibuat. Tinjau tanda dari ekstraksi yang belum memiliki video relevan sebelum menambahkannya ke S-06e; materi nifas dan laktasi diarahkan ke S-04/S-04a.
 - [ ] QA sinkronisasi Birth Plan dari aplikasi pada akun uji, termasuk antrean offline, pemulihan di perangkat lain, konflik dua versi, serta mode hamil/nifas.
 - [ ] Validasi seluruh algoritma klinis oleh SpOG/bidan senior. Ambang dan rekomendasi belum boleh dianggap tervalidasi untuk pelayanan.
 - [ ] Ethical Clearance sebelum uji coba dengan partisipan.
@@ -80,6 +83,6 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 
 ## Urutan kerja berikutnya
 1. QA sinkronisasi Birth Plan dari aplikasi pada akun uji, termasuk antrean offline, pemulihan cloud, konflik dua versi, PDF, dan mode kehamilan/nifas.
-2. Implementasikan layar S-06f Perubahan Psikologi/Emosi dengan sumber dan materi yang ditinjau pakar.
-3. Lanjutkan review konten edukasi dan validasi klinis, lalu QA lintas perangkat dan proses Ethical Clearance/UAT.
+2. Lengkapi S-06g P4K dan konten S-06e yang belum memiliki video relevan; lakukan review pakar sebelum publikasi.
+3. Lanjutkan QA lintas perangkat, validasi klinis, dan proses Ethical Clearance/UAT.
 4. Siapkan deployment produksi dan distribusi yang dipilih.

@@ -26,6 +26,7 @@ export default function App() {
   })
   const [showBirth, setShowBirth] = useState(false)
   const [showChat, setShowChat] = useState(false)
+  const [openMentalFromEdu, setOpenMentalFromEdu] = useState(false)
   const [onboarding, setOnboarding] = useState<Onboarding>("splash")
   const [showBottomNav, setShowBottomNav] = useState(true)
 
@@ -34,6 +35,7 @@ export default function App() {
     try { setIsPostpartum(localStorage.getItem("siaga_isPostpartum") === "true") } catch {}
     setOnboarding("app")
   }, [])
+  const consumeMentalDeepLink = useCallback(() => setOpenMentalFromEdu(false), [])
 
   useEffect(() => {
     const {
@@ -110,8 +112,8 @@ export default function App() {
               setShowBottomNav={setShowBottomNav}
             />
           )}
-          {tab === "skrining" && <SkriningPage setTab={setTab} setShowBirth={setShowBirth} isPostpartum={isPostpartum} setShowBottomNav={setShowBottomNav} />}
-          {tab === "edukasi" && <EdukasiPage />}
+          {tab === "skrining" && <SkriningPage setTab={setTab} setShowBirth={setShowBirth} isPostpartum={isPostpartum} setShowBottomNav={setShowBottomNav} initialForm={openMentalFromEdu ? "mental" : null} onInitialFormConsumed={consumeMentalDeepLink} />}
+          {tab === "edukasi" && <EdukasiPage isPostpartum={isPostpartum} onOpenSkriningMental={() => { if (isPostpartum) return; setOpenMentalFromEdu(true); setTab("skrining") }} />}
           {tab === "tracker" && <PengingatPage setShowBottomNav={setShowBottomNav} />}
           {tab === "profil" && <ProfilPage uk={uk} hplLabel={hplLabel} setShowBottomNav={setShowBottomNav} />}
         </div>

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react"
 import { ArrowLeft, ChevronDown, Search, X } from "lucide-react"
 import { fisiologiGroups, fisiologiSystems } from "./fisiologiData"
+import EdukasiDetailHeader from "./EdukasiDetailHeader"
 
 export default function FisiologiScreen({ onBack }: { onBack: () => void }) {
   const [query, setQuery] = useState("")
@@ -18,30 +19,9 @@ export default function FisiologiScreen({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="-mx-4 -mt-5">
-      <header className="rounded-b-[32px] bg-[#4A6E54] px-5 pb-11 pt-6 text-white">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => { onBack(); window.scrollTo({ top: 0, behavior: "smooth" }) }}
-            aria-label="Kembali ke materi edukasi"
-            className="grid size-11 shrink-0 place-items-center rounded-full bg-white/12 text-white transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-          >
-            <ArrowLeft className="size-5" aria-hidden="true" />
-          </button>
-          <div className="min-w-0 flex-1">
-            <h1 className="!m-0 text-xl font-extrabold leading-tight">Perubahan Fisiologi Kehamilan</h1>
-            <div className="mt-1 text-sm leading-relaxed text-white/90">Kenali adaptasi tubuh Bunda selama kehamilan.</div>
-          </div>
-          <img
-            src="/s-06/s-06d/Thumbnail.webp"
-            alt=""
-            aria-hidden="true"
-            className="h-[76px] w-[76px] shrink-0 rounded-[16px] bg-[#FFFDEC] object-contain sm:h-[88px] sm:w-[104px]"
-          />
-        </div>
-      </header>
+      <EdukasiDetailHeader nomor={4} label="Fisiologi Kehamilan" judul="Perubahan Fisiologi Kehamilan" deskripsi="Kenali adaptasi tubuh Bunda selama kehamilan." teksBagikan="Baca materi Perubahan Fisiologi Kehamilan di SIAGA Bunda." onBack={onBack} />
 
-      <main className="relative mx-4 mt-4 rounded-[32px] bg-[#FFFCF6] px-5 pb-36 pt-6">
+      <main className="relative mx-4 rounded-[32px] bg-[#FFFCF6] px-5 pb-36 pt-6">
         <div className="mb-5 flex items-end justify-between gap-3">
           <div>
             <h2 className="text-lg font-bold text-[#1D2B29]">11 sistem tubuh</h2>
@@ -89,7 +69,6 @@ export default function FisiologiScreen({ onBack }: { onBack: () => void }) {
                 <div className="divide-y divide-[#D9E7E2] rounded-[22px] bg-white px-3.5 ring-1 ring-[#D9E7E2]">
                   {systems.map((system) => {
                     const expanded = openId === system.id
-                    const Icon = system.icon
                     const detailsId = `fisiologi-${system.id}`
 
                     return (

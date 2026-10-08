@@ -1,6 +1,7 @@
 import { useState } from "react"
-import { ArrowLeft, ArrowRight, BookOpen, Share2, Stethoscope } from "lucide-react"
+import { ArrowLeft, ArrowRight, BookOpen, Stethoscope } from "lucide-react"
 import VideoBelajarCard from "./VideoBelajarCard"
+import EdukasiDetailHeader from "./EdukasiDetailHeader"
 
 const tahapFertilisasi = [
   {
@@ -35,72 +36,15 @@ const tahapFertilisasi = [
   },
 ] as const
 
-function BagikanMateri() {
-  const [pesan, setPesan] = useState("")
-
-  async function bagikan() {
-    const data = {
-      title: "Terjadinya Kehamilan",
-      url: new URL("?tab=edukasi", window.location.href).toString(),
-      text: "Baca materi Terjadinya Kehamilan di SIAGA Bunda.",
-    }
-    try {
-      if (navigator.share) {
-        await navigator.share(data)
-        return
-      }
-      await navigator.clipboard.writeText(data.url)
-      setPesan("Tautan materi disalin.")
-    } catch (error) {
-      if (error instanceof Error && error.name === "AbortError") return
-      setPesan("Tautan belum dapat dibagikan. Coba lagi nanti.")
-    }
-  }
-
-  return (
-    <div className="relative flex flex-col items-end">
-      <button
-        type="button"
-        onClick={() => void bagikan()}
-        aria-label="Bagikan materi fertilisasi"
-        className="grid size-11 shrink-0 place-items-center rounded-full bg-white/12 text-white transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-      >
-        <Share2 className="size-5" aria-hidden="true" />
-      </button>
-      {pesan && <span role="status" className="absolute right-0 top-[calc(100%+0.5rem)] z-20 w-max rounded-full bg-white px-3 py-1.5 text-xs font-medium text-[#33443F] shadow-sm">{pesan}</span>}
-    </div>
-  )
-}
-
 export default function FertilisasiScreen({ onBack }: { onBack: () => void }) {
   const [tahapAktif, setTahapAktif] = useState(0)
   const tahap = tahapFertilisasi[tahapAktif]
 
   return (
     <div className="-mx-4 -mt-5">
-      <header className="rounded-b-[32px] bg-[#4A6E54] px-5 pb-11 pt-6 text-white">
-        <div className="flex items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={() => { onBack(); window.scrollTo({ top: 0, behavior: "smooth" }) }}
-            aria-label="Kembali ke materi edukasi"
-            className="grid size-11 shrink-0 place-items-center rounded-full bg-white/12 text-white hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-          >
-            <ArrowLeft className="size-5" aria-hidden="true" />
-          </button>
-          <div className="min-w-0 flex-1 text-center">
-            <div className="text-xs font-semibold text-white/80">Materi 1</div>
-            <div className="mt-0.5 truncate text-sm font-bold">Fertilisasi</div>
-          </div>
-          <BagikanMateri />
-        </div>
-        <div className="mt-5 max-w-[320px]">
-            <h1 className="!m-0 text-[26px] font-extrabold leading-tight">Terjadinya Kehamilan (Fertilisasi)</h1>
-          <div className="mt-2 text-sm leading-relaxed text-white/90">Kenali perjalanan sel telur hingga awal kehamilan.</div>
-        </div>
-      </header>
+      <EdukasiDetailHeader nomor={1} label="Fertilisasi" judul="Terjadinya Kehamilan (Fertilisasi)" deskripsi="Kenali perjalanan sel telur hingga awal kehamilan." teksBagikan="Baca materi Terjadinya Kehamilan di SIAGA Bunda." onBack={onBack} />
 
-      <main className="relative mx-4 mt-4 rounded-[32px] bg-[#FFFCF6] px-5 pb-36 pt-6">
+      <main className="relative mx-4 rounded-[32px] bg-[#FFFCF6] px-5 pb-36 pt-6">
         <VideoBelajarCard
           judul="Terjadinya Kehamilan (Fertilisasi)"
           deskripsi="Lihat bagaimana proses kehamilan terjadi, mulai dari ovulasi hingga implantasi."

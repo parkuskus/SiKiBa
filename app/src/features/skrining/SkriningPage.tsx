@@ -24,15 +24,19 @@ export default function SkriningPage({
   setShowBirth,
   isPostpartum = false,
   setShowBottomNav,
+  initialForm = null,
+  onInitialFormConsumed,
 }: {
   setTab: (t: "beranda" | "skrining" | "edukasi" | "tracker" | "profil") => void
   setShowBirth: (v: boolean) => void
   isPostpartum?: boolean
   setShowBottomNav: (v: boolean) => void
+  initialForm?: ActiveForm
+  onInitialFormConsumed?: () => void
 }) {
   const [fasyankes, setFasyankes] = useState<string | null>(null)
   const [skriningTab, setSkriningTab] = useState<SkriningTab>("hamil")
-  const [activeForm, setActiveForm] = useState<ActiveForm>(null)
+  const [activeForm, setActiveForm] = useState<ActiveForm>(initialForm)
   const [results, setResults] = useState<Record<string, AnyResult & { createdAt?: string }>>({})
   const [activeResult, setActiveResult] = useState<null | {
     tipeKey: string
@@ -81,6 +85,10 @@ export default function SkriningPage({
   useEffect(() => {
     if (isNifasActive && skriningTab === "hamil") setSkriningTab("nifas")
   }, [isNifasActive, skriningTab])
+
+  useEffect(() => {
+    if (initialForm) onInitialFormConsumed?.()
+  }, [initialForm, onInitialFormConsumed])
 
   useEffect(() => {
     setShowBottomNav(activeForm === null && activeResult === null)

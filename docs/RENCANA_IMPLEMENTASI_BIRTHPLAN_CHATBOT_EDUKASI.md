@@ -17,7 +17,7 @@ Rencana kerja lanjutan untuk SIAGA Bunda. Dokumen ini memetakan perubahan UI, da
 | 2 | Form Birth Plan | Kartu Beranda khusus mode hamil, lima langkah, daftar kekurangan dinamis, ringkasan dan tombol PDF |
 | 3 | Profil dan PDF | Ringkasan read-only di Profil serta PDF P4K berdiri sendiri untuk dibagikan/diunduh |
 | 4 | Persona Kira | Avatar gambar, nama/copy, FAQ offline, prompt Edge Function dan kondisi darurat selaras |
-| 5 | Header video dan thumbnail S-06a–S-06f | Video pembelajaran di bagian atas S-06a/S-06b; thumbnail di header S-06c/S-06f; judul diseragamkan |
+| 5 | Header video dan thumbnail S-06a–S-06f | Video pembelajaran di bagian atas S-06a/S-06b; thumbnail di katalog; header detail diseragamkan |
 | 6 | Video S-06e dan aset cover tersisa | Autoplay video saat detail tanda bahaya dibuka; thumbnail cover konsisten untuk katalog dan detail |
 | 7 | Review konten dan UAT | Pemeriksaan klinis, aksesibilitas, offline, sinkronisasi, PDF dan mode nifas |
 
@@ -132,10 +132,10 @@ Gunakan label lengkap berikut pada katalog/detail dan konsistenkan istilah di do
 |---|---|---|
 | S-06a | Terjadinya Kehamilan (Fertilisasi) | `s-06a/Thumbnail.webp`; card belajar video sebelum materi |
 | S-06b | Perkembangan Janin per Minggu | `s-06b/Thumbnail.webp`; card belajar video sebelum materi |
-| S-06c | Perkembangan Plasenta, Tali Pusat, dan Ketuban | `s-06c/Thumbnail.webp` di kanan header |
+| S-06c | Perkembangan Plasenta, Tali Pusat, dan Ketuban | header bersama; thumbnail di tile katalog |
 | S-06d | Perubahan Fisiologi Kehamilan | `s-06d/Thumbnail.webp` sudah ada; periksa crop/rasio |
 | S-06e | Tanda Bahaya Kehamilan | `s-06e/Thumbnail.webp`; video inline per gejala yang memiliki aset relevan |
-| S-06f | Perubahan Psikologi/Emosi | `s-06f/Thumbnail.png` di pojok kanan atas header |
+| S-06f | Perubahan Psikologi/Emosi | header bersama; thumbnail di tile katalog |
 | S-06g | Birth Plan & Persiapan Persalinan (P4K) | kartu Beranda menjadi pintu masuk form; bukan materi artikel katalog |
 
 Gunakan ejaan **Plasenta** pada judul layar meskipun daftar awal pengguna menulis “Plasentas”. Pertahankan ID yang sudah disepakati sebelumnya: P4K adalah S-06g; tidak menghidupkan kembali materi Keluhan Umum atau layar S-06h.
@@ -148,10 +148,10 @@ Gunakan ejaan **Plasenta** pada judul layar meskipun daftar awal pengguna menuli
 - Gunakan elemen video native dengan kontrol, `playsInline`, poster thumbnail, dan tidak autoplay; tombol eksplisit mengikuti mockup dan lebih aman untuk data/aksesibilitas. Buka inline atau player overlay yang dapat ditutup dan tetap menyediakan kontrol native.
 - Pastikan encode/path dengan spasi dan kapitalisasi diuji pada dev server serta build PWA.
 
-### Header S-06c dan S-06f
+### Header detail S-06a–S-06f
 
-- S-06c: pasang `s-06c/Thumbnail.webp` di sisi kanan header menggunakan pola header S-06d, ukuran responsif, alt kosong jika dekoratif.
-- S-06f: pasang `s-06f/Thumbnail.png` di kanan atas header, dengan ukuran dan crop sesuai rasionya. Tetap pertahankan area teks/judul dan target kembali yang tidak tertutup gambar.
+- Semua layar detail memakai pola bersama sesuai referensi terbaru: panel sage rounded bawah, tombol kembali di kiri, nomor dan label materi di tengah, tombol bagikan di kanan, lalu judul besar dan deskripsi.
+- Thumbnail masing-masing materi tetap dipakai di tile katalog. Header detail tidak menampilkan thumbnail agar keenam layar konsisten dengan referensi terbaru.
 
 ### Video pada detail tanda bahaya S-06e
 
@@ -210,12 +210,14 @@ Daftar ini indikatif. Sebelum implementasi, periksa ulang status working tree, m
 
 ## Progress implementasi
 
-- 2026-10-08: Judul katalog S-06a–S-06f diperbarui. Judul detail S-06a–S-06d diseragamkan, thumbnail S-06c dipasang pada header, dan thumbnail S-06f dipasang pada tile katalog. S-06f belum memiliki layar detail, jadi header detailnya tetap menunggu implementasi screen.
+- 2026-10-08: Judul katalog S-06a–S-06f diperbarui. Judul detail S-06a–S-06d diseragamkan, thumbnail S-06f dipasang pada tile katalog sebelum layar detail tersedia.
 - 2026-10-08: Card belajar video ditambahkan di bagian atas S-06a/S-06b dengan MP4 lokal, thumbnail, dan kontrol native. Prompt thumbnail S-06e ditambahkan ke `docs/ASSETS.md`. Persona chatbot diganti menjadi Kira dengan gambar karakter, copy/FAQ offline, dan prompt online yang selaras.
 - 2026-10-08: Thumbnail S-06e dari pengguna dikonversi ke WebP dan dipakai di tile katalog; prompt generator yang sebelumnya disiapkan untuk cover S-06e tidak lagi diperlukan.
 - 2026-10-08: S-06e kini membuka layar dengan pencarian dan tiga kelompok gejala; satu kartu dapat terbuka pada satu waktu dan video gejala yang sesuai mulai diputar muted, inline, dengan kontrol native. Video laktasi tidak dipasang pada materi tanda bahaya kehamilan.
 - 2026-10-08: Birth Plan P4K selesai diimplementasikan pada Dexie v6 dan migration Supabase 009. Form mendukung autosave dan pemulihan draft, sinkronisasi antrean, pilihan saat versi perangkat/cloud berbeda, akses edit hanya dari Beranda mode kehamilan, tampilan Profil read-only, serta PDF bagikan/unduh. Migration sudah diterapkan; QA client offline dan multi-device masih pending.
 - 2026-10-08: Migration 009 diterapkan ke proyek Supabase SIAGA Bunda. Smoke test RLS transaksional sukses untuk pembacaan dan perubahan data sendiri, penolakan lintas pengguna, serta akses anon; seluruh perubahan uji di-rollback. Skrip dapat dijalankan ulang lewat `supabase/tests/009_birth_plans_rls.sql`. Sinkronisasi client offline/multi-device masih menunggu QA aplikasi.
+- 2026-10-08: Layar S-06f dibuat dengan thumbnail katalog, tiga pilihan trimester, bagian perasaan/penyebab/dukungan, panduan mencari bantuan, bagikan catatan emosi, dan deep link langsung ke EPDS S-03f saat mode kehamilan. Pada mode nifas, tombol EPDS tidak ditampilkan karena skrining tersebut hanya tersedia di mode kehamilan saat ini.
+- 2026-10-08: Header detail S-06a–S-06f diperbarui menjadi satu komponen/pola mengikuti referensi terbaru. Thumbnail tetap tampil di katalog dan video S-06a/S-06b, tidak di header detail.
 
 ## Kriteria penerimaan
 
@@ -239,7 +241,7 @@ Daftar ini indikatif. Sebelum implementasi, periksa ulang status working tree, m
 
 - Judul enam materi cocok di katalog dan header.
 - Card video S-06a/b memakai thumbnail dan MP4 lokal yang ditentukan, berfungsi offline setelah precache PWA, dan memiliki kontrol yang dapat diakses.
-- Thumbnail S-06c/f muncul di posisi header yang benar pada layar sempit dan besar.
+- Header S-06a–S-06f menampilkan pola navigasi, label materi, tombol berbagi, judul, dan deskripsi yang konsisten pada layar sempit dan besar.
 - Video S-06e hanya diputar untuk kartu terbuka, satu per waktu, berhenti ketika ditutup, dan tetap dapat diputar manual bila autoplay ditolak.
 - Semua aset baru memiliki izin penggunaan/atribusi yang tercatat; konten medis memiliki sumber dan reviewer.
 

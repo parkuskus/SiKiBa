@@ -4,6 +4,7 @@ import { weeksFromHpht } from "@/clinical-rules/ukHpl"
 import { getCurrentProfile } from "@/data/currentUser"
 import { janinWeeks } from "./janinWeekData"
 import VideoBelajarCard from "./VideoBelajarCard"
+import EdukasiDetailHeader from "./EdukasiDetailHeader"
 
 const trimesterList = [
   { id: 1, label: "Trimester 1", weeks: janinWeeks.filter((item) => item.trimester === 1) },
@@ -64,24 +65,9 @@ export default function JaninWeekScreen({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="-mx-4 -mt-5">
-      <header className="rounded-b-[32px] bg-[#4A6E54] px-5 pb-11 pt-6 text-white">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => { onBack(); window.scrollTo({ top: 0, behavior: "smooth" }) }}
-            aria-label="Kembali ke materi edukasi"
-            className="grid size-11 shrink-0 place-items-center rounded-full bg-white/12 text-white hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-          >
-            <ArrowLeft className="size-5" aria-hidden="true" />
-          </button>
-          <div className="min-w-0 flex-1">
-            <h1 className="!m-0 text-xl font-extrabold leading-tight">Perkembangan Janin per Minggu</h1>
-            <div className="mt-1 text-sm leading-relaxed text-white/90">Lihat perubahan si Kecil dari minggu ke minggu.</div>
-          </div>
-        </div>
-      </header>
+      <EdukasiDetailHeader nomor={2} label="Perkembangan Janin" judul="Perkembangan Janin per Minggu" deskripsi="Lihat perubahan si Kecil dari minggu ke minggu." teksBagikan="Baca materi Perkembangan Janin per Minggu di SIAGA Bunda." onBack={onBack} />
 
-      <main className="relative mx-4 -mt-7 rounded-t-[32px] bg-[#FFFCF6] px-5 pb-36 pt-6">
+      <main className="relative mx-4 rounded-[32px] bg-[#FFFCF6] px-5 pb-36 pt-6">
         <VideoBelajarCard
           judul="Perkembangan Janin per Minggu"
           deskripsi="Lihat bagaimana si Kecil tumbuh dan berkembang dari minggu ke minggu."
