@@ -93,7 +93,7 @@ export default function ChatbotPage({ onClose }: { onClose: () => void }) {
     }
   }
 
-  const petaDarurat = "https://www.google.com/maps/search/?api=1&query=Puskesmas%20terdekat"
+  const petaDarurat = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent("Puskesmas atau Praktik Mandiri Bidan (PMB) terdekat")}`
 
   return (
     <div className="relative flex h-full min-h-0 flex-col bg-[#FFFCF6]">
