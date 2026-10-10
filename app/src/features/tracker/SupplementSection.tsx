@@ -40,6 +40,7 @@ export default function SupplementSection({ onAdd }: { onAdd: () => void }) {
   const [weekOffset, setWeekOffset] = useState(0)
   const [selected, setSelected] = useState(toISODate(new Date()))
   const [sheetDose, setSheetDose] = useState<Dose | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const load = async () => {
     const id = await getCurrentUserId()
@@ -90,9 +91,18 @@ export default function SupplementSection({ onAdd }: { onAdd: () => void }) {
   const handleDelete = async () => {
     if (!sheetDose) return
     if (!window.confirm(`Hapus pengingat ${sheetDose.med.namaSuplemen}?`)) return
-    await deleteSupplement(sheetDose.med.id)
-    setSheetDose(null)
-    await load()
+    setDeleting(true)
+    try {
+      const id = sheetDose.med.id
+      await deleteSupplement(id)
+      setMeds((current) => current.filter((medicine) => medicine.id !== id))
+      setDoseMap((current) => Object.fromEntries(Object.entries(current).filter(([key]) => !key.startsWith(`${id}|`))))
+      setSheetDose(null)
+    } catch {
+      window.alert("Pengingat belum berhasil dihapus. Coba lagi.")
+    } finally {
+      setDeleting(false)
+    }
   }
 
   return (
@@ -197,7 +207,7 @@ export default function SupplementSection({ onAdd }: { onAdd: () => void }) {
                 <span className="text-xs font-semibold text-[#1E2326]">Tanpa status</span>
               </button>
             </div>
-            <button onClick={() => void handleDelete()} className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full bg-white py-2.5 text-xs font-semibold text-[#C62828] ring-1 ring-[#EAE6E0]">
+            <button disabled={deleting} onClick={() => void handleDelete()} className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full bg-white py-2.5 text-xs font-semibold text-[#C62828] ring-1 ring-[#EAE6E0] disabled:opacity-50">
               <Trash2 className="size-3.5" /> Hapus pengingat ini
             </button>
           </div>

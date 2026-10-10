@@ -63,6 +63,7 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 - [x] Tautan peta pada hasil tanda bahaya dan eskalasi darurat chatbot mencari Puskesmas atau Praktik Mandiri Bidan (PMB) terdekat (2026-10-09).
 - [x] Akun Dummy dapat menautkan Web Push untuk pengingat suplemen dan ANC saat PWA tertutup. Jadwal yang diperlukan disinkronkan ke akun Supabase anonim khusus Dummy; notifikasi perlu internet (2026-10-10).
 - [x] Push server diperbaiki setelah QA menemukan Edge Function tidak memiliki grant `SELECT` pada jadwal suplemen/ANC/dosis (`42501`); migration `010_service_role_reminder_reads.sql` memberi akses minimum ke role service (2026-10-10).
+- [x] Hapus pengingat obat memperbaiki query Dexie pada field `suplemenId` yang bukan indeks; penghapusan obat dan log dosis kini memakai indeks `userId` dalam satu transaksi lokal sehingga UI langsung diperbarui (2026-10-10).
 
 ### Belum selesai / perlu konfirmasi
 - [ ] S-06 Edukasi: S-06a–S-06f tersedia; S-06g belum dibuat. Tinjau tanda dari ekstraksi yang belum memiliki video relevan sebelum menambahkannya ke S-06e; materi nifas dan laktasi diarahkan ke S-04/S-04a.

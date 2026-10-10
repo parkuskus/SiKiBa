@@ -46,11 +46,16 @@ export async function upsertSupplement(input: SupplementInput) {
 }
 
 export async function deleteSupplement(id: string) {
-  const medicine = await db.supplementReminders.get(id)
-  await db.supplementReminders.delete(id)
+  const medicine = await db.transaction('rw', db.supplementReminders, db.doseLogs, async () => {
+    const row = await db.supplementReminders.get(id)
+    if (!row) return null
+    await db.supplementReminders.delete(id)
+    const logs = await db.doseLogs.where('userId').equals(row.userId)
+      .filter((log) => log.suplemenId === id).toArray()
+    await db.doseLogs.bulkDelete(logs.map((log) => log.id))
+    return row
+  })
   if (medicine) deleteSyncedSupplement(medicine.userId, medicine.namaSuplemen)
-  const logs = await db.doseLogs.where('suplemenId').equals(id).toArray()
-  await Promise.all(logs.map((l) => db.doseLogs.delete(l.id)))
 }
 
 export async function setDoseStatus(input: { userId: string; suplemenId: string; tanggal: string; waktu: string; status: DoseLog['status'] }) {
