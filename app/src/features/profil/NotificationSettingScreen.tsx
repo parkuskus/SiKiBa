@@ -62,8 +62,8 @@ export default function NotificationSettingScreen({ onBack }: { onBack: () => vo
           </div>
 
           <p className="rounded-[16px] bg-white p-3 text-xs leading-relaxed text-[#33443F]">
-            {userId.startsWith("demo-")
-              ? "Akun Dummy memakai pengingat lokal. Untuk menguji push saat aplikasi tertutup, gunakan akun email terverifikasi."
+            {userId === "demo-dummy"
+              ? "Akun Dummy dapat memakai Web Push. Jadwal suplemen dan ANC dikirim ke server untuk pengingat. Perangkat dan server perlu terhubung internet saat pengiriman."
               : pushLinked
               ? "Push pengingat sudah aktif di perangkat ini."
               : !isPushConfigured()
@@ -78,7 +78,7 @@ export default function NotificationSettingScreen({ onBack }: { onBack: () => vo
           </p>
           {error && <p role="alert" className="rounded-[14px] bg-[#FDECEC] p-3 text-xs text-[#C62828]">{error}</p>}
 
-          {!userId.startsWith("demo-") && !pushLinked && isPushConfigured() && notifPerm !== "denied" && notifPerm !== "unsupported" && (
+          {(userId === "demo-dummy" || !userId.startsWith("demo-")) && !pushLinked && isPushConfigured() && notifPerm !== "denied" && notifPerm !== "unsupported" && (
             <Button disabled={working || !userId} className="min-h-12 w-full rounded-full bg-[#4A6E54] text-sm font-bold text-white hover:bg-[#3D5C46]" onClick={() => void handleNotif()}>
               {working ? "Mengaktifkan" : notifPerm === "granted" ? "Tautkan push notification" : "Aktifkan notifikasi"}
             </Button>

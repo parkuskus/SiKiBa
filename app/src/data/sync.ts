@@ -11,23 +11,33 @@ async function enqueue(table: string, op: Op, payload: Record<string, unknown>, 
 }
 
 async function fireOrQueue(table: string, op: Op, payload: Record<string, unknown>, onConflict?: string) {
-  if (String(payload.user_id ?? payload.id ?? '').startsWith('demo-')) return
+  let outgoing = payload
+  let owner = String(payload.user_id ?? payload.id ?? '')
+  if (owner.startsWith('demo-')) {
+    if (!['supplement_reminders', 'anc_visits', 'dose_logs'].includes(table)) return
+    try {
+      const demoPushOwner = localStorage.getItem('siaga_demo_push_user_id')
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!demoPushOwner || demoPushOwner !== session?.user.id || !session.user.is_anonymous) return
+      owner = demoPushOwner
+      outgoing = { ...payload, user_id: owner }
+    } catch { return }
+  }
   // ponytail: coba langsung jika online, gagal → queue; offline langsung queue
   if (typeof navigator !== 'undefined' && !navigator.onLine) {
-    await enqueue(table, op, payload, onConflict)
+    await enqueue(table, op, outgoing, onConflict)
     return
   }
   try {
     const { data: { session } } = await supabase.auth.getSession()
-    const owner = String(payload.user_id ?? payload.id ?? '')
     if (!session || owner !== session.user.id) {
-      await enqueue(table, op, payload, onConflict)
+      await enqueue(table, op, outgoing, onConflict)
       return
     }
-    const q = op === 'delete' ? supabase.from(table).delete().match(payload)
+    const q = op === 'delete' ? supabase.from(table).delete().match(outgoing)
       : op === 'upsert'
-      ? supabase.from(table).upsert(payload as never, onConflict ? { onConflict } as never : undefined)
-      : supabase.from(table).insert(payload as never)
+      ? supabase.from(table).upsert(outgoing as never, onConflict ? { onConflict } as never : undefined)
+      : supabase.from(table).insert(outgoing as never)
     const { error } = await q as unknown as { error: unknown }
     if (error) {
       // RLS/FK warn (belum auth) jangan queue ulang — cukup log, biar tidak spam
@@ -36,11 +46,11 @@ async function fireOrQueue(table: string, op: Op, payload: Record<string, unknow
         console.warn('[sync] skip (auth):', error)
         return
       }
-      await enqueue(table, op, payload, onConflict)
+      await enqueue(table, op, outgoing, onConflict)
       console.warn('[sync] queued after error:', error)
     }
   } catch (e) {
-    await enqueue(table, op, payload, onConflict)
+    await enqueue(table, op, outgoing, onConflict)
     console.warn('[sync] queued offline:', e)
   }
 }

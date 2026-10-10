@@ -52,6 +52,7 @@ Deno.serve(async (request) => {
   const subject = Deno.env.get("VAPID_SUBJECT");
   if (!publicKey || !privateKey || !subject) return Response.json({ error: "VAPID is not configured" }, { status: 503 });
 
+  let stage = "load-subscriptions";
   try {
     webpush.setVapidDetails(subject, publicKey, privateKey);
     const { data: subscriptions, error: subError } = await db.from("push_subscriptions").select("id,user_id,endpoint,p256dh,auth,time_zone");
@@ -63,13 +64,15 @@ Deno.serve(async (request) => {
       let local: { date: string; time: string };
       try { local = localDateTime(now, subscription.time_zone); } catch { continue; }
       const { date, time } = local;
+      stage = "load-user-schedules";
       const [reminders, visits, doseLogs] = await Promise.all([
         db.from("supplement_reminders").select("*").eq("user_id", subscription.user_id).eq("status_aktif", true),
         db.from("anc_visits").select("id,tanggal_terjadwal").eq("user_id", subscription.user_id).eq("status_selesai", false),
         db.from("dose_logs").select("suplemen_id,waktu,status").eq("user_id", subscription.user_id).eq("tanggal", date),
       ]);
-      const error = reminders.error ?? visits.error ?? doseLogs.error;
-      if (error) throw error;
+      if (reminders.error) { stage = "query-supplement-reminders"; throw reminders.error; }
+      if (visits.error) { stage = "query-anc-visits"; throw visits.error; }
+      if (doseLogs.error) { stage = "query-dose-logs"; throw doseLogs.error; }
       const minutes = (at: string) => Number(at.slice(0, 2)) * 60 + Number(at.slice(3, 5));
       const currentMinute = minutes(time);
       const doseStatus = new Map((doseLogs.data ?? []).map((item) => [`${item.suplemen_id}|${normalizeTime(item.waktu)}`, item.status]));
@@ -84,6 +87,7 @@ Deno.serve(async (request) => {
           const late = currentMinute - minutes(at);
           // ponytail: a two-minute retry window tolerates cron/network delays; no stale daily reminders.
           if (late < 0 || late > 2 || ["taken", "skip"].includes(doseStatus.get(`${medicine.id}|${at}`) ?? "")) continue;
+          stage = "claim-and-send-supplement";
           if (await sendOnce(subscription, {
             key: `medicine:${medicine.id}:${date}:${at}`, title: `Waktunya ${medicine.namaSuplemen}`,
             body: `Jadwal minum pukul ${at.replace(":", ".")}. Catat setelah diminum di SIAGA Bunda.`, ttl: 120,
@@ -96,6 +100,7 @@ Deno.serve(async (request) => {
         for (const visit of visits.data ?? []) {
           const daysLeft = daysUntil(date, visit.tanggal_terjadwal);
           if (daysLeft !== 1 && daysLeft !== 2) continue;
+          stage = "claim-and-send-anc";
           if (await sendOnce(subscription, {
             key: `anc:${visit.id}:${visit.tanggal_terjadwal}:H-${daysLeft}`,
             title: "Jadwal pemeriksaan mendekat",
@@ -106,7 +111,8 @@ Deno.serve(async (request) => {
     }
     return Response.json({ ok: true, sent });
   } catch (error) {
-    console.error("[push] dispatch failed", (error as { code?: string }).code ?? "unknown");
-    return Response.json({ error: "Reminder dispatch failed" }, { status: 500 });
+    const detail = error as { code?: string; message?: string };
+    console.error("[push] dispatch failed", { stage, code: detail?.code ?? "unknown", message: detail?.message ?? "unknown" });
+    return Response.json({ error: "Reminder dispatch failed", stage, code: detail?.code ?? "unknown", detail: detail?.message?.slice(0, 240) ?? "unknown" }, { status: 500 });
   }
 });

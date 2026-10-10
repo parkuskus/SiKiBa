@@ -61,13 +61,15 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 - [x] Migration `009_birth_plans.sql` diterapkan ke proyek Supabase SIAGA Bunda. Smoke test RLS transaksional memverifikasi select/insert/update milik sendiri, penolakan akses lintas pengguna, akses baca authenticated, dan penolakan baca anon; seluruh data uji di-rollback. Skrip uji tersimpan di `supabase/tests/009_birth_plans_rls.sql` (2026-10-08).
 - [x] Sesi akun Dummy dipertahankan setelah refresh; inisialisasi sesi anonim tidak lagi menghapus identitas Dummy, dan pemilihan profil tidak lagi jatuh ke profil pertama di perangkat (2026-10-08).
 - [x] Tautan peta pada hasil tanda bahaya dan eskalasi darurat chatbot mencari Puskesmas atau Praktik Mandiri Bidan (PMB) terdekat (2026-10-09).
+- [x] Akun Dummy dapat menautkan Web Push untuk pengingat suplemen dan ANC saat PWA tertutup. Jadwal yang diperlukan disinkronkan ke akun Supabase anonim khusus Dummy; notifikasi perlu internet (2026-10-10).
+- [x] Push server diperbaiki setelah QA menemukan Edge Function tidak memiliki grant `SELECT` pada jadwal suplemen/ANC/dosis (`42501`); migration `010_service_role_reminder_reads.sql` memberi akses minimum ke role service (2026-10-10).
 
 ### Belum selesai / perlu konfirmasi
 - [ ] S-06 Edukasi: S-06a–S-06f tersedia; S-06g belum dibuat. Tinjau tanda dari ekstraksi yang belum memiliki video relevan sebelum menambahkannya ke S-06e; materi nifas dan laktasi diarahkan ke S-04/S-04a.
 - [ ] QA sinkronisasi Birth Plan dari aplikasi pada akun uji, termasuk antrean offline, pemulihan di perangkat lain, konflik dua versi, serta mode hamil/nifas.
 - [ ] Validasi seluruh algoritma klinis oleh SpOG/bidan senior. Ambang dan rekomendasi belum boleh dianggap tervalidasi untuk pelayanan.
 - [ ] Ethical Clearance sebelum uji coba dengan partisipan.
-- [ ] QA end-to-end pada perangkat Android dan iOS: OTP/SMTP produksi, offline dan antrean sync, RLS, retensi data, reminder/notifikasi, mode nifas, chatbot, dan alur MERAH.
+- [ ] QA end-to-end pada perangkat Android dan iOS: OTP/SMTP produksi, offline dan antrean sync, RLS, retensi data, reminder/notifikasi, mode nifas, chatbot, dan alur MERAH. Setelah grant 010, cron terpantau membalas HTTP 200 (`sent: 0`) pada 2026-10-10; jadwal aktif saat itu sudah lewat sehingga penerimaan notifikasi perangkat pada menit jadwal berikutnya masih perlu diuji. Belum ada subscription anonim Dummy pada pemeriksaan saat itu.
 - [ ] Setelah deploy frontend, aktifkan push di perangkat dengan akun riil dan uji penerimaan ketika PWA tertutup, termasuk obat, ANC H-2/H-1, serta upload/crop avatar cloud. Backend sudah di-deploy; izin browser belum dapat diberikan dari agen.
 - [ ] Tinjau kebutuhan overlay darurat bersama untuk eskalasi chatbot dan hasil MERAH.
 - [ ] Finalisasi isi/tampilan PDF bersama stakeholder; pastikan data ekspor dan format berbagi sesuai kebutuhan bidan.
