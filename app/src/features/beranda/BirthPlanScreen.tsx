@@ -1,11 +1,19 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { ArrowLeft, Backpack, ChevronRight, CircleAlert, ClipboardList, Download, HeartPulse, Save, Share2, Wallet, X } from "lucide-react"
+import { liveQuery } from "dexie"
+import { db } from "@/data/db"
+import { flushSyncQueue, syncBirthPlan } from "@/data/sync"
 import type { BirthPlan } from "@/data/db"
 import { generateBirthPlanPDF, shareBirthPlanPDF } from "@/services/exportService"
-import { CHECKLIST_PERLENGKAPAN, getBirthPlan, pilihVersiRencana, rencanaKosong, simpanLokalDanSinkronkan, TANDA_PERSALINAN } from "./birthPlanService"
+import { CHECKLIST_PERLENGKAPAN, getBirthPlan, pilihVersiRencana, rencanaKosong, simpanLokalDanSinkronkan, TANDA_PERSALINAN, type BirthPlanSyncStatus } from "./birthPlanService"
 
 type Props = { userId: string; readOnly?: boolean; onClose: () => void }
 type Missing = { label: string; target: string }
+type SyncStatus = BirthPlanSyncStatus | "idle"
+
+const moneyLabel = (value: number | null) => value === null
+  ? "Belum diisi"
+  : new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(value)
 
 function hitungProgress(plan: BirthPlan) {
   const fields = [plan.penolong, plan.tempatBersalin, plan.pendamping, plan.hpBidanSiaga, plan.donor1Nama, plan.donor1GolonganDarah, plan.donor2Nama, plan.donor2GolonganDarah, plan.transportasi]
@@ -79,42 +87,136 @@ function Checklist({ items, values, onChange, readOnly }: { items: readonly (rea
 
 export default function BirthPlanScreen({ userId, readOnly = false, onClose }: Props) {
   const [draft, setDraft] = useState(() => rencanaKosong(userId))
+  const draftRef = useRef(draft)
+  const revisionRef = useRef(0)
+  const dirtyRef = useRef(false)
+  const saveChainRef = useRef(Promise.resolve())
   const [memuat, setMemuat] = useState(true)
-  const [tersimpan, setTersimpan] = useState(false)
   const [menyimpan, setMenyimpan] = useState(false)
   const [dirty, setDirty] = useState(false)
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle")
+  const syncStatusRef = useRef<SyncStatus>("idle")
   const [conflict, setConflict] = useState<{ device: BirthPlan; cloud: BirthPlan }>()
   const [error, setError] = useState("")
   const [exporting, setExporting] = useState(false)
   const progress = useMemo(() => hitungProgress(draft), [draft])
   const missing = useMemo(() => daftarKekurangan(draft), [draft])
 
-  const simpan = useCallback(async (): Promise<boolean> => {
-    if (readOnly || !dirty) return true
+  const updateSyncStatus = (status: SyncStatus) => {
+    syncStatusRef.current = status
+    setSyncStatus(status)
+  }
+
+  const retrySync = useCallback(async () => {
+    if (userId.startsWith("demo-")) {
+      updateSyncStatus("local-only")
+      return true
+    }
+    setError("")
+    const revision = revisionRef.current
+    const snapshot = draftRef.current
     setMenyimpan(true)
     try {
-      await simpanLokalDanSinkronkan(draft)
-      setTersimpan(true)
-      setDirty(false)
-      return true
+      const outcome = await syncBirthPlan(snapshot)
+      const status: BirthPlanSyncStatus = outcome === "skipped" ? "local-only" : outcome
+      if (revision === revisionRef.current && !dirtyRef.current) {
+        updateSyncStatus(status)
+        if (status === "failed") setError("Rencana tersimpan di perangkat, tetapi sinkronisasi gagal. Coba lagi.")
+      }
+      return outcome !== "failed"
     } catch {
-      setError("Rencana belum dapat disimpan. Coba lagi.")
+      if (revision === revisionRef.current && !dirtyRef.current) {
+        updateSyncStatus("failed")
+        setError("Rencana tersimpan di perangkat, tetapi belum tersinkron. Coba lagi.")
+      }
       return false
     } finally {
       setMenyimpan(false)
     }
-  }, [dirty, draft, readOnly])
+  }, [userId])
+
+  const simpan = useCallback(async (): Promise<boolean> => {
+    if (readOnly) return true
+    if (!dirtyRef.current) return true
+
+    const simpanTerbaru = async () => {
+      if (!dirtyRef.current) return true
+      const revision = revisionRef.current
+      const snapshot = draftRef.current
+      setMenyimpan(true)
+      setError("")
+      try {
+        const result = await simpanLokalDanSinkronkan(snapshot)
+        if (revision !== revisionRef.current) {
+          updateSyncStatus("idle")
+          return false
+        }
+        draftRef.current = result.plan
+        setDraft(result.plan)
+        dirtyRef.current = false
+        setDirty(false)
+        updateSyncStatus(userId.startsWith("demo-") ? "local-only" : "queued")
+        void result.syncStatus.then((status) => {
+          if (revision === revisionRef.current) {
+            updateSyncStatus(status)
+            if (status === "failed") setError("Rencana tersimpan di perangkat, tetapi sinkronisasi gagal. Coba sinkronkan ulang.")
+          }
+        })
+        return true
+      } catch {
+        updateSyncStatus("failed")
+        setError("Rencana belum berhasil disimpan di perangkat. Coba lagi.")
+        return false
+      } finally {
+        setMenyimpan(false)
+      }
+    }
+
+    const task = saveChainRef.current.then(simpanTerbaru, simpanTerbaru)
+    saveChainRef.current = task.then(() => undefined, () => undefined)
+    return task
+  }, [readOnly, retrySync, userId])
 
   useEffect(() => {
     let active = true
     void getBirthPlan(userId).then((result) => {
       if (!active) return
-      if (result.plan) setDraft(result.plan)
+      const loaded = result.plan ?? rencanaKosong(userId)
+      draftRef.current = loaded
+      setDraft(loaded)
+      dirtyRef.current = false
+      setDirty(false)
+      updateSyncStatus("idle")
       setConflict(result.conflict)
+      setMemuat(false)
+    }).catch(() => {
+      if (!active) return
+      setError("Rencana belum dapat dimuat. Periksa koneksi, lalu coba lagi.")
       setMemuat(false)
     })
     return () => { active = false }
   }, [userId])
+
+  useEffect(() => {
+    if (readOnly || userId.startsWith("demo-")) return
+    const subscription = liveQuery(() => db.syncQueue.where("table").equals("birth_plans")
+      .filter((item) => String(item.payload.user_id ?? "") === userId).count()).subscribe({
+      next: (pending) => {
+        if (pending === 0 && syncStatusRef.current === "queued") updateSyncStatus("synced")
+      },
+    })
+    const syncWhenOnline = () => {
+      void (async () => {
+        await flushSyncQueue()
+        if (syncStatusRef.current === "queued" || syncStatusRef.current === "failed") await retrySync()
+      })()
+    }
+    window.addEventListener("online", syncWhenOnline)
+    return () => {
+      window.removeEventListener("online", syncWhenOnline)
+      subscription.unsubscribe()
+    }
+  }, [readOnly, retrySync, userId])
 
   useEffect(() => {
     if (readOnly || memuat || conflict || !dirty) return
@@ -123,9 +225,13 @@ export default function BirthPlanScreen({ userId, readOnly = false, onClose }: P
   }, [draft, readOnly, memuat, conflict, dirty, simpan])
 
   function ubah(perubahan: Partial<BirthPlan>) {
-    setDraft((current) => ({ ...current, ...perubahan, updatedAt: new Date().toISOString() }))
+    const next = { ...draftRef.current, ...perubahan, updatedAt: new Date().toISOString() }
+    draftRef.current = next
+    revisionRef.current++
+    dirtyRef.current = true
+    setDraft(next)
     setDirty(true)
-    setTersimpan(false)
+    updateSyncStatus("idle")
     setError("")
   }
 
@@ -134,7 +240,7 @@ export default function BirthPlanScreen({ userId, readOnly = false, onClose }: P
   }
 
   async function bagikan() {
-    if (dirty && !(await simpan())) return
+    if (!(await simpan())) return
     setExporting(true)
     setError("")
     try {
@@ -147,7 +253,7 @@ export default function BirthPlanScreen({ userId, readOnly = false, onClose }: P
   }
 
   async function unduh() {
-    if (dirty && !(await simpan())) return
+    if (!(await simpan())) return
     setExporting(true)
     setError("")
     try {
@@ -168,10 +274,28 @@ export default function BirthPlanScreen({ userId, readOnly = false, onClose }: P
   async function pilihKonflik(versi: "device" | "cloud") {
     if (!conflict) return
     const pilihan = versi === "device" ? conflict.device : conflict.cloud
-    await pilihVersiRencana(pilihan)
-    setDraft(pilihan)
-    setConflict(undefined)
-    setDirty(false)
+    setMenyimpan(true)
+    setError("")
+    try {
+      const result = await pilihVersiRencana(pilihan)
+      draftRef.current = result.plan
+      const revision = ++revisionRef.current
+      dirtyRef.current = false
+      setDraft(result.plan)
+      setConflict(undefined)
+      setDirty(false)
+      updateSyncStatus(userId.startsWith("demo-") ? "local-only" : "queued")
+      void result.syncStatus.then((status) => {
+        if (revisionRef.current === revision) {
+          updateSyncStatus(status)
+          if (status === "failed") setError("Versi dipilih dan tersimpan di perangkat, tetapi belum tersinkron. Coba sinkronkan ulang.")
+        }
+      })
+    } catch {
+      setError("Versi rencana belum berhasil disimpan. Coba lagi.")
+    } finally {
+      setMenyimpan(false)
+    }
   }
 
   function checklist(field: "checklistPerlengkapan" | "tandaPersalinanDipahami", key: string, checked: boolean) {
@@ -213,16 +337,25 @@ export default function BirthPlanScreen({ userId, readOnly = false, onClose }: P
               </div>
               <p className="mt-2 text-xs text-[#536961]">{progress.complete} dari 25 butir sudah dilengkapi</p>
               {readOnly && <p className="mt-3 rounded-[14px] bg-[#EAF4F0] px-3 py-2 text-xs font-medium text-[#315D40]">Tampilan ini hanya untuk melihat. Ubah rencana melalui kartu di Beranda saat mode kehamilan.</p>}
-              {!readOnly && (menyimpan || tersimpan) && <p role="status" className="mt-3 text-xs font-medium text-[#315D40]">{menyimpan ? "Menyimpan rencana…" : "Tersimpan di perangkat"}</p>}
+              {!readOnly && (menyimpan || syncStatus !== "idle") && (
+                <p role="status" className={`mt-3 text-xs font-medium ${syncStatus === "failed" ? "text-[#922D2A]" : "text-[#315D40]"}`}>
+                  {menyimpan ? "Menyimpan rencana…" : syncStatus === "synced" ? "Tersimpan di perangkat dan tersinkron ke akun" : syncStatus === "queued" ? "Tersimpan di perangkat, menunggu sinkronisasi" : syncStatus === "failed" ? "Tersimpan di perangkat, tetapi sinkronisasi gagal" : "Tersimpan di perangkat"}
+                </p>
+              )}
+              {!readOnly && syncStatus === "failed" && <button type="button" disabled={menyimpan || Boolean(conflict)} onClick={() => void retrySync()} className="mt-2 min-h-11 text-xs font-bold text-[#922D2A] underline underline-offset-2 disabled:opacity-50">Coba sinkronkan ulang</button>}
             </section>
 
             {conflict && !readOnly && (
               <section className="rounded-[20px] border border-[#E6B45E] bg-[#FFF0C2] p-4" aria-labelledby="conflict-title">
                 <h2 id="conflict-title" className="font-bold text-[#704500]">Ada dua versi rencana</h2>
                 <p className="mt-1 text-sm leading-relaxed text-[#704500]">Pilih data perangkat ini atau data yang tersimpan online. Pilihan lain akan digantikan.</p>
+                <div className="mt-3 grid grid-cols-1 gap-2 text-xs min-[400px]:grid-cols-2">
+                  <p className="rounded-[12px] bg-white/70 p-2.5">Perangkat · Estimasi dana {moneyLabel(conflict.device.estimasiDana)}</p>
+                  <p className="rounded-[12px] bg-white/70 p-2.5">Online · Estimasi dana {moneyLabel(conflict.cloud.estimasiDana)}</p>
+                </div>
                 <div className="mt-3 grid grid-cols-1 gap-2 min-[400px]:grid-cols-2">
-                  <button type="button" onClick={() => void pilihKonflik("device")} className="min-h-11 rounded-full bg-white px-3 text-xs font-bold text-[#704500] ring-1 ring-[#E6B45E]">Gunakan versi perangkat</button>
-                  <button type="button" onClick={() => void pilihKonflik("cloud")} className="min-h-11 rounded-full bg-[#4A6E54] px-3 text-xs font-bold text-white">Gunakan versi online</button>
+                  <button type="button" disabled={menyimpan} onClick={() => void pilihKonflik("device")} className="min-h-11 rounded-full bg-white px-3 text-xs font-bold text-[#704500] ring-1 ring-[#E6B45E] disabled:opacity-60">Gunakan versi perangkat</button>
+                  <button type="button" disabled={menyimpan} onClick={() => void pilihKonflik("cloud")} className="min-h-11 rounded-full bg-[#4A6E54] px-3 text-xs font-bold text-white disabled:opacity-60">Gunakan versi online</button>
                 </div>
               </section>
             )}
@@ -280,8 +413,8 @@ export default function BirthPlanScreen({ userId, readOnly = false, onClose }: P
             <StepCard nomor={3} judul="Persiapan Biaya" id="persiapanBiaya" icon={<Wallet className="size-5" />}>
               <label id="estimasiDana-field" className="block">
                 <span className="mb-1.5 block text-sm font-medium text-[#33443F]">Estimasi dana persalinan (Rp)</span>
-                {readOnly ? <span className="flex min-h-12 items-center rounded-[16px] bg-[#FFFCF6] px-3.5 text-sm text-[#33443F] ring-1 ring-[#E7DED1]">{draft.estimasiDana === null ? "Belum diisi" : new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(draft.estimasiDana)}</span> : (
-                  <input id="estimasiDana" type="number" min="0" step="1000" value={draft.estimasiDana ?? ""} placeholder="0" onChange={(event) => { const value = event.target.value; ubah({ estimasiDana: value === "" ? null : Math.max(0, Number(value)), danaDikonfirmasi: value !== "" }) }} className="min-h-12 w-full rounded-[16px] border border-[#E7DED1] bg-[#FFFCF6] px-3.5 text-sm text-[#1D2B29] outline-none placeholder:text-[#66736F] focus-visible:ring-2 focus-visible:ring-[#4A6E54]" />
+                {readOnly || Boolean(conflict) ? <span className="flex min-h-12 items-center rounded-[16px] bg-[#FFFCF6] px-3.5 text-sm text-[#33443F] ring-1 ring-[#E7DED1]">{moneyLabel(draft.estimasiDana)}</span> : (
+                  <input id="estimasiDana" type="number" min="0" step="1000" value={draft.estimasiDana ?? ""} placeholder="0" onChange={(event) => { const value = event.target.value; const amount = value === "" ? null : Number(value); const valid = amount === null || Number.isFinite(amount); ubah({ estimasiDana: valid && amount !== null ? Math.max(0, amount) : null, danaDikonfirmasi: value !== "" && valid }) }} className="min-h-12 w-full rounded-[16px] border border-[#E7DED1] bg-[#FFFCF6] px-3.5 text-sm text-[#1D2B29] outline-none placeholder:text-[#66736F] focus-visible:ring-2 focus-visible:ring-[#4A6E54]" />
                 )}
               </label>
               <p className="mt-2 text-xs text-[#536961]">Termasuk biaya rujukan dan kebutuhan tak terduga.</p>

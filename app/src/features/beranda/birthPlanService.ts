@@ -1,6 +1,14 @@
 import { db, type BirthPlan } from "@/data/db"
 import { supabase } from "@/data/supabase"
-import { syncBirthPlan } from "@/data/sync"
+import { syncBirthPlan, type SyncOutcome } from "@/data/sync"
+import { parseEstimasiDana, sameBirthPlanContent } from "./birthPlanUtils"
+
+export type BirthPlanSyncStatus = "synced" | "queued" | "failed" | "local-only"
+export type BirthPlanSaveResult = { plan: BirthPlan; syncStatus: Promise<BirthPlanSyncStatus> }
+
+function syncStatus(outcome: SyncOutcome): BirthPlanSyncStatus {
+  return outcome === "skipped" ? "local-only" : outcome
+}
 
 export const CHECKLIST_PERLENGKAPAN = [
   ["bukuKia", "Buku KIA"],
@@ -61,8 +69,8 @@ function dariCloud(row: Record<string, unknown>): BirthPlan {
     donor2Nama: String(row.donor2_nama ?? ""),
     donor2GolonganDarah: (row.donor2_golongan_darah ?? "") as BirthPlan["donor2GolonganDarah"],
     transportasi: String(row.transportasi ?? ""),
-    estimasiDana: typeof row.estimasi_dana === "number" ? row.estimasi_dana : null,
-    danaDikonfirmasi: typeof row.estimasi_dana === "number",
+    estimasiDana: parseEstimasiDana(row.estimasi_dana),
+    danaDikonfirmasi: parseEstimasiDana(row.estimasi_dana) !== null,
     checklistPerlengkapan: { ...kosong.checklistPerlengkapan, ...(row.checklist_perlengkapan as Record<string, boolean> | null ?? {}) },
     tandaPersalinanDipahami: { ...kosong.tandaPersalinanDipahami, ...(row.tanda_persalinan_dipahami as Record<string, boolean> | null ?? {}) },
     createdAt: String(row.created_at ?? new Date().toISOString()),
@@ -83,28 +91,30 @@ export async function getBirthPlan(userId: string): Promise<{ plan: BirthPlan | 
     const cloud = dariCloud(data as Record<string, unknown>)
     const localTime = local ? Date.parse(local.updatedAt) : 0
     const cloudTime = Date.parse(cloud.updatedAt)
-    if (local && localTime !== cloudTime) {
-      return {
-        plan: localTime > cloudTime ? local : cloud,
-        conflict: { device: local, cloud },
-      }
+    if (!local) {
+      await db.birthPlans.put(cloud)
+      return { plan: cloud }
     }
-    if (!local || cloudTime > localTime) await db.birthPlans.put(cloud)
-    return { plan: cloud }
+    if (sameBirthPlanContent(local, cloud)) {
+      if (cloudTime > localTime) await db.birthPlans.put(cloud)
+      return { plan: cloudTime > localTime ? cloud : local }
+    }
+    return {
+      plan: localTime >= cloudTime ? local : cloud,
+      conflict: { device: local, cloud },
+    }
   } catch {
     return { plan: local ?? null }
   }
 }
 
-export async function simpanLokalDanSinkronkan(plan: BirthPlan): Promise<BirthPlan> {
+export async function simpanLokalDanSinkronkan(plan: BirthPlan): Promise<BirthPlanSaveResult> {
   const saved = { ...plan, updatedAt: new Date().toISOString() }
   await db.birthPlans.put(saved)
-  void syncBirthPlan(saved)
-  return saved
+  return { plan: saved, syncStatus: syncBirthPlan(saved).then(syncStatus, () => "failed") }
 }
 
-export async function pilihVersiRencana(plan: BirthPlan): Promise<BirthPlan> {
+export async function pilihVersiRencana(plan: BirthPlan): Promise<BirthPlanSaveResult> {
   await db.birthPlans.put(plan)
-  void syncBirthPlan(plan)
-  return plan
+  return { plan, syncStatus: syncBirthPlan(plan).then(syncStatus, () => "failed") }
 }

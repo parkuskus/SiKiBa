@@ -1,7 +1,7 @@
 # Investigasi Laporan Pengguna
 
 **Tanggal:** 10 Oktober 2026  
-**Status:** Investigasi selesai; perubahan untuk isian skrining terakhir sudah diterapkan di aplikasi.  
+**Status:** Investigasi dan perbaikan peta, mode nifas, isian skrining, serta penyimpanan P4K sudah diterapkan di aplikasi.  
 **Tujuan:** Merangkum temuan yang dapat dibuktikan, bagian yang masih perlu direproduksi atau dikonfirmasi, dan rancangan solusi sebelum implementasi.
 
 **Dasar keputusan klinis:** Masukan pada daftar ini berasal dari pakar dan sudah diverifikasi. Frekuensi ANC dan makna BB sebelum hamil diperlakukan sebagai persyaratan yang disetujui; investigasi ini tidak meminta validasi klinis ulang.
@@ -10,7 +10,7 @@
 
 | No. | Laporan                                                          | Temuan investigasi                                                                                                                                                                                                                                                                    | Prioritas                                |
 | --- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| 1   | Estimasi dana P4K tidak tersimpan                                | Field sudah masuk model lokal dan payload cloud. Risiko yang ditemukan ada pada autosave berbasis jeda dan sinkronisasi cloud yang tidak ditunggu/ditampilkan; belum ada bukti bahwa field dana sendiri sengaja dikecualikan. Perlu reproduksi untuk membedakan data lokal dan cloud. | Tinggi                                   |
+| 1   | Estimasi dana P4K tidak tersimpan                                | Payload dan kolom cloud sudah memuat estimasi. UI lama hanya memberi status lokal, sementara sync cloud berjalan tanpa status. Jika konflik tampil, field dana tetap editable dan dapat tertimpa saat memilih versi. Snapshot agregat cloud menunjukkan satu record P4K tanpa estimasi dana. | Tinggi |
 | 2   | BB faktor risiko perlu berlabel “BB sebelum hamil”               | Label saat ini hanya “Berat (kg)” pada bagian Pemeriksaan Fisik. Nilai disimpan sebagai `bbKg`, tidak dipakai dalam skor Poedji. Persyaratan pakar menetapkan bahwa nilai tersebut adalah BB sebelum hamil.                                                                           | Sedang                                   |
 | 3   | Berbagai form skrining menampilkan data dummy, bukan isian terakhir | Nilai awal contoh ditemukan di beberapa skrining hamil, nifas, dan bayi. Form menginisialisasi ulang nilai itu ketika dibuka dan tidak memuat detail skrining terakhir. Hasil langsung setelah submit tetap perlu direproduksi untuk memastikan apakah masalahnya juga terjadi pada tahap itu. | Tinggi |
 | 4   | Jawaban chatbot tidak konsisten/rancu                            | Ada jalur LLM online dan FAQ berbasis pencocokan kata offline; aturan, cakupan, penandaan verifikasi, dan deteksi eskalasinya tidak sepenuhnya sama.                                                                                                                                  | Tinggi, karena konteks kesehatan         |
@@ -24,24 +24,33 @@
 
 ### Yang ditemukan
 
-- Input `estimasiDana` memperbarui draft dan menandai draft berubah. Autosave dijadwalkan setelah 450 ms tanpa perubahan (`app/src/features/beranda/BirthPlanScreen.tsx`, sekitar baris 92–129 dan 280–288).
+- Input `estimasiDana` memperbarui draft dan menandai draft berubah. Autosave dijadwalkan setelah 450 ms tanpa perubahan (`app/src/features/beranda/BirthPlanScreen.tsx`).
 - Simpan lokal menulis seluruh objek `BirthPlan` ke Dexie. Migration Supabase 009 memiliki kolom `estimasi_dana numeric` yang menerima `NULL` atau nilai nonnegatif (`birthPlanService.ts`, sekitar baris 99–103; `supabase/migrations/009_birth_plans.sql`).
-- Sinkronisasi cloud memasukkan `estimasi_dana`, tetapi dipanggil fire-and-forget. UI menyatakan “Tersimpan di perangkat”; status keberhasilan sinkronisasi cloud tidak ditampilkan (`app/src/data/sync.ts`, sekitar baris 172–189).
-- Saat membuka ulang, data cloud dikonversi dengan syarat `typeof estimasi_dana === "number"`. Jika format nilai dari backend bukan number, nilai tampil kosong. Perilaku aktual perlu diperiksa dari hasil query produksi sebelum menetapkan ini sebagai akar masalah.
-- Konflik versi lokal dan cloud meminta pengguna memilih satu versi penuh. Memilih versi cloud yang tidak memiliki estimasi dana dapat menggantikan nilai lokal yang lebih baru.
+- Payload `syncBirthPlan` sudah mengirim `estimasi_dana`, tetapi sebelum perbaikan dipanggil fire-and-forget. UI hanya menyatakan “Tersimpan di perangkat”, sehingga cloud gagal/menunggu terlihat seperti sudah tersimpan penuh (`app/src/data/sync.ts`).
+- Snapshot agregat remote yang diperiksa 2026-10-10 menunjukkan satu record `birth_plans` dan tidak ada record dengan `estimasi_dana` terisi. Query ini hanya memeriksa jumlah, bukan membuka isi atau mengidentifikasi pemilik record.
+- Alur konflik versi lokal/cloud membandingkan timestamp tanpa terlebih dahulu memeriksa kesamaan isi. Selain itu, input estimasi dana tidak dikunci saat konflik walaupun field lain dikunci. Autosave juga berhenti selama konflik. Jadi angka dapat diketik, tetapi memilih versi online dapat menimpa angka itu tanpa menyimpannya.
+- Konversi nilai cloud sebelumnya hanya menerima `number`; nilai numeric yang dikembalikan sebagai string akan dianggap kosong.
 
 ### Kesimpulan sementara
 
-Belum ditemukan kesalahan yang secara khusus membuang `estimasiDana` pada penulisan lokal. Yang dapat dipastikan adalah indikator “tersimpan” berarti tersimpan di perangkat, bukan bukti bahwa cloud telah menerima nilai. Jika pengguna menutup PWA atau memeriksa perangkat lain, keterlambatan/gagal sinkronisasi, konflik versi, atau autosave 450 ms perlu dibedakan. Gejala belum direproduksi dengan akun dan langkah pengguna.
+Penyimpanan lokal menerima seluruh objek, dan payload sync memuat estimasi. Dua penyebab yang terverifikasi dari kode adalah tidak adanya status cloud yang akurat serta field estimasi yang tetap bisa diedit lalu tertimpa ketika konflik dipilih. Snapshot cloud membuktikan ada record tanpa estimasi, tetapi belum menghubungkan record itu dengan akun pengguna yang melaporkan masalah.
 
 ### Rancangan solusi
 
-1. Reproduksi dengan angka bukan nol, misalnya `650000`, lalu tutup melalui tombol simpan, buka lagi, refresh, dan periksa dari perangkat kedua.
-2. Catat nilai di empat titik: event input, objek draft, record Dexie, dan record Supabase. Uji juga nilai `0`, mengosongkan field, offline, dan buka konflik lokal/cloud.
-3. Pertahankan penyimpanan lokal sebagai respons cepat. Tampilkan status terpisah untuk tersimpan lokal, menunggu sinkronisasi, dan tersinkron ke cloud; jangan menyebut tersimpan cloud jika request/antrean gagal.
-4. Parse nilai numerik cloud secara eksplisit dan validasi `Number.isFinite`, sambil mempertahankan perbedaan antara kosong (`null`) dan nol (`0`).
-5. Pastikan edit terakhir selalu di-flush saat tombol simpan/tutup ditekan; cegah autosave lama menandai draft yang lebih baru sebagai bersih.
-6. Saat konflik, tampilkan perbandingan estimasi dana secara jelas dan jangan mengganti nilai diam-diam.
+1. Uji nilai bukan nol, nol, kosong, offline/reconnect, konflik versi, tutup/buka, refresh, dan perangkat kedua.
+2. Pertahankan simpan lokal lebih dulu, tetapi tampilkan status terpisah untuk tersimpan lokal, menunggu sinkronisasi, tersinkron, gagal, dan akun lokal saja.
+3. Parse nilai numeric cloud dengan aman; pertahankan perbedaan antara kosong (`null`) dan nol (`0`).
+4. Serialkan autosave per rencana agar request lama tidak menimpa edit terbaru. Pastikan tombol simpan/tutup menunggu commit lokal, bukan menunggu jaringan.
+5. Jika ada konflik isi, tampilkan kedua nilai estimasi, kunci edit selama pemilihan, dan jangan hilangkan nilai tanpa keputusan eksplisit.
+
+### Implementasi
+
+- Penyimpanan Dexie sekarang diselesaikan sebelum proses sinkronisasi; upsert cloud terlebih dahulu masuk antrean Dexie yang durable, dan request cloud berjalan setelahnya. UI membedakan status lokal, antrean, berhasil, gagal, dan akun Dummy lokal.
+- Retry tersedia saat sync gagal dan saat perangkat kembali online. Autosave cloud Birth Plan diserialkan agar versi lama tidak selesai setelah versi baru.
+- Konflik tidak lagi dibuat hanya karena timestamp berbeda jika konten kedua versi sama. Jika isinya berbeda, nilai estimasi dana perangkat dan online ditampilkan; field dana ikut terkunci selama konflik.
+- Nilai estimasi dari cloud menerima `number` atau numeric string yang valid; nol tetap berbeda dari kosong.
+- `scripts/check-birth-plan.mjs` memeriksa parse nol/numeric/null serta perbandingan isi saat timestamp berbeda.
+- Build dan skrip cek tersebut berhasil pada 2026-10-10. Perbandingan nilai lokal/cloud pada perangkat akun yang melaporkan masalah masih perlu QA browser.
 
 ### Kriteria penerimaan
 
@@ -190,4 +199,4 @@ Belum ada keterangan masalah pada butir nomor 9. Perlu deskripsi gejala, langkah
 
 ## Batas investigasi
 
-Investigasi awal menelusuri kode dan dokumen lokal. Peta darurat, konfirmasi mode nifas, dan pemuatan isian skrining terakhir telah diimplementasikan; build dan pemeriksaan pemilihan draft per pengguna/tipe lulus. Belum dilakukan replay end-to-end pada perangkat dengan data pengguna yang mengalami laporan. Perilaku hasil langsung setelah submit dan masalah lain yang belum diimplementasikan tetap memerlukan QA terarah; keputusan klinis dari pakar tidak dibuka ulang.
+Perbaikan P4K telah diverifikasi dengan build, uji utilitas, dan snapshot agregat database. Belum dilakukan replay end-to-end pada browser/perangkat dan akun yang melaporkan gejala; karena itu penerimaan jumlah yang sama setelah tutup/buka, reconnect, dan resolusi konflik pada sesi tersebut masih memerlukan QA perangkat.

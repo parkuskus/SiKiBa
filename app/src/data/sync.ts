@@ -5,34 +5,62 @@ import { supabase } from './supabase'
 // Mitigasi retensi iOS + offline submit (ARCHITECTURE.md:9): submit offline → enqueue → auto flush saat online.
 
 type Op = 'insert' | 'upsert' | 'delete'
+export type SyncOutcome = 'synced' | 'queued' | 'failed' | 'skipped'
+let birthPlanSyncChain: Promise<void> = Promise.resolve()
 
-async function enqueue(table: string, op: Op, payload: Record<string, unknown>, onConflict?: string) {
-  await db.syncQueue.add({ table, op, payload, onConflict, createdAt: new Date().toISOString() }).catch(() => {})
+function serializeBirthPlanSync<T>(work: () => Promise<T>): Promise<T> {
+  const task = birthPlanSyncChain.then(work, work)
+  birthPlanSyncChain = task.then(() => undefined, () => undefined)
+  return task
 }
 
-async function fireOrQueue(table: string, op: Op, payload: Record<string, unknown>, onConflict?: string) {
+async function enqueue(table: string, op: Op, payload: Record<string, unknown>, onConflict?: string): Promise<boolean> {
+  try {
+    await db.syncQueue.add({ table, op, payload, onConflict, createdAt: new Date().toISOString() })
+    return true
+  } catch {
+    return false
+  }
+}
+
+async function fireOrQueue(table: string, op: Op, payload: Record<string, unknown>, onConflict?: string, durable = false): Promise<SyncOutcome> {
   let outgoing = payload
   let owner = String(payload.user_id ?? payload.id ?? '')
   if (owner.startsWith('demo-')) {
-    if (!['supplement_reminders', 'anc_visits', 'dose_logs'].includes(table)) return
+    if (!['supplement_reminders', 'anc_visits', 'dose_logs'].includes(table)) return 'skipped'
     try {
       const demoPushOwner = localStorage.getItem('siaga_demo_push_user_id')
       const { data: { session } } = await supabase.auth.getSession()
-      if (!demoPushOwner || demoPushOwner !== session?.user.id || !session.user.is_anonymous) return
+      if (!demoPushOwner || demoPushOwner !== session?.user.id || !session.user.is_anonymous) return 'skipped'
       owner = demoPushOwner
       outgoing = { ...payload, user_id: owner }
-    } catch { return }
+    } catch { return 'skipped' }
+  }
+  let durableQueueId: number | undefined
+  if (durable) {
+    try {
+      if (table === 'birth_plans') {
+        const older = await db.syncQueue.where('table').equals(table)
+          .filter((item) => String(item.payload.user_id ?? '') === owner).toArray()
+        await db.syncQueue.bulkDelete(older.map((item) => item.id!))
+      }
+      durableQueueId = await db.syncQueue.add({ table, op, payload: outgoing, onConflict, createdAt: new Date().toISOString() })
+    } catch {
+      return 'failed'
+    }
+  }
+  const queued = async () => durableQueueId !== undefined || await enqueue(table, op, outgoing, onConflict)
+  const clearDurableQueue = async () => {
+    if (durableQueueId !== undefined) await db.syncQueue.delete(durableQueueId).catch(() => {})
   }
   // ponytail: coba langsung jika online, gagal → queue; offline langsung queue
   if (typeof navigator !== 'undefined' && !navigator.onLine) {
-    await enqueue(table, op, outgoing, onConflict)
-    return
+    return await queued() ? 'queued' : 'failed'
   }
   try {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session || owner !== session.user.id) {
-      await enqueue(table, op, outgoing, onConflict)
-      return
+      return await queued() ? 'queued' : 'failed'
     }
     const q = op === 'delete' ? supabase.from(table).delete().match(outgoing)
       : op === 'upsert'
@@ -40,18 +68,22 @@ async function fireOrQueue(table: string, op: Op, payload: Record<string, unknow
       : supabase.from(table).insert(outgoing as never)
     const { error } = await q as unknown as { error: unknown }
     if (error) {
-      // RLS/FK warn (belum auth) jangan queue ulang — cukup log, biar tidak spam
-      const msg = String(error)
-      if (msg.includes('violates row-level') || msg.includes('foreign key') || msg.includes('JWT')) {
+      const failure = error as { code?: string; message?: string }
+      if (['42501', '23503', 'PGRST301', '401', '403'].includes(failure.code ?? '') || /row-level|foreign key|JWT/i.test(failure.message ?? '')) {
+        await clearDurableQueue()
         console.warn('[sync] skip (auth):', error)
-        return
+        return 'failed'
       }
-      await enqueue(table, op, outgoing, onConflict)
+      const saved = await queued()
       console.warn('[sync] queued after error:', error)
+      return saved ? 'queued' : 'failed'
     }
+    await clearDurableQueue()
+    return 'synced'
   } catch (e) {
-    await enqueue(table, op, outgoing, onConflict)
+    const saved = await queued()
     console.warn('[sync] queued offline:', e)
+    return saved ? 'queued' : 'failed'
   }
 }
 
@@ -68,11 +100,18 @@ export async function flushSyncQueue(): Promise<number> {
     }
     if (String(it.payload.user_id ?? it.payload.id ?? '') !== session.user.id) continue
     try {
-      const q = it.op === 'delete' ? supabase.from(it.table).delete().match(it.payload)
-        : it.op === 'upsert'
-        ? supabase.from(it.table).upsert(it.payload as never, it.onConflict ? { onConflict: it.onConflict } as never : undefined)
-        : supabase.from(it.table).insert(it.payload as never)
-      const { error } = await q as unknown as { error: unknown }
+      const send = async () => {
+        if (it.table === 'birth_plans' && !await db.syncQueue.get(it.id!)) return { error: null, superseded: true }
+        const q = it.op === 'delete' ? supabase.from(it.table).delete().match(it.payload)
+          : it.op === 'upsert'
+          ? supabase.from(it.table).upsert(it.payload as never, it.onConflict ? { onConflict: it.onConflict } as never : undefined)
+          : supabase.from(it.table).insert(it.payload as never)
+        const { error } = await q as unknown as { error: unknown }
+        return { error, superseded: false }
+      }
+      const result = it.table === 'birth_plans' ? await serializeBirthPlanSync(send) : await send()
+      if (result.superseded) continue
+      const { error } = result
       if (error) {
         const msg = String(error)
         if (msg.includes('violates row-level') || msg.includes('foreign key') || msg.includes('JWT')) {
@@ -102,7 +141,7 @@ if (typeof window !== 'undefined') {
 }
 
 // helpers — tetap fire-and-forget untuk caller (void), tapi di dalam sudah queue-aware
-export function syncProfile(p: { id: string; nama: string; email: string; tanggal_lahir: string; hpht: string; gravida: number; para: number; abortus: number; fasyankes: string; nama_bidan: string; noHp: string; avatarPath?: string }): Promise<void> {
+export function syncProfile(p: { id: string; nama: string; email: string; tanggal_lahir: string; hpht: string; gravida: number; para: number; abortus: number; fasyankes: string; nama_bidan: string; noHp: string; avatarPath?: string }): Promise<SyncOutcome> {
   return fireOrQueue('profiles', 'upsert', {
     id: p.id, nama: p.nama, email: p.email, tanggal_lahir: p.tanggal_lahir || null, hpht: p.hpht || null,
     gravida: p.gravida, para: p.para, abortus: p.abortus,
@@ -169,22 +208,23 @@ export function syncBbl(e: { id: string; userId: string; dataLahir: string; apga
   })
 }
 
-export function syncBirthPlan(plan: BirthPlan): Promise<void> {
-  return fireOrQueue('birth_plans', 'upsert', {
-    user_id: plan.userId,
-    penolong: plan.penolong,
-    tempat_bersalin: plan.tempatBersalin,
-    pendamping: plan.pendamping,
-    hp_bidan_siaga: plan.hpBidanSiaga,
-    donor1_nama: plan.donor1Nama,
-    donor1_golongan_darah: plan.donor1GolonganDarah || null,
-    donor2_nama: plan.donor2Nama,
-    donor2_golongan_darah: plan.donor2GolonganDarah || null,
-    transportasi: plan.transportasi,
-    estimasi_dana: plan.estimasiDana,
-    checklist_perlengkapan: plan.checklistPerlengkapan,
-    tanda_persalinan_dipahami: plan.tandaPersalinanDipahami,
-    created_at: plan.createdAt,
+export function syncBirthPlan(plan: BirthPlan): Promise<SyncOutcome> {
+  const send = () => fireOrQueue('birth_plans', 'upsert', {
+      user_id: plan.userId,
+      penolong: plan.penolong,
+      tempat_bersalin: plan.tempatBersalin,
+      pendamping: plan.pendamping,
+      hp_bidan_siaga: plan.hpBidanSiaga,
+      donor1_nama: plan.donor1Nama,
+      donor1_golongan_darah: plan.donor1GolonganDarah || null,
+      donor2_nama: plan.donor2Nama,
+      donor2_golongan_darah: plan.donor2GolonganDarah || null,
+      transportasi: plan.transportasi,
+      estimasi_dana: plan.estimasiDana,
+      checklist_perlengkapan: plan.checklistPerlengkapan,
+      tanda_persalinan_dipahami: plan.tandaPersalinanDipahami,
+      created_at: plan.createdAt,
     updated_at: plan.updatedAt,
-  }, 'user_id')
+    }, 'user_id', true)
+  return serializeBirthPlanSync(send)
 }
