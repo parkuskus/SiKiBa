@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { CalendarDays, Check } from "lucide-react"
+import { CalendarDays } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -18,15 +18,6 @@ import WeightHistory from "@/features/tracker/WeightHistory"
 import DiaryHistory from "@/features/tracker/DiaryHistory"
 import MedForm from "@/features/tracker/MedForm"
 import type { WeightEntry, ANCVisit, DiaryEntry } from "@/data/db"
-
-const MILESTONES = [
-  { w: 12, t: "Organ penting terbentuk" },
-  { w: 20, t: "Gerakan terasa, kontrol ANC" },
-  { w: 24, t: "Batas viabilitas janin" },
-  { w: 28, t: "Masuk trimester 3" },
-  { w: 37, t: "Cukup bulan" },
-  { w: 40, t: "Hari perkiraan lahir" },
-]
 
 const DEMO_HPHT = "2026-02-12"
 const SUPLEMEN_DEFAULT = [
@@ -182,10 +173,6 @@ export default function PengingatPage({ setShowBottomNav }: { setShowBottomNav: 
   const hplLabel = new Date(tl.hpl).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })
   const currentWeek = Number.isFinite(tl.uk) ? Math.min(40, Math.max(0, tl.uk)) : 0
   const progress = Math.min(100, Math.max(0, currentWeek / 40 * 100))
-  const nextMilestoneIndex = MILESTONES.findIndex((milestone) => milestone.w >= currentWeek)
-  const milestoneAnchor = nextMilestoneIndex < 0 ? MILESTONES.length - 2 : nextMilestoneIndex
-  const milestoneStart = Math.max(0, milestoneAnchor - 1)
-  const visibleMilestones = MILESTONES.slice(milestoneStart, milestoneStart + 3)
   const trimesterLabel = `Trimester ${tl.trimester}`
 
   // layar tambah obat penuh (bukan bagian section)
@@ -239,7 +226,7 @@ export default function PengingatPage({ setShowBottomNav }: { setShowBottomNav: 
           <div className="flex items-center justify-between gap-3 px-1">
             <div>
               <h2 className="!m-0 text-[15px] font-bold text-[#1D2B29]">Perjalanan kehamilan</h2>
-              <p className="mt-0.5 text-xs text-[#536961]">Minggu berjalan dan tonggak terdekat</p>
+              <p className="mt-0.5 text-xs text-[#536961]">Usia kehamilan dan perkiraan lahir</p>
             </div>
             <span className="shrink-0 rounded-full bg-[#EAF4F0] px-3 py-1.5 text-xs font-bold text-[#4A6E54]">{trimesterLabel}</span>
           </div>
@@ -273,28 +260,6 @@ export default function PengingatPage({ setShowBottomNav }: { setShowBottomNav: 
             </div>
           </div>
 
-          <div className="rounded-[24px] bg-white p-4 ring-1 ring-[#D9E7E2]">
-            <h3 className="!m-0 text-sm font-bold text-[#1D2B29]">Tonggak perjalanan</h3>
-            <div className="mt-2 divide-y divide-[#E8EFEB]">
-              {visibleMilestones.map((milestone, index) => {
-                const passed = milestone.w < currentWeek
-                const current = milestone.w === currentWeek
-                const next = !passed && !current && !visibleMilestones.slice(0, index).some((item) => item.w >= currentWeek)
-                return (
-                  <div key={milestone.w} className="flex items-center gap-3 py-2.5 first:pt-1 last:pb-1">
-                    <span className={`grid size-8 shrink-0 place-items-center rounded-full ${passed ? "bg-[#EDF6EF] text-[#2E7D32]" : current ? "bg-[#4A6E54] text-white" : "bg-[#F7FAF8] text-[#789087] ring-1 ring-[#D9E7E2]"}`}>
-                      {passed ? <Check className="size-4" strokeWidth={2.5} /> : <span className="text-xs font-bold">{milestone.w}</span>}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-semibold text-[#1D2B29]">Minggu {milestone.w}</p>
-                      <p className="text-xs leading-snug text-[#536961]">{milestone.t}</p>
-                    </div>
-                    {(current || next) && <span className="shrink-0 text-[11px] font-semibold text-[#4A6E54]">{current ? "Sekarang" : "Berikutnya"}</span>}
-                  </div>
-                )
-              })}
-            </div>
-          </div>
         </section>
 
         <SupplementSection onAdd={() => setShowMedForm(true)} />

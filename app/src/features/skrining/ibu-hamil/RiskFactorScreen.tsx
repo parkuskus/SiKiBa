@@ -85,7 +85,7 @@ export default function RiskFactorScreen({
   const [sistolik, setSistolik] = useState("")
   const [diastolik, setDiastolik] = useState("")
   const [tbCm, setTbCm] = useState("")
-  const [bbKg, setBbKg] = useState("")
+  const [bbPreKg, setBbPreKg] = useState("")
   const [gemeli, setGemeli] = useState<boolean | null>(null)
   const [trb, setTrb] = useState<boolean | null>(null)
   const [letak, setLetak] = useState<boolean | null>(null)
@@ -107,7 +107,7 @@ export default function RiskFactorScreen({
     setSistolik(detail.sistolik == null ? "" : String(detail.sistolik))
     setDiastolik(detail.diastolik == null ? "" : String(detail.diastolik))
     setTbCm(detail.tbCm == null ? "" : String(detail.tbCm))
-    setBbKg(detail.bbKg == null ? "" : String(detail.bbKg))
+    setBbPreKg(detail.bbPreKg == null && detail.bbKg == null ? "" : String(detail.bbPreKg ?? detail.bbKg))
     setRiwayatPE(typeof detail.riwayatPE === "boolean" ? detail.riwayatPE : null)
     const saved = detail.jawabanForm as { paritas?: string; jarak?: string; riwayatKomplikasi?: string[]; penyakitKronik?: string[]; gemeli?: boolean | null; trb?: boolean | null; letak?: boolean | null; hidramnion?: boolean | null } | undefined
     if (saved) {
@@ -194,7 +194,7 @@ export default function RiskFactorScreen({
         sistolik: sistolik ? Number(sistolik) : undefined,
         diastolik: diastolik ? Number(diastolik) : undefined,
         tbCm: tbCm ? Number(tbCm) : undefined,
-        bbKg: bbKg ? Number(bbKg) : undefined,
+        bbPreKg: bbPreKg ? Number(bbPreKg) : undefined,
         trb: trb === true,
         riwayatKomplikasi: kompl.some((x) => ["perdarahan", "prematur", "lainnya", "sc"].includes(x)),
         riwayatSC: kompl.includes("sc"),
@@ -299,7 +299,7 @@ export default function RiskFactorScreen({
                   { label: "Sistolik (mmHg)", value: sistolik, set: setSistolik, key: "sistolik" },
                   { label: "Diastolik (mmHg)", value: diastolik, set: setDiastolik, key: "diastolik" },
                   { label: "Tinggi (cm)", value: tbCm, set: setTbCm, key: "tbCm" },
-                  { label: "Berat (kg)", value: bbKg, set: setBbKg, key: "bbKg" },
+                  { label: "BB sebelum hamil (kg)", value: bbPreKg, set: setBbPreKg, key: "bbPreKg" },
                 ].map((field) => (
                   <div key={field.key} className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
                     <label className="block text-xs text-[#33443F]">{field.label}</label>

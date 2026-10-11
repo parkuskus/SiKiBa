@@ -11,7 +11,7 @@
 | No. | Laporan                                                          | Temuan investigasi                                                                                                                                                                                                                                                                    | Prioritas                                |
 | --- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
 | 1   | Estimasi dana P4K tidak tersimpan                                | Payload dan kolom cloud sudah memuat estimasi. UI lama hanya memberi status lokal, sementara sync cloud berjalan tanpa status. Jika konflik tampil, field dana tetap editable dan dapat tertimpa saat memilih versi. Snapshot agregat cloud menunjukkan satu record P4K tanpa estimasi dana. | Tinggi |
-| 2   | BB faktor risiko perlu berlabel “BB sebelum hamil”               | Label saat ini hanya “Berat (kg)” pada bagian Pemeriksaan Fisik. Nilai disimpan sebagai `bbKg`, tidak dipakai dalam skor Poedji. Persyaratan pakar menetapkan bahwa nilai tersebut adalah BB sebelum hamil.                                                                           | Sedang                                   |
+| 2   | BB faktor risiko perlu berlabel “BB sebelum hamil”               | Selesai: label, key data baru, dan validasi memakai BB sebelum hamil; detail lama dengan key `bbKg` tetap dipulihkan. Algoritma skor Poedji tidak berubah.                                                                                                                               | Selesai                                   |
 | 3   | Berbagai form skrining menampilkan data dummy, bukan isian terakhir | Nilai awal contoh ditemukan di beberapa skrining hamil, nifas, dan bayi. Form menginisialisasi ulang nilai itu ketika dibuka dan tidak memuat detail skrining terakhir. Hasil langsung setelah submit tetap perlu direproduksi untuk memastikan apakah masalahnya juga terjadi pada tahap itu. | Tinggi |
 | 4   | Jawaban chatbot tidak konsisten/rancu                            | Ada jalur LLM online dan FAQ berbasis pencocokan kata offline; aturan, cakupan, penandaan verifikasi, dan deteksi eskalasinya tidak sepenuhnya sama.                                                                                                                                  | Tinggi, karena konteks kesehatan         |
 | 5   | Jadwal ANC tidak sesuai; ingin ubah tanggal dan tandai HPL merah | Generator saat ini memakai enam minggu tetap `[10, 12, 20, 28, 32, 36]`; kalender hanya bisa menandai selesai dan mengubah catatan. HPL belum diberikan ke kalender sebagai penanda.                                                                                                  | Tinggi, aturan jadwal perlu dikonfirmasi |
@@ -60,21 +60,9 @@ Penyimpanan lokal menerima seluruh objek, dan payload sync memuat estimasi. Dua 
 
 ## 2. Label BB di Skrining Faktor Risiko
 
-### Yang ditemukan
+### Implementasi
 
-- Pada `RiskFactorScreen.tsx`, field berada pada bagian “Pemeriksaan Fisik” dan diberi label “Berat (kg)” (`app/src/features/skrining/ibu-hamil/RiskFactorScreen.tsx`, sekitar baris 261–279).
-- Nilai dikirim sebagai `bbKg` dan disimpan di `detail` oleh `riskFactorForm.ts`; pemanggilan `scorePoedji` tidak menggunakan `bbKg` untuk skor utama (`app/src/features/skrining/ibu-hamil/riskFactorForm.ts`, sekitar baris 20–25, 46–57, 87–96).
-- Storyboard S-03a menyebut tinggi dan berat tanpa menjelaskan apakah BB yang dimaksud sebelum hamil atau saat ini. S-03b secara terpisah membedakan BB sebelum hamil dan BB saat ini (`docs/SiKiBa_Spesifikasi_Storyboard_Prototype.md`, S-03a dan S-03b).
-- `docs/COPY.md` juga memakai istilah “BB sebelum hamil”. Masukan pakar menetapkan istilah tersebut untuk field S-03a.
-
-### Kesimpulan sementara
-
-Label sekarang memang kurang spesifik dan tidak sesuai dengan makna field yang sudah ditetapkan pakar. Nilai field tersebut adalah BB sebelum hamil, bukan berat saat pemeriksaan.
-
-### Rancangan solusi
-
-- Ganti label menjadi “BB sebelum hamil (kg)” dan selaraskan nama/arti field pada detail hasil, riwayat, serta pesan validasi.
-- Jangan mengubah skor Poedji berdasarkan nilai BB; masukan pakar yang dicatat di sini meminta keterangan BB sebelum hamil, bukan perubahan algoritma skor.
+Label, key detail, dan pesan validasi sudah diselaraskan. Pemulihan tetap mendukung key lama `bbKg`; skor Poedji tidak berubah.
 
 ## 3. Berbagai skrining menampilkan data dummy, bukan isian terakhir
 
@@ -148,9 +136,9 @@ Implementasi: generator jadwal berdasarkan HPHT dan aturan pakar, rekonsiliasi j
 
 “Tonggak perjalanan” adalah satu bagian presentasi di `PengingatPage.tsx`: array `MILESTONES`, kalkulasi milestone yang sedang tampil, dan satu kartu render sekitar baris 22, 183–187, dan 274–295. Kode itu tidak menjadi sumber perhitungan UK/HPL, jadwal ANC, atau persentase profil; penghapusan dapat dibatasi pada blok UI serta state turunan yang hanya dipakai di sana.
 
-### Rancangan solusi
+### Implementasi
 
-Hapus bagian “Tonggak perjalanan” dan kalkulasi/konstanta yang khusus dipakai olehnya. Pertahankan ringkasan UK/HPL yang memang dipakai di bagian lain Pengingat dan Beranda. Periksa jarak antarbagian setelah blok dihapus.
+Bagian UI “Tonggak perjalanan”, daftar milestone, dan kalkulasi yang hanya dipakai bagian itu sudah dihapus. Ringkasan UK/HPL, progress, berat badan, dan jadwal ANC tetap ada.
 
 ## 7. Peta hasil darurat harus mencari fasilitas terdekat
 
@@ -187,7 +175,7 @@ Belum ada keterangan masalah pada butir nomor 9. Perlu deskripsi gejala, langkah
 3. **Berikutnya** — reproduksi estimasi dana P4K pada penyimpanan lokal dan cloud; perbaiki status sinkronisasi dan konflik bila gejala terkonfirmasi.
 4. **Selesai implementasi pada 2026-10-10** — jadwal ANC pakar, edit tanggal, marker HPL merah, dan sinkronisasi push. QA perangkat/push masih perlu dilakukan.
 5. **Berikutnya** — rapikan konsistensi chatbot terhadap pedoman pakar yang telah disetujui.
-6. **Berikutnya** — hapus Tonggak Perjalanan dan perbarui label BB sesuai persyaratan pakar.
+6. **Selesai pada 2026-10-10** — hapus Tonggak Perjalanan dan perbarui label BB sesuai persyaratan pakar.
 7. Minta klarifikasi laporan nomor 9.
 
 ## Batas investigasi

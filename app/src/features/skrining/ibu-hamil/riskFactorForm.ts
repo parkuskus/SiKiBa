@@ -21,7 +21,7 @@ export type RiskFactorInput = {
   sistolik?: number
   diastolik?: number
   tbCm?: number
-  bbKg?: number
+  bbPreKg?: number
   trb?: boolean // teknik reproduksi berbantu
   jawabanForm?: { paritas: string | null; jarak: string | null; riwayatKomplikasi: string[]; penyakitKronik: string[]; gemeli: boolean | null; trb: boolean | null; letak: boolean | null; hidramnion: boolean | null }
 }
@@ -36,7 +36,7 @@ export function validateRiskFactor(v: RiskFactorInput): Record<string, string> {
   if (v.sistolik !== undefined && (v.sistolik < 70 || v.sistolik > 250)) e.sistolik = 'Sistolik (mmHg) harus 70–250'
   if (v.diastolik !== undefined && (v.diastolik < 40 || v.diastolik > 150)) e.diastolik = 'Diastolik (mmHg) harus 40–150'
   if (v.tbCm !== undefined && (v.tbCm < 100 || v.tbCm > 200)) e.tbCm = 'Tinggi (cm) harus 100–200'
-  if (v.bbKg !== undefined && (v.bbKg < 20 || v.bbKg > 250)) e.bbKg = 'Berat (kg) harus 20–250'
+  if (v.bbPreKg !== undefined && (v.bbPreKg < 20 || v.bbPreKg > 250)) e.bbPreKg = 'BB sebelum hamil (kg) harus 20–250'
   return e
 }
 

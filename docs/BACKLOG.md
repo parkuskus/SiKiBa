@@ -68,6 +68,7 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 - [x] Form skrining hamil, nifas, dan bayi menghapus nilai awal contoh untuk akun; setiap form memuat detail skrining terakhir berdasarkan `userId` dan tipe, sedangkan umur/UK dapat diisi dari profil. Record lama yang tidak menyimpan jawaban rinci diberi peringatan pada form Faktor Risiko (2026-10-10).
 - [x] P4K menyimpan lokal sebelum sync, memasukkan upsert ke antrean Dexie sebelum request cloud, menunjukkan status lokal/antrean/sukses/gagal, dan menyediakan retry. Autosave cloud diserialkan; konflik membandingkan isi, menampilkan kedua estimasi, serta mengunci field saat pemilihan versi. Snapshot agregat remote menunjukkan 1 row tanpa estimasi dana; pemilik row belum dicocokkan ke sesi uji (2026-10-10).
 - [x] Jadwal ANC mengikuti interval pakar berbasis HPHT sampai HPL, dapat dipindahkan tanggalnya, mempertahankan kunjungan selesai/terlewat, menandai HPL merah, dan menyinkronkan tanggal/metadata edit agar push mengikuti jadwal terbaru. Migration 011–012 sudah diterapkan (2026-10-10).
+- [x] Blok Tonggak Perjalanan serta data UI/kalkulasi yang hanya dipakainya dihapus dari Pengingat; field BB Faktor Risiko diberi label “BB sebelum hamil (kg)”, disimpan sebagai `bbPreKg`, dan tetap memulihkan detail lama `bbKg` (2026-10-10).
 
 ### Belum selesai / perlu konfirmasi
 - [ ] S-06 Edukasi: S-06a–S-06f tersedia; S-06g belum dibuat. Tinjau tanda dari ekstraksi yang belum memiliki video relevan sebelum menambahkannya ke S-06e; materi nifas dan laktasi diarahkan ke S-04/S-04a.
