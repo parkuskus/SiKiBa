@@ -34,7 +34,6 @@ export default function SkriningPage({
   initialForm?: ActiveForm
   onInitialFormConsumed?: () => void
 }) {
-  const [fasyankes, setFasyankes] = useState<string | null>(null)
   const [skriningTab, setSkriningTab] = useState<SkriningTab>("hamil")
   const [activeForm, setActiveForm] = useState<ActiveForm>(initialForm)
   const [results, setResults] = useState<Record<string, AnyResult & { createdAt?: string }>>({})
@@ -71,16 +70,6 @@ export default function SkriningPage({
   const doneCount = relevantKeys.filter((k) => results[k] && isToday((results[k] as { createdAt?: string }).createdAt)).length
   const totalForMode = relevantKeys.length
   const progressPct = totalForMode ? Math.round((doneCount / totalForMode) * 100) : 0
-
-  useEffect(() => {
-    void (async () => {
-      try {
-        const { getCurrentProfile } = await import("@/data/currentUser")
-        const p = await getCurrentProfile()
-        if (p?.fasyankes) setFasyankes(p.fasyankes)
-      } catch {}
-    })()
-  }, [])
 
   useEffect(() => {
     if (isNifasActive && skriningTab === "hamil") setSkriningTab("nifas")
@@ -284,7 +273,7 @@ export default function SkriningPage({
         rekomendasi={activeResult.rekomendasi}
         urgensiLabel={activeResult.urgensiLabel}
         waktuISO={activeResult.waktuISO}
-        mapsQuery={activeResult.tipeKey === "danger" ? "Puskesmas atau Praktik Mandiri Bidan (PMB) terdekat" : fasyankes ?? undefined}
+        mapsQuery="Puskesmas atau Praktik Mandiri Bidan (PMB) terdekat"
         onUlangi={() => {
           const k = activeResult.tipeKey as ActiveForm
           setActiveResult(null)

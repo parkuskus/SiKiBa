@@ -43,6 +43,7 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
   const [meds, setMeds] = useState<{ nama: string; waktu: string[] }[]>([])
   const [nextAncLabel, setNextAncLabel] = useState<string | null>(null)
   const [showReminders, setShowReminders] = useState(false)
+  const [confirmBackToPregnant, setConfirmBackToPregnant] = useState(false)
   const [clock, setClock] = useState(() => Date.now())
   const [showBirthPlan, setShowBirthPlan] = useState(false)
   const [birthPlanUserId, setBirthPlanUserId] = useState("")
@@ -162,11 +163,7 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
             hplLabel={hplLabel}
             gpa={gpa}
             onShowBirth={() => setShowBirth(true)}
-            // ponytail: testing mode — bolak-balik bebas tanpa 42 hari
-            onBackToPregnant={() => {
-              setIsPostpartum(false)
-              try { localStorage.removeItem("siaga_birth_date") } catch { /* abaikan: storage tak tersedia */ }
-            }}
+            onBackToPregnant={() => setConfirmBackToPregnant(true)}
           />
         </div>
         <QuickActionGrid
@@ -200,6 +197,23 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
           </>
         )}
       </div>
+
+      <Dialog open={confirmBackToPregnant} onOpenChange={setConfirmBackToPregnant}>
+        <DialogContent showCloseButton={false} className="w-[calc(100%-2rem)] max-w-[360px] gap-0 rounded-[24px] border-0 bg-[#FFFCF6] p-5 ring-1 ring-[#D9E7E2]">
+          <DialogTitle className="text-lg font-bold text-[#1D2B29]">Kembali ke mode hamil</DialogTitle>
+          <DialogDescription className="mt-2 text-sm leading-relaxed text-[#33443F]">
+            Anda yakin akan kembali ke mode hamil? Data kelahiran tetap tersimpan.
+          </DialogDescription>
+          <div className="mt-5 grid grid-cols-2 gap-2">
+            <button type="button" onClick={() => setConfirmBackToPregnant(false)} className="min-h-11 rounded-full bg-white px-3 text-sm font-semibold text-[#33443F] ring-1 ring-[#D9E7E2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4A6E54]">
+              Batal
+            </button>
+            <button type="button" onClick={() => { setIsPostpartum(false); setConfirmBackToPregnant(false) }} className="min-h-11 rounded-full bg-[#4A6E54] px-3 text-sm font-semibold text-white hover:bg-[#3D5C46] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1D2B29]">
+              Ya, kembali
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={showReminders} onOpenChange={setShowReminders}>
         <DialogContent showCloseButton={false} className="fixed inset-x-auto bottom-0 left-1/2 top-auto flex max-h-[75dvh] w-full max-w-[480px] -translate-x-1/2 translate-y-0 flex-col gap-0 overflow-y-auto rounded-t-[28px] rounded-b-none border-0 bg-[#FFFCF6] p-5 ring-0 sm:max-w-[480px]">
