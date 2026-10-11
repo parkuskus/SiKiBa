@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react"
 import { ArrowLeft, Backpack, ChevronRight, CircleAlert, ClipboardList, Download, HeartPulse, Save, Share2, Wallet, X } from "lucide-react"
 import { liveQuery } from "dexie"
 import { db } from "@/data/db"
@@ -14,6 +14,7 @@ type SyncStatus = BirthPlanSyncStatus | "idle"
 const moneyLabel = (value: number | null) => value === null
   ? "Belum diisi"
   : new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(value)
+const formatRupiahInput = (value: number | null) => value === null ? "" : new Intl.NumberFormat("id-ID", { maximumFractionDigits: 0 }).format(value)
 
 function hitungProgress(plan: BirthPlan) {
   const fields = [plan.penolong, plan.tempatBersalin, plan.pendamping, plan.hpBidanSiaga, plan.donor1Nama, plan.donor1GolonganDarah, plan.donor2Nama, plan.donor2GolonganDarah, plan.transportasi]
@@ -302,6 +303,19 @@ export default function BirthPlanScreen({ userId, readOnly = false, onClose }: P
     ubah({ [field]: { ...draft[field], [key]: checked } })
   }
 
+  function ubahEstimasiDana(event: ChangeEvent<HTMLInputElement>) {
+    const input = event.currentTarget
+    const caret = input.selectionStart ?? input.value.length
+    const digitsBeforeCaret = input.value.slice(0, caret).replace(/\D/g, "").length
+    const digits = input.value.replace(/\D/g, "")
+    const amount = digits ? Number(digits) : null
+    if (amount !== null && (!Number.isSafeInteger(amount) || amount < 0)) return
+    ubah({ estimasiDana: amount, danaDikonfirmasi: amount !== null })
+    const formatted = formatRupiahInput(amount)
+    const nextCaret = digitsBeforeCaret === 0 ? 0 : [...formatted].findIndex((_, index) => formatted.slice(0, index + 1).replace(/\D/g, "").length === digitsBeforeCaret) + 1
+    requestAnimationFrame(() => input.setSelectionRange(nextCaret < 0 ? formatted.length : nextCaret, nextCaret < 0 ? formatted.length : nextCaret))
+  }
+
   return (
     <div className="-mx-4 -mt-5 min-h-[100dvh] bg-[#FFFCF6]">
       <header className="sticky top-0 z-20 flex min-h-[68px] items-center gap-3 border-b border-[#E8EFEB] bg-white px-4 py-3">
@@ -414,7 +428,7 @@ export default function BirthPlanScreen({ userId, readOnly = false, onClose }: P
               <label id="estimasiDana-field" className="block">
                 <span className="mb-1.5 block text-sm font-medium text-[#33443F]">Estimasi dana persalinan (Rp)</span>
                 {readOnly || Boolean(conflict) ? <span className="flex min-h-12 items-center rounded-[16px] bg-[#FFFCF6] px-3.5 text-sm text-[#33443F] ring-1 ring-[#E7DED1]">{moneyLabel(draft.estimasiDana)}</span> : (
-                  <input id="estimasiDana" type="number" min="0" step="1000" value={draft.estimasiDana ?? ""} placeholder="Masukkan estimasi" onChange={(event) => { const value = event.target.value; const amount = value === "" ? null : Number(value); const valid = amount === null || Number.isFinite(amount); ubah({ estimasiDana: valid && amount !== null ? Math.max(0, amount) : null, danaDikonfirmasi: value !== "" && valid }) }} onBlur={() => { void simpan() }} className="min-h-12 w-full rounded-[16px] border border-[#E7DED1] bg-[#FFFCF6] px-3.5 text-sm text-[#1D2B29] outline-none placeholder:text-[#66736F] focus-visible:ring-2 focus-visible:ring-[#4A6E54]" />
+                  <input id="estimasiDana" type="text" inputMode="numeric" pattern="[0-9]*" autoComplete="off" value={formatRupiahInput(draft.estimasiDana)} placeholder="Masukkan estimasi" onChange={ubahEstimasiDana} onBlur={() => { void simpan() }} className="min-h-12 w-full rounded-[16px] border border-[#E7DED1] bg-[#FFFCF6] px-3.5 text-sm text-[#1D2B29] outline-none placeholder:text-[#66736F] focus-visible:ring-2 focus-visible:ring-[#4A6E54]" />
                 )}
               </label>
               <p className="mt-2 text-xs text-[#536961]">Termasuk biaya rujukan dan kebutuhan tak terduga.</p>
