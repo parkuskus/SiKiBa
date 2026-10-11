@@ -2,9 +2,9 @@
 
 Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT.md` dan `SiKiBa_Spesifikasi_Storyboard_Prototype.md`; aturan visual mengacu ke `DESIGN.md`.
 
-## Status saat ini — 2026-10-06
+## Status saat ini — 2026-10-11
 
-### Selesai
+### Sudah diselesaikan
 - [x] Fondasi PWA React, TypeScript, Vite, Tailwind v4, Dexie, Supabase Auth/Postgres, service worker, dan struktur fitur modular.
 - [x] Onboarding S-00, S-01, S-01b dengan email OTP Supabase, pembuatan profil berbasis Auth UUID, dan template email.
 - [x] Beranda S-02 dengan mode hamil/nifas, kartu profil, aksi cepat, ringkasan reminder, dan pencatatan kelahiran.
@@ -16,14 +16,14 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 - [x] Logika tracker S-07–S-07d untuk berat badan, suplemen, ANC, diary, dan timeline; UI tracker tersedia.
 - [x] Profil: edit/detail, riwayat, pengaturan notifikasi dan penyimpanan, serta ekspor PDF dasar.
 - [x] Sinkronisasi Dexie ke Supabase dengan antrean offline untuk profil, hasil skrining, berat, suplemen, ANC, diary, nifas, dan profil bayi. Pemanggilan helper sudah terhubung pada alur utama; perlu QA perilaku RLS dan retry.
-- [x] Chatbot Siba memakai Edge Function saat online dan FAQ lokal sebagai fallback; batas topik, format jawaban, badge sumber terverifikasi, dan peringatan darurat tersedia.
+- [x] Chatbot Kira memakai Edge Function saat online dan FAQ lokal sebagai fallback; batas topik, format jawaban, badge sumber terverifikasi, dan peringatan darurat tersedia.
 - [x] Redesign Figma-first yang tercatat 1 Oktober: onboarding, beranda, form skrining, nifas/BBL, tracker, profil, dan chatbot mengikuti stage sage, panel mint/putih, serta format tanggal `DD/MM/YYYY`.
 - [x] Migration Supabase 001–006 untuk skema awal, chatbot/RAG, grant, email profil, akses terautentikasi, dan kolom sync profil.
-- [x] Build produksi berhasil pada 2026-10-06 (`npm run build`).
+- [x] Build frontend berhasil; build terakhir setelah pembaruan P4K lulus pada 2026-10-11 (`npm run build`).
 - [x] Kriteria manifest PWA diperbaiki 2026-10-06: ikon 192/512 valid, bahasa Indonesia, `start_url` dan `scope`; pemicu instal otomatis tetap dikendalikan Chrome.
 - [x] Logo ibu hamil diperbarui 2026-10-06: ikon PWA, logo transparan untuk UI, dan versi latar putih untuk favicon/ikon layar utama.
 - [x] Kartu menu skrining memilih hasil tersimpan terbaru per tipe, bukan hanya hasil hari ini; progress harian tetap dihitung dari tanggal hasil terbaru (2026-10-06).
-- [x] Brief prompt ilustrasi dan variasi layout header untuk 10 form skrining dibuat di `docs/SCREENING_HEADER_ILLUSTRATIONS.md` (2026-10-06); generate aset dan implementasi header masih pending.
+- [x] Brief prompt/layout, 10 ilustrasi header, dan penerapan header untuk seluruh form skrining selesai sesuai `docs/SCREENING_HEADER_ILLUSTRATIONS.md` (2026-10-06–2026-10-08).
 - [x] Sepuluh ilustrasi header skrining yang dibuat pengguna diurutkan dan dinamai `illu-46` sampai `illu-55` sesuai `docs/SCREENING_HEADER_ILLUSTRATIONS.md`.
 - [x] Header S-03a Faktor Risiko memakai komposisi asimetris dan ilustrasi `illu-46-skrining-risiko.webp`; logo dihapus dari header agar ilustrasi tidak tertutup.
 - [x] Header S-03a dipisahkan dari sheet form tanpa overlap negatif agar ilustrasi dan konten form tidak bertabrakan.
@@ -71,20 +71,20 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 - [x] Jadwal ANC mengikuti interval pakar berbasis HPHT sampai HPL, dapat dipindahkan tanggalnya, mempertahankan kunjungan selesai/terlewat, menandai HPL merah, dan menyinkronkan tanggal/metadata edit agar push mengikuti jadwal terbaru. Migration 011–012 sudah diterapkan (2026-10-10).
 - [x] Chatbot menyamakan jalur cepat/eskalasi online-offline, memakai 6 giliran konteks terakhir, retrieval hybrid, dan streaming SSE dengan output-safety guard. Migration 013 dan Edge Function `chat` versi 26 sudah diterapkan; uji live menghasilkan jawaban terverifikasi dari RAG (2026-10-11).
 - [x] Blok Tonggak Perjalanan serta data UI/kalkulasi yang hanya dipakainya dihapus dari Pengingat; field BB Faktor Risiko diberi label “BB sebelum hamil (kg)”, disimpan sebagai `bbPreKg`, dan tetap memulihkan detail lama `bbKg` (2026-10-10).
+- [x] Eskalasi chatbot dan hasil skrining MERAH memakai komponen overlay darurat bersama dengan tombol peta, berbagi ke bidan, dan dismiss.
+- [x] Panduan rilis Android ke Google Play Store via TWA/Bubblewrap ditambahkan di `docs/DEPLOY_PLAY_STORE.md` (2026-10-06); implementasi paket Android dan submission masih pekerjaan lanjutan.
 
-### Belum selesai / perlu konfirmasi
-- [ ] S-06 Edukasi: S-06a–S-06f tersedia; S-06g belum dibuat. Tinjau tanda dari ekstraksi yang belum memiliki video relevan sebelum menambahkannya ke S-06e; materi nifas dan laktasi diarahkan ke S-04/S-04a.
+### Belum diselesaikan / menunggu QA atau konfirmasi
+- [ ] S-06: materi P4K sudah tersedia sebagai form di Beranda sesuai revisi layout, bukan tile edukasi. Tinjau kecocokan tanda bahaya yang belum memiliki video relevan pada S-06e; materi nifas dan laktasi diarahkan ke S-04/S-04a.
 - [ ] QA sinkronisasi Birth Plan dari browser/perangkat akun pelapor, khususnya jumlah estimasi dana lokal vs cloud, nol/kosong, antre offline dan retry, konflik perangkat/cloud, pemulihan lintas perangkat, serta mode hamil/nifas. Implementasi antre durable, indikator, retry, dan perlindungan konflik tersedia; uji runtime akun pelapor belum dilakukan.
 - [ ] QA kalender ANC di perangkat: pindahkan tanggal, refresh/offline, pastikan status/catatan tidak hilang, lalu uji push ANC H-2/H-1 memakai tanggal hasil edit.
 - [ ] Validasi seluruh algoritma klinis oleh SpOG/bidan senior. Ambang dan rekomendasi belum boleh dianggap tervalidasi untuk pelayanan.
 - [ ] Ethical Clearance sebelum uji coba dengan partisipan.
 - [ ] QA end-to-end pada perangkat Android dan iOS: OTP/SMTP produksi, offline dan antrean sync, RLS, retensi data, reminder/notifikasi, mode nifas, chatbot, dan alur MERAH. Chatbot membutuhkan evaluasi relevansi/eskalasi dan pengukuran TTFR end-to-end pada perangkat setelah rilis frontend.
 - [ ] Setelah deploy frontend, aktifkan push di perangkat dengan akun riil dan uji penerimaan ketika PWA tertutup, termasuk obat, ANC H-2/H-1, serta upload/crop avatar cloud. Backend sudah di-deploy; izin browser belum dapat diberikan dari agen.
-- [x] Eskalasi chatbot dan hasil skrining MERAH memakai komponen overlay darurat bersama dengan tombol peta, berbagi ke bidan, dan dismiss.
 - [ ] Finalisasi isi/tampilan PDF bersama stakeholder; pastikan data ekspor dan format berbagi sesuai kebutuhan bidan.
-- [ ] Konfigurasi SMTP produksi, secret Edge Function, dan verifikasi deployment Supabase/Cloudflare Pages.
+- [ ] Konfigurasi dan uji SMTP produksi untuk OTP; pastikan frontend terbaru sudah di-deploy ke Cloudflare Pages/Workers. Edge Function `dispatch-reminders` dan `chat` serta konfigurasi push tercatat sudah di-deploy; verifikasi ulang production masih bagian QA rilis.
 - [ ] Siapkan distribusi Google Play melalui TWA setelah PWA production, keamanan data, validasi klinis, dan persyaratan akun/testing siap.
-- [x] Panduan rilis Android ke Google Play Store via TWA/Bubblewrap ditambahkan di `docs/DEPLOY_PLAY_STORE.md` (2026-10-06); implementasi paket Android dan submission masih pekerjaan lanjutan.
 - [ ] **Prasyarat Play Store:** deploy manifest/ikon PWA terbaru; siapkan package name permanen, akun Play Console institusi, Bubblewrap, Android SDK, dan signing key.
 - [ ] Sajikan `/.well-known/assetlinks.json` sebagai JSON valid di production memakai SHA-256 App Signing certificate dari Play Console.
 - [ ] **Keamanan dan kebijakan:** implementasikan enkripsi data kesehatan; lengkapi penghapusan akun dan data cloud; siapkan kebijakan privasi, Data safety, serta Health apps declaration.
@@ -101,6 +101,6 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 
 ## Urutan kerja berikutnya
 1. QA sinkronisasi Birth Plan dari aplikasi pada akun uji, termasuk antrean offline, pemulihan cloud, konflik dua versi, PDF, dan mode kehamilan/nifas.
-2. Lengkapi S-06g P4K dan konten S-06e yang belum memiliki video relevan; lakukan review pakar sebelum publikasi.
+2. Tinjau kecocokan video tanda bahaya pada S-06e; materi P4K sudah berupa form di Beranda sesuai layout saat ini.
 3. Lanjutkan QA lintas perangkat, validasi klinis, dan proses Ethical Clearance/UAT.
 4. Siapkan deployment produksi dan distribusi yang dipilih.
