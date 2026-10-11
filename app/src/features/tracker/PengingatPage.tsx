@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { db } from "@/data/db"
 import { getCurrentUserId, getCurrentProfile } from "@/data/currentUser"
-import { initANC, toggleANC } from "@/features/tracker/ancForm"
+import { moveANC, reconcileANC, toggleANC } from "@/features/tracker/ancForm"
 import { submitDiary } from "@/features/tracker/diaryForm"
 import { getTimeline } from "@/features/tracker/timelineForm"
 import { weeksFromHpht } from "@/clinical-rules/ukHpl"
@@ -104,11 +104,7 @@ export default function PengingatPage({ setShowBottomNav }: { setShowBottomNav: 
         setBbStatus({ kenaikan, trajectory: kenaikan < targetProp - 1 ? "Kurang" : kenaikan > targetProp + 2 ? "Lebih" : "Normal" })
       } catch {}
     } else setBbStatus(null)
-    let a = await db.ancVisits.where("userId").equals(id).toArray()
-    if (!a.length) {
-      await initANC(id, h)
-      a = await db.ancVisits.where("userId").equals(id).toArray()
-    }
+    const a = await reconcileANC(id, h)
     a.sort((x, y) => x.tanggalTerjadwal.localeCompare(y.tanggalTerjadwal))
     setAnc(a)
     const d = await db.diaryEntries.where("userId").equals(id).toArray()
@@ -138,6 +134,12 @@ export default function PengingatPage({ setShowBottomNav }: { setShowBottomNav: 
   const handleSaveAncNote = async (id: string, done: boolean, note: string) => {
     await toggleANC(id, done, note.trim() || undefined)
     await load()
+  }
+
+  const handleMoveAnc = async (id: string, date: string) => {
+    const status = await moveANC(id, date)
+    await load()
+    return status
   }
 
   const handleDiary = async () => {
@@ -348,8 +350,10 @@ export default function PengingatPage({ setShowBottomNav }: { setShowBottomNav: 
                 ) : (
                   <ANCCalendar
                     anc={anc}
+                    hplDate={tl.hpl}
                     onToggle={(id, done) => void handleToggleAnc(id, done)}
                     onSaveNote={(id, done, note) => void handleSaveAncNote(id, done, note)}
+                    onMoveDate={handleMoveAnc}
                   />
                 )}
               </CardContent>

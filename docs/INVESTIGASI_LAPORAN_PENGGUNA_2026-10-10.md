@@ -128,26 +128,19 @@ Sumber nilai dummy telah ditemukan pada berbagai form: masing-masing memulai den
 
 ### Yang ditemukan
 
-- `generateANCJadwal` selalu membuat enam tanggal pada UK 10, 12, 20, 28, 32, dan 36 minggu dari HPHT (`app/src/features/tracker/ancForm.ts`, baris 5–14). Ini tidak sama dengan aturan pakar yang telah diverifikasi: UK 1–27 tiap 1 bulan, UK 28–36 tiap 2 minggu, dan UK mulai 37 tiap 1 minggu.
-- `initANC` hanya dipanggil jika belum ada kunjungan lokal. Perubahan HPHT atau algoritma tidak otomatis membangun ulang jadwal yang sudah ada (`PengingatPage.tsx`, sekitar baris 107–112). Migrasi/perhitungan ulang jadwal lama perlu dirancang agar tanggal yang telah diselesaikan tidak hilang.
-- Kalender ANC dapat menandai kunjungan selesai dan mengubah catatan. Tidak ada date picker atau aksi untuk memindahkan tanggal; tanggal menjadi key `visitMap` (`ANCCalendar.tsx`, sekitar baris 31–41 dan 93–120).
-- Kalender menerima daftar kunjungan saja. HPL tidak dipasok sebagai tanggal kalender, dan tidak memiliki style merah. Hari ini memiliki prioritas style lebih tinggi daripada jadwal ANC (`ANCCalendar.tsx`, sekitar baris 61–82). HPL dapat dihitung dari `calcHPL` di `ukHpl.ts` tetapi belum digunakan sebagai marker ANC.
-- Catatan storyboard lama menyebut minimal 6 kunjungan dan jadwal 2x T1/1x T2/3x T3 serta push H-3/H-1, sedangkan implementasi push saat ini mengirim H-2/H-1. Aturan pakar yang lebih baru menjadi acuan implementasi jadwal. “1 bulan” diterapkan sebagai penambahan satu bulan kalender dari tanggal kunjungan sebelumnya agar tidak bergeser menjadi interval empat minggu.
+- Generator lama memakai enam offset tetap UK 10, 12, 20, 28, 32, dan 36 minggu, hanya dibuat ketika tidak ada jadwal lokal. Kalender tidak menerima tanggal HPL dan belum memiliki aksi ubah tanggal.
+- Pengirim Web Push sudah membaca tanggal kunjungan ANC dari Supabase dan mengirim pengingat H-2/H-1 pukul 09.00. Agar tanggal baru berpengaruh pada push, perubahan tanggal perlu disinkronkan ke `anc_visits`.
+- Aturan pakar terbaru menjadi acuan. “1 bulan” diimplementasikan sebagai satu bulan kalender; jadwal dimulai pada UK 1, pindah ke interval dua minggu pada UK 28 dan mingguan pada UK 37, lalu berakhir pada HPL yang ditandai merah.
 
 ### Rancangan solusi
 
-1. Implementasikan aturan pakar persis: UK 1–27 tiap satu bulan kalender, UK 28–36 tiap dua minggu, dan UK ≥37 tiap satu minggu.
-2. Bentuk generator dari HPHT/UK dan tetapkan titik awal yang konsisten. Jadwal dimulai dari kunjungan berikutnya berdasarkan UK saat ini, bukan membuat kunjungan lampau. Pertahankan batas fase yang ditentukan pakar.
-3. Sediakan aksi “Ubah tanggal” pada kunjungan yang belum/sudah diselesaikan sesuai keputusan produk. Simpan perubahan lokal dan sinkronkan cloud, jaga status selesai/catatan, dan hindari duplikasi tanggal.
-4. Tandai tanggal HPL dengan warna merah dan legenda tersendiri. Jika HPL bertumpuk dengan jadwal ANC atau hari ini, tampilkan penanda gabungan tanpa kehilangan status kunjungan.
-5. Selaraskan pengingat Web Push dengan tanggal kunjungan hasil generator. Pertahankan lead time push yang telah diputuskan produk; catatan storyboard lama H-3/H-1 dan implementasi H-2/H-1 berbeda, sehingga konfigurasi aktual perlu dicatat sebagai keputusan produk.
-6. Rancang pembaruan jadwal yang sudah ada: pertahankan kunjungan historis/selesai dan tanggal yang diedit pengguna; jangan menghapusnya ketika HPHT atau generator berubah.
+Implementasi: generator jadwal berdasarkan HPHT dan aturan pakar, rekonsiliasi jadwal lama yang mempertahankan kunjungan selesai/terlewat, catatan, dan tanggal yang diedit; date picker untuk memindahkan jadwal; marker HPL merah; sinkronisasi metadata/jadwal ke push Supabase melalui migration 011–012. Push yang sudah aktif membaca tanggal ANC terbaru dan tetap memakai H-2/H-1 pukul 09.00.
 
 ### Kriteria penerimaan
 
-- Kasus batas UK 1, 27, 28, 36, 37, dan HPL menghasilkan frekuensi sesuai tabel yang disetujui.
-- Tanggal dapat diedit, tetap ada sesudah refresh/sinkronisasi, dan push memakai tanggal baru.
-- HPL selalu merah, termasuk jika bertepatan dengan jadwal ANC atau hari ini.
+- Skrip `scripts/check-anc-schedule.mjs` menguji pola mingguan, dua mingguan, bulanan, dan batas HPL.
+- QA browser/perangkat untuk mengubah tanggal, mempertahankan jadwal lama, dan menerima push dari tanggal hasil edit masih perlu dilakukan.
+- HPL tampil merah, termasuk ketika bertepatan dengan hari ini atau jadwal ANC.
 
 ## 6. Menghapus Tonggak Perjalanan
 
@@ -192,11 +185,11 @@ Belum ada keterangan masalah pada butir nomor 9. Perlu deskripsi gejala, langkah
 1. **Selesai pada 2026-10-10** — peta darurat untuk hasil MERAH dan konfirmasi kembali dari mode nifas.
 2. **Selesai pada 2026-10-10** — nilai contoh berbagai form skrining diganti dengan isian kosong/profil, dan detail terakhir dipulihkan per pengguna serta tipe skrining.
 3. **Berikutnya** — reproduksi estimasi dana P4K pada penyimpanan lokal dan cloud; perbaiki status sinkronisasi dan konflik bila gejala terkonfirmasi.
-4. **Berikutnya** — implementasikan jadwal ANC pakar, edit tanggal, marker HPL merah, dan sinkronisasi push.
+4. **Selesai implementasi pada 2026-10-10** — jadwal ANC pakar, edit tanggal, marker HPL merah, dan sinkronisasi push. QA perangkat/push masih perlu dilakukan.
 5. **Berikutnya** — rapikan konsistensi chatbot terhadap pedoman pakar yang telah disetujui.
 6. **Berikutnya** — hapus Tonggak Perjalanan dan perbarui label BB sesuai persyaratan pakar.
 7. Minta klarifikasi laporan nomor 9.
 
 ## Batas investigasi
 
-Perbaikan P4K telah diverifikasi dengan build, uji utilitas, dan snapshot agregat database. Belum dilakukan replay end-to-end pada browser/perangkat dan akun yang melaporkan gejala; karena itu penerimaan jumlah yang sama setelah tutup/buka, reconnect, dan resolusi konflik pada sesi tersebut masih memerlukan QA perangkat.
+P4K telah diperiksa dengan build, uji utilitas, dan snapshot agregat database. Jadwal ANC telah diuji dengan skrip pola tanggal dan migration 011–012 telah diterapkan. Belum dilakukan replay end-to-end pada browser/perangkat untuk konflik P4K atau penerimaan push ANC setelah tanggal diedit.

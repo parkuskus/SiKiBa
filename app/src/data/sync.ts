@@ -183,11 +183,16 @@ export function syncDose(e: { userId: string; suplemenId: string; tanggal: strin
   }, 'user_id,suplemen_id,tanggal,waktu')
 }
 
-export function syncAnc(e: { id: string; userId: string; tanggalTerjadwal: string; statusSelesai: boolean; catatan?: string }) {
+export function syncAnc(e: { id: string; userId: string; tanggalTerjadwal: string; statusSelesai: boolean; catatan?: string; mingguTerjadwal?: number; tanggalDiedit?: boolean }) {
   return fireOrQueue('anc_visits', 'upsert', {
     id: e.id, user_id: e.userId, tanggal_terjadwal: e.tanggalTerjadwal,
     status_selesai: e.statusSelesai, catatan: e.catatan ?? null,
+    minggu_terjadwal: e.mingguTerjadwal ?? null, tanggal_diedit: e.tanggalDiedit ?? false,
   }, 'id')
+}
+
+export function deleteSyncedAnc(userId: string, id: string) {
+  void fireOrQueue('anc_visits', 'delete', { user_id: userId, id })
 }
 
 export function syncDiary(e: { id: string; userId: string; tanggal: string; teks: string; mood: number }) {

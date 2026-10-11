@@ -466,13 +466,14 @@ Hasil skrining dikategorikan dengan kode warna: **Hijau** (aman), **Kuning** (wa
 - **Referensi:** Storyboard draft Menu 11; Kemenkes Pedoman TTD Ibu Hamil 2020; WHO Daily Iron and Folic Acid Supplementation.
 
 ### S-07b — Jadwal ANC & Reminder (ANCScheduleScreen)
-**Fungsi:** Kalender kunjungan ANC sesuai rekomendasi Kemenkes (minimal 6 kali: 2x T1, 1x T2, 3x T3), dengan jadwal berikutnya dan pengingat H-3 sebelum kunjungan.
+**Fungsi:** Kalender kunjungan ANC berdasarkan interval jadwal pakar yang telah diverifikasi, dengan jadwal berikutnya, tanggal yang dapat disesuaikan pengguna, dan marker HPL.
 
 - **Input:** HPHT (dari registrasi), tanggal kunjungan ANC yang sudah dilakukan, fasyankes tujuan, nama bidan/dokter.
-- **Proses:** Generate jadwal ANC otomatis berbasis HPHT, sesuaikan dengan rekomendasi Kemenkes 2020, hitung kunjungan sudah & belum, set notifikasi H-3 & H-1 sebelum kunjungan, tandai kunjungan yang sudah selesai, catat catatan singkat tiap kunjungan.
-- **Output:** Timeline jadwal ANC 6 kunjungan, kunjungan yang sudah dilakukan (centang), kunjungan berikutnya dengan countdown, notifikasi H-3 dan H-1, catatan per kunjungan.
-- **Navigasi:** Kembali → S-07 · Tap kunjungan → detail & catatan.
-- **Referensi:** Storyboard draft Menu 10; Kemenkes Pedoman ANC Terpadu 2020; Standar 6 kunjungan ANC Kemenkes.
+- **Aturan jadwal pakar:** UK 1–27 minggu setiap 1 bulan kalender; UK 28–36 minggu setiap 2 minggu; UK mulai 37 minggu setiap 1 minggu sampai HPL. Aturan ini menggantikan generator enam kunjungan pada storyboard awal.
+- **Proses:** Generate jadwal berbasis HPHT dan interval pakar; rekonsiliasi jadwal baru sambil mempertahankan kunjungan selesai/terlewat, catatan, dan tanggal yang sudah diedit; izinkan pengguna memindahkan tanggal kunjungan; tandai tanggal HPL merah; sinkronkan perubahan jadwal agar Web Push mengikuti tanggal terbaru.
+- **Output:** Kalender jadwal ANC sesuai interval pakar, marker HPL merah, kunjungan yang sudah selesai, jadwal berikutnya, dan catatan per kunjungan. Web Push saat ini mengirim H-2 dan H-1 pukul 09.00 waktu lokal untuk jadwal ANC yang belum selesai.
+- **Navigasi:** Kembali → S-07 · Tap tanggal kunjungan → detail, catatan, status selesai, dan ubah tanggal.
+- **Referensi:** Aturan interval berasal dari masukan pakar yang telah diverifikasi; implementasi menggunakan HPHT dan rumus HPL yang dipakai aplikasi. Catatan prototype awal tentang H-3 dan H-1 berbeda dari lead time Web Push saat ini (H-2 dan H-1).
 
 ### S-07c — Diary Harian Ibu Hamil (DiaryScreen)
 **Fungsi:** Catatan harian ekspresif ibu hamil — ruang untuk mencurahkan perasaan, merekam momen, dan memantau mood; opsional dengan background musik instrumental.
