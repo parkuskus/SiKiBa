@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { getCurrentUserId } from "@/data/currentUser"
+import { useEffect, useState } from "react"
+import { useLatestScreeningDraft } from "@/features/skrining/useLatestScreeningDraft"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { submitLaktasi } from "@/features/skrining/nifas/laktasiForm"
@@ -16,27 +16,49 @@ export default function LaktasiScreen({
   onBack: () => void
   onSuccess: (r: Result) => void
 }) {
+  const { loading: draftLoading, userId, detail } = useLatestScreeningDraft("laktasi")
   const [form, setForm] = useState({
-    usiaBayiHari: 3,
-    frekuensiMenyusuPerHari: 8,
-    durasiMenyusuMenit: 15,
-    kondisiPuting: "normal" as "normal" | "nyeri" | "luka" | "masuk",
-    kondisiPayudara: "normal" as "normal" | "bengkak" | "keras" | "merah",
-    volumeASI: "cukup" as "cukup" | "sedikit" | "tidak ada",
-    bbBayiTren: "naik" as "naik" | "stagnan" | "turun",
-    bakPerHari: 6,
-    urin: "jernih" as "jernih" | "kuning" | "gelap",
-    demam: false,
+    usiaBayiHari: "",
+    frekuensiMenyusuPerHari: "",
+    durasiMenyusuMenit: "",
+    kondisiPuting: null as "normal" | "nyeri" | "luka" | "masuk" | null,
+    kondisiPayudara: null as "normal" | "bengkak" | "keras" | "merah" | null,
+    volumeASI: null as "cukup" | "sedikit" | "tidak ada" | null,
+    bbBayiTren: null as "naik" | "stagnan" | "turun" | null,
+    bakPerHari: "",
+    urin: null as "jernih" | "kuning" | "gelap" | null,
+    demam: null as boolean | null,
   })
   const [loading, setLoading] = useState(false)
   const [err, setErr] = useState<string | null>(null)
 
+  useEffect(() => {
+    if (!draftLoading && detail) {
+      setForm({
+        usiaBayiHari: String(detail.usiaBayiHari ?? ""),
+        frekuensiMenyusuPerHari: String(detail.frekuensiMenyusuPerHari ?? ""),
+        durasiMenyusuMenit: detail.durasiMenyusuMenit == null ? "" : String(detail.durasiMenyusuMenit),
+        kondisiPuting: detail.kondisiPuting === "normal" || detail.kondisiPuting === "nyeri" || detail.kondisiPuting === "luka" || detail.kondisiPuting === "masuk" ? detail.kondisiPuting : null,
+        kondisiPayudara: detail.kondisiPayudara === "normal" || detail.kondisiPayudara === "bengkak" || detail.kondisiPayudara === "keras" || detail.kondisiPayudara === "merah" ? detail.kondisiPayudara : null,
+        volumeASI: detail.volumeASI === "cukup" || detail.volumeASI === "sedikit" || detail.volumeASI === "tidak ada" ? detail.volumeASI : null,
+        bbBayiTren: detail.bbBayiTren === "naik" || detail.bbBayiTren === "stagnan" || detail.bbBayiTren === "turun" ? detail.bbBayiTren : null,
+        bakPerHari: String(detail.bakPerHari ?? ""),
+        urin: detail.urin === "jernih" || detail.urin === "kuning" || detail.urin === "gelap" ? detail.urin : null,
+        demam: typeof detail.demam === "boolean" ? detail.demam : null,
+      })
+    }
+  }, [draftLoading, detail])
+
   const handle = async () => {
     setErr(null)
+    if (![form.usiaBayiHari, form.frekuensiMenyusuPerHari, form.bakPerHari].every((value) => value.trim() && Number.isFinite(Number(value))) || !form.kondisiPuting || !form.kondisiPayudara || !form.volumeASI || !form.bbBayiTren || !form.urin || form.demam === null) {
+      setErr("Lengkapi seluruh data laktasi sebelum melihat hasil")
+      return
+    }
     setLoading(true)
     try {
       const res = await submitLaktasi({
-        userId: await getCurrentUserId(),
+        userId,
         usiaBayiHari: Number(form.usiaBayiHari),
         frekuensiMenyusuPerHari: Number(form.frekuensiMenyusuPerHari),
         durasiMenyusuMenit: form.durasiMenyusuMenit ? Number(form.durasiMenyusuMenit) : undefined,
@@ -57,7 +79,7 @@ export default function LaktasiScreen({
   }
 
   return (
-    <SkriningFormShell title="Laktasi dan Menyusui" subtitle="Cek kecukupan ASI dan kondisi bayi" onBack={onBack} illustration="/illu/illu-53-skrining-laktasi.webp">
+    <SkriningFormShell title="Laktasi dan Menyusui" subtitle="Cek kecukupan ASI dan kondisi bayi" onBack={onBack} illustration="/illu/illu-53-skrining-laktasi.webp" loading={draftLoading}>
       <div className="space-y-3.5">
         <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
           <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Pola menyusu</h2>
@@ -70,7 +92,7 @@ export default function LaktasiScreen({
             ].map((field) => (
               <div key={field.key} className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
                 <label className="block text-xs text-[#33443F]">{field.label}</label>
-                <Input type="number" aria-label={field.label} value={field.value} onChange={(event) => setForm((current) => ({ ...current, [field.key]: Number(event.target.value) }))} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
+                <Input type="number" aria-label={field.label} value={field.value} onChange={(event) => setForm((current) => ({ ...current, [field.key]: event.target.value }))} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
               </div>
             ))}
           </div>
@@ -78,10 +100,16 @@ export default function LaktasiScreen({
 
         <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
           <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Kondisi ibu</h2>
-          <button type="button" aria-pressed={form.demam} onClick={() => setForm((current) => ({ ...current, demam: !current.demam }))} className={`flex min-h-11 w-full items-center gap-3 rounded-[16px] px-3 text-left text-[13px] transition-colors ${form.demam ? "bg-[#4A6E54] font-semibold text-white" : "bg-white text-[#1D2B29] ring-1 ring-[#D9E7E2]"}`}>
-            <span className={`grid size-5 shrink-0 place-items-center rounded-[6px] ring-1 ${form.demam ? "bg-white ring-white" : "bg-white ring-[#C2C8CB]"}`}>{form.demam && <span className="size-2.5 rounded-[3px] bg-[#4A6E54]" />}</span>
-            Demam pada ibu
-          </button>
+          <div className="flex items-center justify-between gap-3 rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
+            <p className="text-[13px] font-medium text-[#1D2B29]">Demam pada ibu</p>
+            <div className="flex gap-1.5">
+              {[true, false].map((value) => (
+                <button key={String(value)} type="button" aria-pressed={form.demam === value} onClick={() => setForm((current) => ({ ...current, demam: value }))} className={`min-h-11 min-w-11 rounded-[14px] px-2.5 text-xs font-semibold ${form.demam === value ? "bg-[#4A6E54] text-white" : "bg-white text-[#33443F] ring-1 ring-[#D9E7E2]"}`}>
+                  {value ? "Ya" : "Tidak"}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="space-y-1.5">
             <p className="text-xs font-medium text-[#33443F]">Kondisi puting</p>
             <div className="grid grid-cols-2 gap-2">

@@ -23,6 +23,7 @@ export type RiskFactorInput = {
   tbCm?: number
   bbKg?: number
   trb?: boolean // teknik reproduksi berbantu
+  jawabanForm?: { paritas: string | null; jarak: string | null; riwayatKomplikasi: string[]; penyakitKronik: string[]; gemeli: boolean | null; trb: boolean | null; letak: boolean | null; hidramnion: boolean | null }
 }
 
 export function validateRiskFactor(v: RiskFactorInput): Record<string, string> {

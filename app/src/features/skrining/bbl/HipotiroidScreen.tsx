@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { getCurrentUserId } from "@/data/currentUser"
+import { useEffect, useState } from "react"
+import { useLatestScreeningDraft } from "@/features/skrining/useLatestScreeningDraft"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { submitHipotiroid } from "@/features/skrining/bbl/hipotiroidForm"
@@ -16,9 +16,10 @@ export default function HipotiroidScreen({
   onBack: () => void
   onSuccess: (r: Result) => void
 }) {
+  const { loading: draftLoading, userId, detail } = useLatestScreeningDraft("hipotiroid")
   const [form, setForm] = useState({
-    sudahTSH: false,
-    usiaBayiHari: 2,
+    sudahTSH: null as boolean | null,
+    usiaBayiHari: "",
     gejala: {
       ikterusLama: false,
       konstipasi: false,
@@ -30,12 +31,33 @@ export default function HipotiroidScreen({
   const [loading, setLoading] = useState(false)
   const [err, setErr] = useState<string | null>(null)
 
+  useEffect(() => {
+    if (!draftLoading && detail) {
+      const gejala = detail.gejala as Record<string, unknown> | undefined
+      setForm({
+        sudahTSH: typeof detail.sudahTSH === "boolean" ? detail.sudahTSH : null,
+        usiaBayiHari: detail.usiaBayiHari == null ? "" : String(detail.usiaBayiHari),
+        gejala: {
+          ikterusLama: gejala?.ikterusLama === true,
+          konstipasi: gejala?.konstipasi === true,
+          tangisanSerak: gejala?.tangisanSerak === true,
+          aktivitasKurang: gejala?.aktivitasKurang === true,
+          lidahBesar: gejala?.lidahBesar === true,
+        },
+      })
+    }
+  }, [draftLoading, detail])
+
   const handle = async () => {
     setErr(null)
+    if (form.sudahTSH === null || (form.sudahTSH === false && (!form.usiaBayiHari.trim() || !Number.isFinite(Number(form.usiaBayiHari))))) {
+      setErr("Pilih status tes TSH dan isi usia bayi bila tes belum dilakukan")
+      return
+    }
     setLoading(true)
     try {
       const res = await submitHipotiroid({
-        userId: await getCurrentUserId(),
+        userId,
         sudahTSH: form.sudahTSH,
         usiaBayiHari: form.sudahTSH ? undefined : Number(form.usiaBayiHari),
         gejala: form.gejala,
@@ -49,7 +71,7 @@ export default function HipotiroidScreen({
   }
 
   return (
-    <SkriningFormShell title="Hipotiroid Kongenital" subtitle="Cek TSH dan gejala pada bayi" onBack={onBack} illustration="/illu/illu-55-skrining-hipotiroid.webp">
+    <SkriningFormShell title="Hipotiroid Kongenital" subtitle="Cek TSH dan gejala pada bayi" onBack={onBack} illustration="/illu/illu-55-skrining-hipotiroid.webp" loading={draftLoading}>
       <div className="space-y-3.5">
         <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
           <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Pemeriksaan TSH</h2>
@@ -64,7 +86,7 @@ export default function HipotiroidScreen({
           {!form.sudahTSH && (
             <div className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
               <label className="block text-xs text-[#33443F]">Usia bayi (hari)</label>
-              <Input type="number" aria-label="Usia bayi (hari)" value={form.usiaBayiHari} onChange={(event) => setForm((current) => ({ ...current, usiaBayiHari: Number(event.target.value) }))} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
+              <Input type="number" aria-label="Usia bayi (hari)" value={form.usiaBayiHari} onChange={(event) => setForm((current) => ({ ...current, usiaBayiHari: event.target.value }))} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
             </div>
           )}
         </section>

@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { getCurrentUserId } from "@/data/currentUser"
+import { useEffect, useState } from "react"
+import { useLatestScreeningDraft } from "@/features/skrining/useLatestScreeningDraft"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { submitNifas } from "@/features/skrining/nifas/nifasForm"
@@ -14,32 +14,62 @@ export default function NifasScreen({
   onBack: () => void
   onSuccess: (r: NifasResult) => void
 }) {
+  const { loading: draftLoading, userId, detail } = useLatestScreeningDraft("nifas")
   const [form, setForm] = useState({
-    hariKe: 2,
-    suhu: 36.8,
-    sistolik: 120,
-    diastolik: 80,
-    nadi: 80,
-    spo2: 98,
-    perdarahanMl: 100,
+    hariKe: "",
+    suhu: "",
+    sistolik: "",
+    diastolik: "",
+    nadi: "",
+    spo2: "",
+    perdarahanMl: "",
     lochiaBau: false,
     nyeriUterus: false,
     lukaBengkak: false,
-    nyeriSkala: 2,
-    produksiASI: "ada" as "ada" | "sedikit" | "tidak",
-    mood: 4,
+    nyeriSkala: "",
+    produksiASI: null as "ada" | "sedikit" | "tidak" | null,
+    mood: null as 1 | 2 | 3 | 4 | 5 | null,
   })
   const [loading, setLoading] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const [fieldErrs, setFieldErrs] = useState<Record<string, string>>({})
 
+  useEffect(() => {
+    if (!draftLoading && detail) {
+      setForm((current) => ({
+        ...current,
+        hariKe: String(detail.hariKe ?? ""),
+        suhu: String(detail.suhu ?? ""),
+        sistolik: String(detail.sistolik ?? ""),
+        diastolik: String(detail.diastolik ?? ""),
+        nadi: detail.nadi == null ? "" : String(detail.nadi),
+        spo2: detail.spo2 == null ? "" : String(detail.spo2),
+        perdarahanMl: detail.perdarahanMl == null ? "" : String(detail.perdarahanMl),
+        lochiaBau: detail.lochiaBau === true,
+        nyeriUterus: detail.nyeriUterus === true,
+        lukaBengkak: detail.lukaBengkak === true,
+        nyeriSkala: detail.nyeriSkala == null ? "" : String(detail.nyeriSkala),
+        produksiASI: detail.produksiASI === "ada" || detail.produksiASI === "sedikit" || detail.produksiASI === "tidak" ? detail.produksiASI : null,
+        mood: typeof detail.mood === "number" && detail.mood >= 1 && detail.mood <= 5 ? detail.mood as 1 | 2 | 3 | 4 | 5 : null,
+      }))
+    }
+  }, [draftLoading, detail])
+
   const handle = async () => {
     setErr(null)
     setFieldErrs({})
+    if (![form.hariKe, form.suhu, form.sistolik, form.diastolik].every((value) => value.trim() && Number.isFinite(Number(value)))) {
+      setErr("Isi hari nifas, suhu, dan tekanan darah")
+      return
+    }
+    if (!form.produksiASI || form.mood === null) {
+      setErr("Pilih kondisi produksi ASI dan suasana hati")
+      return
+    }
     setLoading(true)
     try {
       const res = await submitNifas({
-        userId: await getCurrentUserId(),
+        userId,
         hariKe: Number(form.hariKe),
         suhu: Number(form.suhu),
         sistolik: Number(form.sistolik),
@@ -50,9 +80,9 @@ export default function NifasScreen({
         lochiaBau: form.lochiaBau,
         nyeriUterus: form.nyeriUterus,
         lukaBengkak: form.lukaBengkak,
-        nyeriSkala: Number(form.nyeriSkala),
+        nyeriSkala: form.nyeriSkala ? Number(form.nyeriSkala) : undefined,
         produksiASI: form.produksiASI,
-        mood: Number(form.mood),
+        mood: form.mood,
       })
       onSuccess(res as NifasResult)
     } catch (e: unknown) {
@@ -65,7 +95,7 @@ export default function NifasScreen({
   }
 
   return (
-    <SkriningFormShell title="Masa Nifas" subtitle="Cek kesehatan ibu setelah melahirkan" onBack={onBack} illustration="/illu/illu-52-skrining-nifas.webp">
+    <SkriningFormShell title="Masa Nifas" subtitle="Cek kesehatan ibu setelah melahirkan" onBack={onBack} illustration="/illu/illu-52-skrining-nifas.webp" loading={draftLoading}>
       <div className="space-y-3.5">
         <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
           <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Pemantauan ibu</h2>
@@ -87,7 +117,7 @@ export default function NifasScreen({
                   step={"step" in field ? field.step : undefined}
                   aria-label={field.label}
                   value={field.value}
-                  onChange={(event) => setForm((current) => ({ ...current, [field.key]: Number(event.target.value) }))}
+                  onChange={(event) => setForm((current) => ({ ...current, [field.key]: event.target.value }))}
                   className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0"
                 />
                 {fieldErrs[field.key] && <p className="text-[11px] text-[#C62828]">{fieldErrs[field.key]}</p>}
@@ -101,7 +131,7 @@ export default function NifasScreen({
           <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Produksi ASI</h2>
           <div className="grid grid-cols-3 gap-2">
             {(["ada", "sedikit", "tidak"] as const).map((value) => (
-              <button key={value} type="button" aria-pressed={form.produksiASI === value} onClick={() => setForm((current) => ({ ...current, produksiASI: value }))} className={`min-h-11 rounded-[14px] px-2 text-xs font-semibold transition-colors ${form.produksiASI === value ? "bg-[#4A6E54] text-white" : "bg-white text-[#33443F] ring-1 ring-[#D9E7E2]"}`}>
+                <button key={value} type="button" aria-pressed={form.produksiASI === value} onClick={() => setForm((current) => ({ ...current, produksiASI: value }))} className={`min-h-11 rounded-[14px] px-2 text-xs font-semibold transition-colors ${form.produksiASI === value ? "bg-[#4A6E54] text-white" : "bg-white text-[#33443F] ring-1 ring-[#D9E7E2]"}`}>
                 {value === "ada" ? "Ada" : value === "sedikit" ? "Sedikit" : "Tidak ada"}
               </button>
             ))}
@@ -111,8 +141,8 @@ export default function NifasScreen({
         <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
           <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Suasana hati hari ini</h2>
           <div className="grid grid-cols-5 gap-2">
-            {[1, 2, 3, 4, 5].map((value) => (
-              <button key={value} type="button" aria-label={`Suasana hati ${value}`} aria-pressed={form.mood === value} onClick={() => setForm((current) => ({ ...current, mood: value }))} className={`min-h-11 rounded-[14px] text-sm font-bold transition-colors ${form.mood === value ? "bg-[#4A6E54] text-white" : "bg-white text-[#33443F] ring-1 ring-[#D9E7E2]"}`}>
+              {[1, 2, 3, 4, 5].map((value) => (
+              <button key={value} type="button" aria-label={`Suasana hati ${value}`} aria-pressed={form.mood === value} onClick={() => setForm((current) => ({ ...current, mood: value as 1 | 2 | 3 | 4 | 5 }))} className={`min-h-11 rounded-[14px] text-sm font-bold transition-colors ${form.mood === value ? "bg-[#4A6E54] text-white" : "bg-white text-[#33443F] ring-1 ring-[#D9E7E2]"}`}>
                 {value}
               </button>
             ))}

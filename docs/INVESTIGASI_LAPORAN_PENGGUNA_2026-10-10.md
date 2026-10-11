@@ -1,7 +1,7 @@
 # Investigasi Laporan Pengguna
 
 **Tanggal:** 10 Oktober 2026  
-**Status:** Investigasi kode dan spesifikasi selesai; belum mengubah aplikasi.  
+**Status:** Investigasi selesai; perubahan untuk isian skrining terakhir sudah diterapkan di aplikasi.  
 **Tujuan:** Merangkum temuan yang dapat dibuktikan, bagian yang masih perlu direproduksi atau dikonfirmasi, dan rancangan solusi sebelum implementasi.
 
 **Dasar keputusan klinis:** Masukan pada daftar ini berasal dari pakar dan sudah diverifikasi. Frekuensi ANC dan makna BB sebelum hamil diperlakukan sebagai persyaratan yang disetujui; investigasi ini tidak meminta validasi klinis ulang.
@@ -12,7 +12,7 @@
 | --- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
 | 1   | Estimasi dana P4K tidak tersimpan                                | Field sudah masuk model lokal dan payload cloud. Risiko yang ditemukan ada pada autosave berbasis jeda dan sinkronisasi cloud yang tidak ditunggu/ditampilkan; belum ada bukti bahwa field dana sendiri sengaja dikecualikan. Perlu reproduksi untuk membedakan data lokal dan cloud. | Tinggi                                   |
 | 2   | BB faktor risiko perlu berlabel “BB sebelum hamil”               | Label saat ini hanya “Berat (kg)” pada bagian Pemeriksaan Fisik. Nilai disimpan sebagai `bbKg`, tidak dipakai dalam skor Poedji. Persyaratan pakar menetapkan bahwa nilai tersebut adalah BB sebelum hamil.                                                                           | Sedang                                   |
-| 3   | Hasil/form skrining kembali menampilkan data dummy               | Beberapa form memang memakai nilai awal hard-coded. Form tidak memuat detail skrining terakhir saat dibuka kembali. Belum diketahui apakah laporan merujuk ke nilai form, hasil langsung, atau Riwayat Skrining.                                                                      | Tinggi                                   |
+| 3   | Berbagai form skrining menampilkan data dummy, bukan isian terakhir | Nilai awal contoh ditemukan di beberapa skrining hamil, nifas, dan bayi. Form menginisialisasi ulang nilai itu ketika dibuka dan tidak memuat detail skrining terakhir. Hasil langsung setelah submit tetap perlu direproduksi untuk memastikan apakah masalahnya juga terjadi pada tahap itu. | Tinggi |
 | 4   | Jawaban chatbot tidak konsisten/rancu                            | Ada jalur LLM online dan FAQ berbasis pencocokan kata offline; aturan, cakupan, penandaan verifikasi, dan deteksi eskalasinya tidak sepenuhnya sama.                                                                                                                                  | Tinggi, karena konteks kesehatan         |
 | 5   | Jadwal ANC tidak sesuai; ingin ubah tanggal dan tandai HPL merah | Generator saat ini memakai enam minggu tetap `[10, 12, 20, 28, 32, 36]`; kalender hanya bisa menandai selesai dan mengubah catatan. HPL belum diberikan ke kalender sebagai penanda.                                                                                                  | Tinggi, aturan jadwal perlu dikonfirmasi |
 | 6   | Bagian Tonggak Perjalanan tidak diperlukan                       | Bagian tersebut adalah blok UI mandiri di halaman Pengingat; tidak menjadi sumber jadwal ANC atau HPL.                                                                                                                                                                                | Rendah                                   |
@@ -67,28 +67,34 @@ Label sekarang memang kurang spesifik dan tidak sesuai dengan makna field yang s
 - Ganti label menjadi “BB sebelum hamil (kg)” dan selaraskan nama/arti field pada detail hasil, riwayat, serta pesan validasi.
 - Jangan mengubah skor Poedji berdasarkan nilai BB; masukan pakar yang dicatat di sini meminta keterangan BB sebelum hamil, bukan perubahan algoritma skor.
 
-## 3. Skrining menampilkan data dummy, bukan data terakhir
+## 3. Berbagai skrining menampilkan data dummy, bukan isian terakhir
 
 ### Yang ditemukan
 
-- `RiskFactorScreen` memulai usia 26 tahun, UK 28 minggu, dan paritas multipara sebagai nilai awal. Profil hanya mengisi usia dan UK secara asinkron; form tidak memuat `detail` hasil terakhir (`RiskFactorScreen.tsx`, sekitar baris 77–115).
-- `GiziScreen` memulai BB pra-hamil 55 kg, TB 160 cm, LILA 24 cm, BB sekarang 62 kg, UK 28 minggu (`GiziScreen.tsx`, sekitar baris 13–14).
-- `DmgScreen` memulai usia 26 tahun, IMT 24, dan UK 26 minggu (`DmgScreen.tsx`, baris 9).
-- `PreeklamsiaScreen` memulai tekanan darah 120/80 dan UK 28 minggu (`PreeklamsiaScreen.tsx`, sekitar baris 51–65).
-- Setiap submit menulis hasil dengan `userId`, kategori/skor, detail jawaban, dan `createdAt` ke Dexie. Daftar Skrining membaca data Dexie per `userId`, memilih hasil terbaru per tipe, sedangkan kartu Riwayat hanya menampilkan skor/kategori dan tanggal; Riwayat tidak menampilkan detail input (`SkriningPage.tsx`, sekitar baris 99–132; `HistoryScreen.tsx`, sekitar baris 59–67).
-- Tidak ada istilah atau identifier `Skrining2` di source. Karena itu belum jelas apakah yang dimaksud S-03b Status Gizi, layar kedua, atau tampilan riwayat.
+- Nilai contoh ada di beberapa form kehamilan. `RiskFactorScreen` memulai usia 26 tahun dan UK 28 minggu; profil mengisi usia dan UK secara asinkron, tetapi detail skrining sebelumnya tidak dimuat (`RiskFactorScreen.tsx`, sekitar baris 77–115). `GiziScreen` memulai BB pra-hamil 55 kg, TB 160 cm, LILA 24 cm, BB sekarang 62 kg, dan UK 28 minggu (`GiziScreen.tsx`, sekitar baris 13–14). `DmgScreen` memulai usia 26 tahun, IMT 24, dan UK 26 minggu (`DmgScreen.tsx`, baris 9). `PreeklamsiaScreen` memulai tekanan darah 120/80 dan UK 28 minggu (`PreeklamsiaScreen.tsx`, sekitar baris 51–65).
+- Nilai awal contoh juga ditemukan di form nifas dan bayi. `NifasScreen` memulai hari nifas 2, suhu 36,8, tekanan darah 120/80, dan nilai contoh lainnya. `LaktasiScreen` memulai usia bayi 3 hari, frekuensi menyusu 8 kali, dan kondisi normal/cukup. `IkterusScreen` memulai usia bayi 3 hari, zona 2, dan onset 36 jam. `HipotiroidScreen` memulai keadaan TSH belum dilakukan dan usia bayi 2 hari (`NifasScreen.tsx`, `LaktasiScreen.tsx`, `IkterusScreen.tsx`, dan `HipotiroidScreen.tsx`, bagian inisialisasi `useState`).
+- Form-form tersebut memakai state awal lokal dan tidak memuat `detail` hasil terakhir berdasarkan `userId` dan tipe skrining ketika dibuka kembali. Dengan demikian, saat dibuka lagi, nilai dapat kembali ke contoh awal.
+- Saat submit, fungsi form menyimpan `userId`, skor/kategori, detail jawaban, dan `createdAt` ke Dexie. Hasil yang dikirim ke layar hasil dihitung dari state form saat tombol ditekan. Daftar Skrining membaca data per `userId` dan memilih hasil terbaru per tipe; kartu Riwayat hanya menampilkan skor/kategori dan tanggal, bukan detail input (`SkriningPage.tsx`, sekitar baris 93–129; `HistoryScreen.tsx`, sekitar baris 59–67).
+- Klarifikasi pengguna menetapkan bahwa “Skrining2” berarti **skrining-skrining secara umum**, bukan satu layar dengan ID Skrining2. Cakupannya adalah berbagai form skrining.
 
 ### Kesimpulan sementara
 
-Ada sumber nyata untuk angka contoh muncul kembali: beberapa form memiliki default tetap dan tidak menghidrasi data terakhir. Ini dapat menjelaskan nilai dummy saat form dibuka ulang. Jika yang salah adalah hasil yang langsung tampil setelah submit atau data milik akun lain, penyebabnya belum dipastikan dan perlu reproduksi pada layar yang tepat.
+Sumber nilai dummy telah ditemukan pada berbagai form: masing-masing memulai dengan nilai contoh dan tidak menghidrasi isian terakhir. Ini menjelaskan mengapa form yang dibuka kembali dapat menunjukkan data contoh, bukan isian terakhir. Hasil langsung setelah submit semestinya dihitung dari state form yang baru dikirim. Jika data dummy muncul pada hasil langsung meskipun field sudah diubah, hal itu memerlukan reproduksi terpisah untuk memeriksa field yang tidak ikut terkirim atau detail yang tidak tersimpan.
 
 ### Rancangan solusi
 
-1. Konfirmasi screen yang dimaksud dengan ID/nama: S-03a, S-03b, S-03c, atau lainnya; serta apakah nilai dummy muncul di form, hasil sesaat, kartu Skrining, Riwayat, atau setelah refresh.
-2. Hapus nilai contoh dari jalur pengguna riil. Gunakan nilai kosong atau isi hanya data yang memang tersedia dari profil.
-3. Jika produk menginginkan pengisian ulang, muat hasil terakhir milik `userId` aktif dan tipe skrining yang sama dari detail Dexie; jangan mengambil data pengguna lain atau seed fixture.
-4. Pastikan layar hasil langsung berasal dari objek input/hasil submit yang sama dengan record yang ditulis. Pastikan Riwayat menunjukkan record terbaru.
-5. Uji nilai input unik pada submit, navigasi, refresh, pindah akun, dan kembali ke form; verifikasi isolasi per `userId`.
+1. Terapkan perbaikan lintas form skrining hamil, nifas, dan bayi, bukan hanya satu jenis skrining.
+2. Hapus nilai contoh dari alur akun pengguna. Isi nilai dari profil hanya jika tersedia dan memang relevan; field klinis lain mulai kosong atau belum dipilih agar pengguna memasukkan kondisi aktual.
+3. Saat form dibuka kembali, muat isian terakhir milik `userId` aktif dan tipe skrining yang sama dari detail Dexie. Jangan mengambil data pengguna lain atau seed fixture.
+4. Pastikan layar hasil langsung berasal dari input/hasil submit yang sama dengan record yang ditulis dan Riwayat menunjukkan record terbaru.
+5. Uji setiap form dengan nilai unik saat submit, buka kembali, refresh, pindah akun, dan kembali ke form; verifikasi hasil/detail serta isolasi per `userId`.
+
+### Implementasi
+
+- Semua form S-03a–S-05b sekarang memuat hasil tersimpan terbaru dengan pencarian Dexie yang dibatasi oleh `userId` dan tipe skrining. Form baru dimulai tanpa angka contoh; usia dan UK diisi dari profil jika tersedia.
+- Nilai kategori/Ya-Tidak yang belum dijawab tampil tanpa pilihan aktif dan perlu dijawab sebelum submit jika merupakan input wajib. Jawaban EPDS dan nilai form sebelumnya dipulihkan dari `detail` tersimpan.
+- Faktor Risiko kini juga menyimpan pilihan mentah pada submit baru. Record lama yang tidak merekam pilihan lengkap tetap dapat dibuka tanpa mengarang jawaban; layar memberi peringatan agar pengguna meninjau kembali.
+- Uji isolasi pemilihan hasil terbaru tersedia di `scripts/check-screening-draft.mjs`. Build produksi dan skrip tersebut berhasil pada 2026-10-10.
 
 ## 4. Chatbot AI inkonsisten dan sebagian jawaban rancu
 
@@ -174,14 +180,14 @@ Belum ada keterangan masalah pada butir nomor 9. Perlu deskripsi gejala, langkah
 
 ## Urutan implementasi yang disarankan
 
-1. **Peta darurat dan konfirmasi mode nifas** — perubahan perilaku terbatas, mudah diverifikasi, dan mengurangi salah arah/salah tekan.
-2. **Data skrining terakhir** — pastikan screen yang dimaksud, hilangkan nilai contoh dari jalur akun riil, lalu uji penyimpanan dan pemuatan per pengguna.
-3. **Estimasi dana P4K** — reproduksi lokal/cloud; tambah status sinkronisasi dan pastikan nilai tidak hilang dalam konflik/autosave.
-4. **Jadwal ANC** — sepakati definisi aturan dengan pemilik produk/pakar, kemudian generator, migrasi jadwal lama, edit tanggal, HPL merah, dan sinkronisasi push.
-5. **Chatbot** — susun set evaluasi dan review pakar sebelum merapikan fallback, eskalasi, dan label verifikasi.
-6. **Tonggak perjalanan dan label BB** — hapus blok UI dan ubah label BB sesuai persyaratan pakar.
+1. **Selesai pada 2026-10-10** — peta darurat untuk hasil MERAH dan konfirmasi kembali dari mode nifas.
+2. **Selesai pada 2026-10-10** — nilai contoh berbagai form skrining diganti dengan isian kosong/profil, dan detail terakhir dipulihkan per pengguna serta tipe skrining.
+3. **Berikutnya** — reproduksi estimasi dana P4K pada penyimpanan lokal dan cloud; perbaiki status sinkronisasi dan konflik bila gejala terkonfirmasi.
+4. **Berikutnya** — implementasikan jadwal ANC pakar, edit tanggal, marker HPL merah, dan sinkronisasi push.
+5. **Berikutnya** — rapikan konsistensi chatbot terhadap pedoman pakar yang telah disetujui.
+6. **Berikutnya** — hapus Tonggak Perjalanan dan perbarui label BB sesuai persyaratan pakar.
 7. Minta klarifikasi laporan nomor 9.
 
 ## Batas investigasi
 
-Investigasi ini menelusuri kode dan dokumen lokal. Belum dilakukan replay dengan akun pengguna, perangkat, state Dexie/Supabase yang mengalami masalah, atau percakapan chatbot yang dilaporkan. Karena itu, akar masalah ditandai sebagai **terverifikasi dari kode** atau **hipotesis yang perlu reproduksi**; keputusan klinis dari pakar tetap menjadi acuan dan tidak dibuka ulang dalam investigasi ini. Tidak ada perilaku runtime yang diklaim telah diperbaiki.
+Investigasi awal menelusuri kode dan dokumen lokal. Peta darurat, konfirmasi mode nifas, dan pemuatan isian skrining terakhir telah diimplementasikan; build dan pemeriksaan pemilihan draft per pengguna/tipe lulus. Belum dilakukan replay end-to-end pada perangkat dengan data pengguna yang mengalami laporan. Perilaku hasil langsung setelah submit dan masalah lain yang belum diimplementasikan tetap memerlukan QA terarah; keputusan klinis dari pakar tidak dibuka ulang.

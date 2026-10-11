@@ -1,20 +1,44 @@
-import { useState } from "react"
-import { getCurrentUserId } from "@/data/currentUser"
+import { useEffect, useState } from "react"
+import { ageFromProfile, ukFromProfile, useLatestScreeningDraft } from "@/features/skrining/useLatestScreeningDraft"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { submitDMG } from "@/features/skrining/ibu-hamil/dmgForm"
 import SkriningFormShell from "@/features/skrining/components/SkriningFormShell"
 
 export default function DmgScreen({ onBack, onSuccess }: { onBack: () => void; onSuccess: (r: any) => void }) {
-  const [form, setForm] = useState({ usia: 26, imtPre: 24, ukMinggu: 26, riwayatDMG: false, riwayatMakrosomia: false, riwayatDMKeluarga: false, glikosuria: false, pcos: false, etnisRisiko: false })
+  const { loading: draftLoading, userId, detail, profile } = useLatestScreeningDraft("dmg")
+  const [form, setForm] = useState({ usia: "", imtPre: "", ukMinggu: "", riwayatDMG: false, riwayatMakrosomia: false, riwayatDMKeluarga: false, glikosuria: false, pcos: false, etnisRisiko: false })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  useEffect(() => {
+    if (draftLoading) return
+    if (detail) {
+      setForm({
+        usia: String(detail.usia ?? ""),
+        imtPre: String(detail.imtPre ?? ""),
+        ukMinggu: String(detail.ukMinggu ?? ""),
+        riwayatDMG: detail.riwayatDMG === true,
+        riwayatMakrosomia: detail.riwayatMakrosomia === true,
+        riwayatDMKeluarga: detail.riwayatDMKeluarga === true,
+        glikosuria: detail.glikosuria === true,
+        pcos: detail.pcos === true,
+        etnisRisiko: detail.etnisRisiko === true,
+      })
+      return
+    }
+    setForm((current) => ({ ...current, usia: ageFromProfile(profile), ukMinggu: ukFromProfile(profile) }))
+  }, [draftLoading, detail, profile])
+
   const handle = async () => {
     setError(null)
+    if (!form.usia.trim() || !form.imtPre.trim() || !form.ukMinggu.trim() || ![form.usia, form.imtPre, form.ukMinggu].every((value) => Number.isFinite(Number(value)))) {
+      setError("Isi usia, IMT sebelum hamil, dan usia kehamilan")
+      return
+    }
     setLoading(true)
     try {
-      const res = await submitDMG({ userId: await getCurrentUserId(), usia: Number(form.usia), imtPre: Number(form.imtPre), ukMinggu: Number(form.ukMinggu), riwayatDMG: form.riwayatDMG, riwayatMakrosomia: form.riwayatMakrosomia, riwayatDMKeluarga: form.riwayatDMKeluarga, glikosuria: form.glikosuria, pcos: form.pcos, etnisRisiko: form.etnisRisiko })
+      const res = await submitDMG({ userId, usia: Number(form.usia), imtPre: Number(form.imtPre), ukMinggu: Number(form.ukMinggu), riwayatDMG: form.riwayatDMG, riwayatMakrosomia: form.riwayatMakrosomia, riwayatDMKeluarga: form.riwayatDMKeluarga, glikosuria: form.glikosuria, pcos: form.pcos, etnisRisiko: form.etnisRisiko })
       onSuccess(res)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Gagal menyimpan")
@@ -24,7 +48,7 @@ export default function DmgScreen({ onBack, onSuccess }: { onBack: () => void; o
   }
 
   return (
-    <SkriningFormShell title="Diabetes Gestasional" subtitle="Skrining risiko gula darah" onBack={onBack} illustration="/illu/illu-50-skrining-dmg.webp">
+    <SkriningFormShell title="Diabetes Gestasional" subtitle="Skrining risiko gula darah" onBack={onBack} illustration="/illu/illu-50-skrining-dmg.webp" loading={draftLoading}>
       <div className="space-y-3.5">
         <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
           <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Data Ibu</h2>
@@ -36,7 +60,7 @@ export default function DmgScreen({ onBack, onSuccess }: { onBack: () => void; o
             ].map((field) => (
               <div key={field.key} className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
                 <label className="block text-xs text-[#33443F]">{field.label}</label>
-                <Input type="number" aria-label={field.label} value={field.value} onChange={(event) => setForm((current) => ({ ...current, [field.key]: Number(event.target.value) }))} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
+                <Input type="number" aria-label={field.label} value={field.value} onChange={(event) => setForm((current) => ({ ...current, [field.key]: event.target.value }))} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
               </div>
             ))}
           </div>

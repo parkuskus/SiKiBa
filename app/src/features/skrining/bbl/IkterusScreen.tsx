@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { getCurrentUserId } from "@/data/currentUser"
+import { useEffect, useState } from "react"
+import { useLatestScreeningDraft } from "@/features/skrining/useLatestScreeningDraft"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { submitIkterus } from "@/features/skrining/bbl/ikterusForm"
@@ -16,23 +16,41 @@ export default function IkterusScreen({
   onBack: () => void
   onSuccess: (r: Result) => void
 }) {
+  const { loading: draftLoading, userId, detail } = useLatestScreeningDraft("ikterus")
   const [form, setForm] = useState({
-    usiaBayiHari: 3,
-    zona: 2 as 1 | 2 | 3 | 4 | 5,
-    onsetJam: 36,
+    usiaBayiHari: "",
+    zona: null as 1 | 2 | 3 | 4 | 5 | null,
+    onsetJam: "",
     fesesDempul: false,
-    aktivitas: "aktif" as "aktif" | "mengantuk" | "tidak mau minum",
+    aktivitas: null as "aktif" | "mengantuk" | "tidak mau minum" | null,
     prematur: false,
   })
   const [loading, setLoading] = useState(false)
   const [err, setErr] = useState<string | null>(null)
 
+  useEffect(() => {
+    if (!draftLoading && detail) {
+      setForm({
+        usiaBayiHari: String(detail.usiaBayiHari ?? ""),
+        zona: [1, 2, 3, 4, 5].includes(Number(detail.zona)) ? Number(detail.zona) as 1 | 2 | 3 | 4 | 5 : null,
+        onsetJam: String(detail.onsetJam ?? ""),
+        fesesDempul: detail.fesesDempul === true,
+        aktivitas: detail.aktivitas === "aktif" || detail.aktivitas === "mengantuk" || detail.aktivitas === "tidak mau minum" ? detail.aktivitas : null,
+        prematur: detail.prematur === true,
+      })
+    }
+  }, [draftLoading, detail])
+
   const handle = async () => {
     setErr(null)
+    if (!form.usiaBayiHari.trim() || !form.onsetJam.trim() || !Number.isFinite(Number(form.usiaBayiHari)) || !Number.isFinite(Number(form.onsetJam)) || form.zona === null || !form.aktivitas) {
+      setErr("Lengkapi usia, waktu muncul, zona, dan kondisi bayi")
+      return
+    }
     setLoading(true)
     try {
       const res = await submitIkterus({
-        userId: await getCurrentUserId(),
+        userId,
         usiaBayiHari: Number(form.usiaBayiHari),
         zona: form.zona,
         onsetJam: Number(form.onsetJam),
@@ -49,18 +67,18 @@ export default function IkterusScreen({
   }
 
   return (
-    <SkriningFormShell title="Ikterus Neonatal" subtitle="Cek kuning pada bayi" onBack={onBack} illustration="/illu/illu-54-skrining-ikterus.webp">
+    <SkriningFormShell title="Ikterus Neonatal" subtitle="Cek kuning pada bayi" onBack={onBack} illustration="/illu/illu-54-skrining-ikterus.webp" loading={draftLoading}>
       <div className="space-y-3.5">
         <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
           <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Waktu dan usia bayi</h2>
           <div className="grid grid-cols-2 gap-2.5">
             <div className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
               <label className="block text-xs text-[#33443F]">Usia bayi (hari)</label>
-              <Input type="number" aria-label="Usia bayi (hari)" value={form.usiaBayiHari} onChange={(event) => setForm((current) => ({ ...current, usiaBayiHari: Number(event.target.value) }))} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
+              <Input type="number" aria-label="Usia bayi (hari)" value={form.usiaBayiHari} onChange={(event) => setForm((current) => ({ ...current, usiaBayiHari: event.target.value }))} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
             </div>
             <div className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
               <label className="block text-xs text-[#33443F]">Usia saat kuning muncul (jam)</label>
-              <Input type="number" aria-label="Usia saat kuning muncul (jam)" value={form.onsetJam} onChange={(event) => setForm((current) => ({ ...current, onsetJam: Number(event.target.value) }))} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
+              <Input type="number" aria-label="Usia saat kuning muncul (jam)" value={form.onsetJam} onChange={(event) => setForm((current) => ({ ...current, onsetJam: event.target.value }))} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
             </div>
           </div>
         </section>

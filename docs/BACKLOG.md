@@ -65,6 +65,7 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 - [x] Push server diperbaiki setelah QA menemukan Edge Function tidak memiliki grant `SELECT` pada jadwal suplemen/ANC/dosis (`42501`); migration `010_service_role_reminder_reads.sql` memberi akses minimum ke role service (2026-10-10).
 - [x] Hapus pengingat obat memperbaiki query Dexie pada field `suplemenId` yang bukan indeks; penghapusan obat dan log dosis kini memakai indeks `userId` dalam satu transaksi lokal sehingga UI langsung diperbarui (2026-10-10).
 - [x] Peta pada semua hasil skrining MERAH kini mencari Puskesmas/PMB terdekat; kembali dari mode nifas meminta konfirmasi dan mempertahankan data tanggal kelahiran (2026-10-10).
+- [x] Form skrining hamil, nifas, dan bayi menghapus nilai awal contoh untuk akun; setiap form memuat detail skrining terakhir berdasarkan `userId` dan tipe, sedangkan umur/UK dapat diisi dari profil. Record lama yang tidak menyimpan jawaban rinci diberi peringatan pada form Faktor Risiko (2026-10-10).
 
 ### Belum selesai / perlu konfirmasi
 - [ ] S-06 Edukasi: S-06a–S-06f tersedia; S-06g belum dibuat. Tinjau tanda dari ekstraksi yang belum memiliki video relevan sebelum menambahkannya ke S-06e; materi nifas dan laktasi diarahkan ke S-04/S-04a.
@@ -87,7 +88,7 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 ## Catatan teknis
 - Dexie adalah penyimpanan lokal/offline; Supabase Postgres adalah sumber data cloud dengan RLS per pengguna.
 - `app/src/data/crypto.ts` masih stub/plaintext; enkripsi data kesehatan yang direncanakan di `ARCHITECTURE.md` belum diterapkan.
-- Belum ada test suite formal. Gerbang verifikasi proyek adalah `cd app && npm run build`; check kecil kalender/jadwal/crop tersedia di `scripts/check-profile-reminders.mjs`.
+- Belum ada test suite formal. Gerbang verifikasi proyek adalah `cd app && npm run build`; check kecil kalender/jadwal/crop tersedia di `scripts/check-profile-reminders.mjs`, dan isolasi pemilihan draft skrining diuji di `scripts/check-screening-draft.mjs`.
 - Build berhasil, tetapi Vite memberi peringatan bundle utama >500 kB dan beberapa dynamic import tidak menghasilkan pemisahan chunk.
 - Data beranda di `app/src/App.tsx` masih memiliki nilai default UK/progress/countdown/HPL; pastikan nilai yang tampil selalu berasal dari profil sebelum rilis.
 - Konten edukasi, validasi klinis, dan persetujuan etik bergantung pada stakeholder/peneliti.

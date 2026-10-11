@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { getCurrentUserId } from "@/data/currentUser"
+import { useEffect, useState } from "react"
+import { useLatestScreeningDraft } from "@/features/skrining/useLatestScreeningDraft"
 import { Button } from "@/components/ui/button"
 import { submitMental } from "@/features/skrining/ibu-hamil/mentalForm"
 import SkriningFormShell from "@/features/skrining/components/SkriningFormShell"
@@ -19,9 +19,16 @@ const QUESTIONS: { q: string; options: [string, string, string, string] }[] = [
 ]
 
 export default function MentalScreen({ onBack, onSuccess }: { onBack: () => void; onSuccess: (r: any) => void }) {
+  const { loading: draftLoading, userId, detail } = useLatestScreeningDraft("epds")
   const [answers, setAnswers] = useState<(number | null)[]>(Array(10).fill(null))
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!draftLoading && Array.isArray(detail?.answers) && detail.answers.length === 10) {
+      setAnswers(detail.answers.map((answer) => typeof answer === "number" ? answer : null))
+    }
+  }, [draftLoading, detail])
 
   const answered = answers.filter((a) => a !== null).length
 
@@ -30,7 +37,7 @@ export default function MentalScreen({ onBack, onSuccess }: { onBack: () => void
     if (answered < 10) return setError(`Masih ada ${10 - answered} pertanyaan belum dijawab`)
     setLoading(true)
     try {
-      const res = await submitMental({ userId: await getCurrentUserId(), answers: answers as number[] })
+      const res = await submitMental({ userId, answers: answers as number[] })
       onSuccess(res)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Gagal menyimpan")
@@ -40,7 +47,7 @@ export default function MentalScreen({ onBack, onSuccess }: { onBack: () => void
   }
 
   return (
-    <SkriningFormShell title="Kesehatan Mental" subtitle="Kuesioner EPDS" onBack={onBack} illustration="/illu/illu-51-skrining-mental.webp">
+    <SkriningFormShell title="Kesehatan Mental" subtitle="Kuesioner EPDS" onBack={onBack} illustration="/illu/illu-51-skrining-mental.webp" loading={draftLoading}>
       <div className="space-y-3.5">
         <section className="space-y-2 rounded-[24px] bg-[#EAF4F0] p-3.5">
           <div className="flex items-end justify-between gap-2">

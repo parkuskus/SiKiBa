@@ -1,6 +1,6 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Activity, Baby, Droplets, Eye, Hand, Thermometer, Wind, Waves, Zap, type LucideIcon } from "lucide-react"
-import { getCurrentUserId } from "@/data/currentUser"
+import { useLatestScreeningDraft } from "@/features/skrining/useLatestScreeningDraft"
 import { Button } from "@/components/ui/button"
 import { submitDangerSign } from "@/features/skrining/ibu-hamil/dangerSignForm"
 import SkriningFormShell from "@/features/skrining/components/SkriningFormShell"
@@ -18,42 +18,65 @@ const GEJALA: { k: string; l: string; Icon: LucideIcon; tint?: boolean; hint?: s
 ]
 
 export default function DangerSignScreen({ onBack, onSuccess }: { onBack: () => void; onSuccess: (r: any) => void }) {
-  const [form, setForm] = useState<Record<string, boolean>>({
-    perdarahan: false,
-    pandanganKabur: false,
-    nyeriAbdomenHebat: false,
-    bengkakWajahTangan: false,
-    gerakanJaninBerkurang: false,
-    demamTinggi: false,
-    ketubanPecah: false,
-    sesakNapas: false,
+  const { loading: draftLoading, userId, detail } = useLatestScreeningDraft("danger_sign")
+  const [form, setForm] = useState<Record<string, boolean | null>>({
+    perdarahan: null,
+    pandanganKabur: null,
+    nyeriAbdomenHebat: null,
+    bengkakWajahTangan: null,
+    gerakanJaninBerkurang: null,
+    demamTinggi: null,
+    ketubanPecah: null,
+    sesakNapas: null,
   })
-  const [nyeriSkala, setNyeriSkala] = useState(0)
-  const [tdTinggi, setTdTinggi] = useState(false)
+  const [nyeriSkala, setNyeriSkala] = useState<number | null>(null)
+  const [tdTinggi, setTdTinggi] = useState<boolean | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const toggle = (k: string) => {
+  useEffect(() => {
+    if (!draftLoading && detail) {
+      setForm({
+        perdarahan: typeof detail.perdarahan === "boolean" ? detail.perdarahan : null,
+        pandanganKabur: typeof detail.pandanganKabur === "boolean" ? detail.pandanganKabur : null,
+        nyeriAbdomenHebat: typeof detail.nyeriAbdomenHebat === "boolean" ? detail.nyeriAbdomenHebat : null,
+        bengkakWajahTangan: typeof detail.bengkakWajahTangan === "boolean" ? detail.bengkakWajahTangan : null,
+        gerakanJaninBerkurang: typeof detail.gerakanJaninBerkurang === "boolean" ? detail.gerakanJaninBerkurang : null,
+        demamTinggi: typeof detail.demamTinggi === "boolean" ? detail.demamTinggi : null,
+        ketubanPecah: typeof detail.ketubanPecah === "boolean" ? detail.ketubanPecah : null,
+        sesakNapas: typeof detail.sesakNapas === "boolean" ? detail.sesakNapas : null,
+      })
+      setNyeriSkala(typeof detail.nyeriKepalaSkala === "number" ? detail.nyeriKepalaSkala : detail.nyeriKepalaHebat === true ? 4 : null)
+      setTdTinggi(typeof detail.tdTinggi === "boolean" ? detail.tdTinggi : null)
+    }
+  }, [draftLoading, detail])
+
+  const answer = (k: string, value: boolean) => {
     if (k === "nyeriKepalaHebat") {
-      setNyeriSkala((current) => current >= 4 ? 0 : 4)
+      setNyeriSkala(value ? 4 : 0)
       return
     }
-    setForm((s) => {
-      const next = { ...s, [k]: !s[k] }
-      if (k === "bengkakWajahTangan" && s[k]) setTdTinggi(false)
-      return next
-    })
+    setForm((current) => ({ ...current, [k]: value }))
+    if (k === "bengkakWajahTangan" && !value) setTdTinggi(null)
   }
 
   const handle = async () => {
     setError(null)
+    if ([...Object.values(form), nyeriSkala === null ? null : nyeriSkala >= 4].some((value) => value === null)) {
+      setError("Pilih Ya atau Tidak untuk setiap tanda")
+      return
+    }
+    if (form.bengkakWajahTangan === true && tdTinggi === null) {
+      setError("Pilih jawaban tekanan darah")
+      return
+    }
     setLoading(true)
     try {
       const res = await submitDangerSign({
-        userId: await getCurrentUserId(),
-        ...form,
-        nyeriKepalaHebat: nyeriSkala >= 4,
-        nyeriKepalaSkala: nyeriSkala,
+        userId,
+        ...Object.fromEntries(Object.entries(form).map(([key, value]) => [key, value === true])) as Record<string, boolean>,
+        nyeriKepalaHebat: (nyeriSkala ?? 0) >= 4,
+        nyeriKepalaSkala: nyeriSkala ?? 0,
         tdTinggi: form.bengkakWajahTangan ? tdTinggi : undefined,
       } as never)
       onSuccess(res)
@@ -65,11 +88,11 @@ export default function DangerSignScreen({ onBack, onSuccess }: { onBack: () => 
   }
 
   return (
-    <SkriningFormShell title="Tanda Bahaya" subtitle="Cek mandiri tanda bahaya" onBack={onBack} illustration="/illu/illu-48-skrining-bahaya.webp">
+    <SkriningFormShell title="Tanda Bahaya" subtitle="Cek mandiri tanda bahaya" onBack={onBack} illustration="/illu/illu-48-skrining-bahaya.webp" loading={draftLoading}>
       <div className="space-y-2.5">
         <p className="px-1 text-[13px] text-[#33443F]">Tandai gejala yang Bunda rasakan</p>
         {GEJALA.map((item, index) => {
-          const checked = item.k === "nyeriKepalaHebat" ? nyeriSkala >= 4 : !!form[item.k]
+          const selected = item.k === "nyeriKepalaHebat" ? nyeriSkala === null ? null : nyeriSkala >= 4 : form[item.k]
           const Icon = item.Icon
           return (
             <div key={item.k}>
@@ -86,20 +109,20 @@ export default function DangerSignScreen({ onBack, onSuccess }: { onBack: () => 
                     <button
                       key={String(choice)}
                       type="button"
-                      aria-pressed={checked === choice}
-                      onClick={() => checked !== choice && toggle(item.k)}
-                      className={`min-h-11 min-w-11 rounded-[14px] px-2 text-xs font-semibold transition-colors active:scale-95 ${checked === choice ? "bg-[#4A6E54] text-white" : "bg-white text-[#33443F] ring-1 ring-[#D9E7E2]"}`}
+                      aria-pressed={selected === choice}
+                      onClick={() => selected !== choice && answer(item.k, choice)}
+                      className={`min-h-11 min-w-11 rounded-[14px] px-2 text-xs font-semibold transition-colors active:scale-95 ${selected === choice ? "bg-[#4A6E54] text-white" : "bg-white text-[#33443F] ring-1 ring-[#D9E7E2]"}`}
                     >
                       {choice ? "Ya" : "Tidak"}
                     </button>
                   ))}
                 </div>
               </div>
-              {item.k === "bengkakWajahTangan" && checked && (
+              {item.k === "bengkakWajahTangan" && selected === true && (
                 <div className="mt-2 flex items-center justify-between gap-2 rounded-[18px] bg-white p-3 ring-1 ring-[#D9E7E2]">
                   <p className="text-xs font-semibold text-[#1D2B29]">Tekanan darah 140/90 atau lebih?</p>
                   <div className="flex gap-1.5">
-                    {[true, false].map((choice) => (
+                      {[true, false].map((choice) => (
                       <button key={String(choice)} type="button" aria-pressed={tdTinggi === choice} onClick={() => setTdTinggi(choice)} className={`min-h-11 min-w-11 rounded-[14px] px-2 text-xs font-semibold ${tdTinggi === choice ? "bg-[#4A6E54] text-white" : "bg-white text-[#33443F] ring-1 ring-[#D9E7E2]"}`}>
                         {choice ? "Ya" : "Tidak"}
                       </button>

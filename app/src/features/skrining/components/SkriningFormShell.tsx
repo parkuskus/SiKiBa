@@ -5,12 +5,14 @@ export default function SkriningFormShell({
   subtitle,
   onBack,
   illustration,
+  loading = false,
   children,
 }: {
   title: string
   subtitle: string
   onBack: () => void
   illustration?: string
+  loading?: boolean
   children: React.ReactNode
 }) {
   return (
@@ -41,7 +43,9 @@ export default function SkriningFormShell({
           </div>
         </header>
       )}
-      <div className={`relative z-20 mx-auto flex w-full max-w-[480px] flex-1 flex-col pb-5 ${illustration ? "rounded-t-[30px] bg-[#FFFCF6] px-5 pt-5" : "px-6 pt-5"}`}>{children}</div>
+      <div className={`relative z-20 mx-auto flex w-full max-w-[480px] flex-1 flex-col pb-5 ${illustration ? "rounded-t-[30px] bg-[#FFFCF6] px-5 pt-5" : "px-6 pt-5"}`}>
+        {loading ? <p role="status" aria-live="polite" className="py-8 text-center text-sm text-[#33443F]">Memuat data skrining terakhir</p> : children}
+      </div>
       <div className="relative mx-auto mt-auto w-full max-w-[480px]">
         <img src="/illu/illu-11-florist-2.webp" alt="" aria-hidden className="pointer-events-none w-full select-none object-cover" />
       </div>

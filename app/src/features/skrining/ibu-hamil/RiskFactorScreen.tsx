@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react"
-import { getCurrentProfile, getCurrentUserId } from "@/data/currentUser"
-import { weeksFromHpht } from "@/clinical-rules/ukHpl"
+import { ageFromProfile, ukFromProfile, useLatestScreeningDraft } from "@/features/skrining/useLatestScreeningDraft"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { submitRiskFactor } from "@/features/skrining/ibu-hamil/riskFactorForm"
@@ -49,7 +48,7 @@ function CheckRow({ checked, label, onToggle }: { checked: boolean; label: strin
   )
 }
 
-function YesNo({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+function YesNo({ value, onChange }: { value: boolean | null; onChange: (v: boolean) => void }) {
   return (
     <div className="flex shrink-0 gap-1.5">
       {[true, false].map((choice) => (
@@ -74,50 +73,69 @@ export default function RiskFactorScreen({
   onBack: () => void
   onSuccess: (r: Result) => void
 }) {
+  const { loading: draftLoading, userId, detail, profile } = useLatestScreeningDraft("poedji_rochjati")
   const [step, setStep] = useState<1 | 2 | 3>(1)
-  const [usia, setUsia] = useState("26")
-  const [ukMinggu, setUkMinggu] = useState("28")
-  const [paritas, setParitas] = useState<Paritas>("multi")
-  const [jarak, setJarak] = useState<Jarak>("belum")
+  const [usia, setUsia] = useState("")
+  const [ukMinggu, setUkMinggu] = useState("")
+  const [paritas, setParitas] = useState<Paritas>(null)
+  const [jarak, setJarak] = useState<Jarak>(null)
   const [kompl, setKompl] = useState<string[]>([])
   const [kronik, setKronik] = useState<string[]>([])
+  const [riwayatPE, setRiwayatPE] = useState<boolean | null>(null)
   const [sistolik, setSistolik] = useState("")
   const [diastolik, setDiastolik] = useState("")
   const [tbCm, setTbCm] = useState("")
   const [bbKg, setBbKg] = useState("")
-  const [gemeli, setGemeli] = useState(false)
-  const [trb, setTrb] = useState(false)
-  const [letak, setLetak] = useState(false)
-  const [hidramnion, setHidramnion] = useState(false)
+  const [gemeli, setGemeli] = useState<boolean | null>(null)
+  const [trb, setTrb] = useState<boolean | null>(null)
+  const [letak, setLetak] = useState<boolean | null>(null)
+  const [hidramnion, setHidramnion] = useState<boolean | null>(null)
+  const [legacyAnswersIncomplete, setLegacyAnswersIncomplete] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fieldErrs, setFieldErrs] = useState<Record<string, string>>({})
 
-  // auto usia dari tanggal lahir & UK dari HPHT bila profil ada
   useEffect(() => {
-    void (async () => {
-      try {
-        const p = await getCurrentProfile()
-        if (!p) return
-        if (p.tanggal_lahir) {
-          const birth = new Date(p.tanggal_lahir)
-          const now = new Date()
-          let age = now.getFullYear() - birth.getFullYear()
-          const m = now.getMonth() - birth.getMonth()
-          if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--
-          if (age >= 10 && age <= 60) setUsia(String(age))
-        }
-        if (p.hpht) {
-          const uk = weeksFromHpht(p.hpht)
-          if (uk >= 0 && uk <= 45) setUkMinggu(String(uk))
-        }
-      } catch {}
-    })()
-  }, [])
-
-  const riwayatPE = kompl.includes("pe")
+    if (draftLoading) return
+    if (!detail) {
+      setUsia(ageFromProfile(profile))
+      setUkMinggu(ukFromProfile(profile))
+      return
+    }
+    setUsia(String(detail.usia ?? ageFromProfile(profile)))
+    setUkMinggu(String(detail.ukMinggu ?? ukFromProfile(profile)))
+    setSistolik(detail.sistolik == null ? "" : String(detail.sistolik))
+    setDiastolik(detail.diastolik == null ? "" : String(detail.diastolik))
+    setTbCm(detail.tbCm == null ? "" : String(detail.tbCm))
+    setBbKg(detail.bbKg == null ? "" : String(detail.bbKg))
+    setRiwayatPE(typeof detail.riwayatPE === "boolean" ? detail.riwayatPE : null)
+    const saved = detail.jawabanForm as { paritas?: string; jarak?: string; riwayatKomplikasi?: string[]; penyakitKronik?: string[]; gemeli?: boolean | null; trb?: boolean | null; letak?: boolean | null; hidramnion?: boolean | null } | undefined
+    if (saved) {
+      setParitas(saved.paritas === "primi" || saved.paritas === "multi" || saved.paritas === "grande" ? saved.paritas : null)
+      setJarak(saved.jarak === "lt2" || saved.jarak === "gte2" || saved.jarak === "belum" ? saved.jarak : null)
+      setKompl(saved.riwayatKomplikasi ?? [])
+      setKronik(saved.penyakitKronik ?? [])
+      setGemeli(saved.gemeli ?? null)
+      setTrb(saved.trb ?? null)
+      setLetak(saved.letak ?? null)
+      setHidramnion(saved.hidramnion ?? null)
+    } else {
+      const parity = Number(detail.paritas)
+      setParitas(Number.isFinite(parity) ? parity === 0 ? "primi" : parity >= 4 ? "grande" : "multi" : null)
+      setJarak(detail.jarakTahun === undefined ? null : Number(detail.jarakTahun) < 2 ? "lt2" : "gte2")
+      setKompl(detail.riwayatSC === true ? ["sc"] : detail.riwayatKomplikasi === true ? ["lainnya"] : [])
+      setKronik([])
+      setGemeli(typeof detail.kehamilanGanda === "boolean" ? detail.kehamilanGanda : null)
+      setTrb(typeof detail.trb === "boolean" ? detail.trb : null)
+      setLetak(typeof detail.kelainanLetak === "boolean" ? detail.kelainanLetak : null)
+      setHidramnion(typeof detail.hidramnion === "boolean" ? detail.hidramnion : null)
+      setLegacyAnswersIncomplete(true)
+    }
+  }, [draftLoading, detail, profile])
 
   const toggleKompl = (id: string) => {
+    if (id === "pe") setRiwayatPE((value) => value === true ? false : true)
+    if (id === "tidak") setRiwayatPE(false)
     setKompl((prev) => {
       if (id === "tidak") return prev.includes("tidak") ? [] : ["tidak"]
       const withoutTidak = prev.filter((x) => x !== "tidak")
@@ -134,6 +152,7 @@ export default function RiskFactorScreen({
   }
 
   const setPE = (v: boolean) => {
+    setRiwayatPE(v)
     setKompl((prev) => {
       const withoutTidak = prev.filter((x) => x !== "tidak" && x !== "pe")
       return v ? [...withoutTidak] .concat("pe") : withoutTidak
@@ -149,14 +168,25 @@ export default function RiskFactorScreen({
     setStep(2)
   }
 
+  const nextFrom2 = () => {
+    setError(null)
+    if (!kompl.length) return setError("Pilih riwayat komplikasi atau Tidak ada")
+    if (!kronik.length) return setError("Pilih penyakit kronik atau Tidak ada")
+    setStep(3)
+  }
+
   const handleSubmit = async () => {
     setError(null)
     setFieldErrs({})
+    if ([riwayatPE, gemeli, trb, letak, hidramnion].some((value) => value === null)) {
+      setError("Jawab semua pertanyaan kondisi khusus")
+      return
+    }
     setSubmitting(true)
     try {
       const paritasNum = paritas === "primi" ? 0 : paritas === "grande" ? 4 : 1
       const res = await submitRiskFactor({
-        userId: await getCurrentUserId(),
+        userId,
         usia: Number(usia),
         paritas: paritasNum,
         jarakTahun: jarak === "lt2" ? 1 : jarak === "gte2" ? 3 : undefined,
@@ -165,14 +195,15 @@ export default function RiskFactorScreen({
         diastolik: diastolik ? Number(diastolik) : undefined,
         tbCm: tbCm ? Number(tbCm) : undefined,
         bbKg: bbKg ? Number(bbKg) : undefined,
-        trb: trb || undefined,
+        trb: trb === true,
         riwayatKomplikasi: kompl.some((x) => ["perdarahan", "prematur", "lainnya", "sc"].includes(x)),
         riwayatSC: kompl.includes("sc"),
-        riwayatPE,
+        riwayatPE: riwayatPE === true,
         penyakitKronik: kronik.some((x) => x !== "tidak"),
-        kehamilanGanda: gemeli,
-        hidramnion,
-        kelainanLetak: letak,
+        kehamilanGanda: gemeli === true,
+        hidramnion: hidramnion === true,
+        kelainanLetak: letak === true,
+        jawabanForm: { paritas, jarak, riwayatKomplikasi: kompl, penyakitKronik: kronik, gemeli, trb, letak, hidramnion },
       })
       onSuccess(res)
     } catch (e: unknown) {
@@ -188,8 +219,9 @@ export default function RiskFactorScreen({
   const back = () => step === 1 ? onBack() : setStep((step - 1) as 1 | 2 | 3)
 
   return (
-    <SkriningFormShell title="Faktor Risiko" subtitle="Skor Poedji Rochjati" onBack={back} illustration="/illu/illu-46-skrining-risiko.webp">
+    <SkriningFormShell title="Faktor Risiko" subtitle="Skor Poedji Rochjati" onBack={back} illustration="/illu/illu-46-skrining-risiko.webp" loading={draftLoading}>
       <div className="space-y-3.5">
+        {legacyAnswersIncomplete && <p className="rounded-[14px] bg-[#FFF1E8] p-3 text-xs text-[#704500]">Sebagian jawaban skrining sebelumnya belum tersimpan rinci. Periksa kembali isian sebelum menyimpan.</p>}
         <div className="px-1">
           <div className="flex items-center justify-between text-xs text-[#33443F]">
             <span>Langkah {step} dari 3</span>
@@ -302,7 +334,7 @@ export default function RiskFactorScreen({
           {step > 1 && <Button variant="outline" className="min-h-[46px] flex-1 rounded-full border-[#D9E7E2] bg-white text-[#33443F]" onClick={() => setStep((step - 1) as 1 | 2 | 3)}>Kembali</Button>}
           {step === 1 && <Button variant="outline" className="min-h-[46px] flex-1 rounded-full border-[#D9E7E2] bg-white text-[#33443F]" onClick={onBack}>Batal</Button>}
           {step < 3 ? (
-            <Button className="min-h-[46px] flex-1 rounded-full bg-[#4A6E54] font-bold text-white hover:bg-[#3D5C46]" onClick={step === 1 ? nextFrom1 : () => setStep(3)}>
+              <Button className="min-h-[46px] flex-1 rounded-full bg-[#4A6E54] font-bold text-white hover:bg-[#3D5C46]" onClick={step === 1 ? nextFrom1 : nextFrom2}>
               Lanjut
             </Button>
           ) : (

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react"
 import { Activity } from "lucide-react"
-import { getCurrentProfile, getCurrentUserId } from "@/data/currentUser"
-import { weeksFromHpht } from "@/clinical-rules/ukHpl"
+import { ageFromProfile, ukFromProfile, useLatestScreeningDraft } from "@/features/skrining/useLatestScreeningDraft"
 import { calcMAP, kategoriMAP } from "@/clinical-rules/mapCalculator"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -49,11 +48,12 @@ function RadioRow({ selected, label, onClick }: { selected: boolean; label: stri
 }
 
 export default function PreeklamsiaScreen({ onBack, onSuccess }: { onBack: () => void; onSuccess: (r: any) => void }) {
+  const { loading: draftLoading, userId, detail, profile } = useLatestScreeningDraft("preeklamsia")
   const [step, setStep] = useState<1 | 2>(1)
-  const [sistolik, setSistolik] = useState("120")
-  const [diastolik, setDiastolik] = useState("80")
-  const [ukMinggu, setUkMinggu] = useState("28")
-  const [proteinuria, setProteinuria] = useState(false)
+  const [sistolik, setSistolik] = useState("")
+  const [diastolik, setDiastolik] = useState("")
+  const [ukMinggu, setUkMinggu] = useState("")
+  const [proteinuria, setProteinuria] = useState<boolean | null>(null)
   const [riwayat, setRiwayat] = useState<PECheck[]>([])
   const [gemeli, setGemeli] = useState(false)
   const [anakPertama, setAnakPertama] = useState(false)
@@ -68,33 +68,34 @@ export default function PreeklamsiaScreen({ onBack, onSuccess }: { onBack: () =>
     setRiwayat((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
   }
 
-  // auto usia dari tanggal lahir & UK dari HPHT bila profil ada
   useEffect(() => {
-    void (async () => {
-      try {
-        const p = await getCurrentProfile()
-        if (!p) return
-        if (p.tanggal_lahir) {
-          const birth = new Date(p.tanggal_lahir)
-          const now = new Date()
-          let age = now.getFullYear() - birth.getFullYear()
-          const m = now.getMonth() - birth.getMonth()
-          if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--
-          if (age >= 10 && age <= 60) setUsia(String(age))
-        }
-        if (p.hpht) {
-          const uk = weeksFromHpht(p.hpht)
-          if (uk >= 0 && uk <= 45) setUkMinggu(String(uk))
-        }
-      } catch {}
-    })()
-  }, [])
+    if (draftLoading) return
+    if (!detail) {
+      setUsia(ageFromProfile(profile))
+      setUkMinggu(ukFromProfile(profile))
+      return
+    }
+    setSistolik(String(detail.sistolik ?? ""))
+    setDiastolik(String(detail.diastolik ?? ""))
+    setUkMinggu(String(detail.ukMinggu ?? ukFromProfile(profile)))
+    setProteinuria(typeof detail.proteinuria === "boolean" ? detail.proteinuria : null)
+    setUsia(String(detail.usia ?? ageFromProfile(profile)))
+    setImtPre(detail.imtPre == null ? "" : String(detail.imtPre))
+    setJarak(detail.jarakTahun == null ? "" : String(detail.jarakTahun))
+    setRiwayat(([
+      ["riwayatPE", "pe"], ["htKronik", "ht"], ["ginjalKronik", "ginjal"],
+      ["diabetesMelitus", "dm"], ["autoimun", "autoimun"], ["riwayatKeluargaPE", "keluarga"],
+    ] as const).filter(([field]) => detail[field] === true).map(([, key]) => key))
+    setGemeli(detail.kehamilanGanda === true)
+    setAnakPertama(detail.nullipara === true)
+  }, [draftLoading, detail, profile])
 
   const nextFrom1 = () => {
     setErr(null)
     if (!sistolik || Number(sistolik) < 70 || Number(sistolik) > 250) return setErr("Sistolik (mmHg) harus 70–250")
     if (!diastolik || Number(diastolik) < 40 || Number(diastolik) > 150) return setErr("Diastolik (mmHg) harus 40–150")
     if (!ukMinggu || Number(ukMinggu) < 0 || Number(ukMinggu) > 45) return setErr("Usia kehamilan (minggu) harus 0–45")
+    if (proteinuria === null) return setErr("Pilih hasil pemeriksaan protein urine")
     setStep(2)
   }
 
@@ -104,11 +105,11 @@ export default function PreeklamsiaScreen({ onBack, onSuccess }: { onBack: () =>
     setLoading(true)
     try {
       const res = await submitPreeklamsia({
-        userId: await getCurrentUserId(),
+        userId,
         sistolik: Number(sistolik),
         diastolik: Number(diastolik),
         ukMinggu: Number(ukMinggu),
-        proteinuria,
+        proteinuria: proteinuria === true,
         riwayatPE: riwayat.includes("pe"),
         htKronik: riwayat.includes("ht"),
         ginjalKronik: riwayat.includes("ginjal"),
@@ -138,7 +139,7 @@ export default function PreeklamsiaScreen({ onBack, onSuccess }: { onBack: () =>
   const back = () => step === 1 ? onBack() : setStep(1)
 
   return (
-    <SkriningFormShell title="Preeklamsia" subtitle="Tekanan darah dan faktor risiko" onBack={back} illustration="/illu/illu-49-skrining-preeklamsia.webp">
+    <SkriningFormShell title="Preeklamsia" subtitle="Tekanan darah dan faktor risiko" onBack={back} illustration="/illu/illu-49-skrining-preeklamsia.webp" loading={draftLoading}>
       <div className="space-y-3.5">
         <div className="px-1">
           <div className="flex items-center justify-between text-xs text-[#33443F]">
