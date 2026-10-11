@@ -1,20 +1,21 @@
-import { useCallback, useEffect, useState } from "react"
+import { lazy, Suspense, useCallback, useEffect, useState } from "react"
 import { MessageCircleHeart } from "lucide-react"
 import BottomNav from "@/shared/components/layout/BottomNav"
 import BirthDialog from "@/shared/components/layout/BirthDialog"
-import BerandaPage from "@/features/beranda/BerandaPage"
-import SkriningPage from "@/features/skrining/SkriningPage"
-import EdukasiPage from "@/features/edukasi/EdukasiPage"
-import PengingatPage from "@/features/tracker/PengingatPage"
-import ProfilPage from "@/features/profil/ProfilPage"
-import ChatbotPage from "@/features/chatbot/ChatbotPage"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
-import SplashScreen from "@/features/onboarding/SplashScreen"
-import RegisterScreen from "@/features/onboarding/RegisterScreen"
-import LoginScreen from "@/features/onboarding/LoginScreen"
 import { supabase } from "@/data/supabase"
 import { db } from "@/data/db"
 import { getCurrentUserId } from "@/data/currentUser"
+
+const BerandaPage = lazy(() => import("@/features/beranda/BerandaPage"))
+const SkriningPage = lazy(() => import("@/features/skrining/SkriningPage"))
+const EdukasiPage = lazy(() => import("@/features/edukasi/EdukasiPage"))
+const PengingatPage = lazy(() => import("@/features/tracker/PengingatPage"))
+const ProfilPage = lazy(() => import("@/features/profil/ProfilPage"))
+const ChatbotPage = lazy(() => import("@/features/chatbot/ChatbotPage"))
+const SplashScreen = lazy(() => import("@/features/onboarding/SplashScreen"))
+const RegisterScreen = lazy(() => import("@/features/onboarding/RegisterScreen"))
+const LoginScreen = lazy(() => import("@/features/onboarding/LoginScreen"))
 
 type Tab = "beranda" | "skrining" | "edukasi" | "tracker" | "profil"
 type Onboarding = "splash" | "register" | "login" | "app"
@@ -85,21 +86,24 @@ export default function App() {
 
   if (onboarding === "splash") {
     return (
-      <SplashScreen
-        onAutoMasuk={enterApp}
-        onDaftar={() => setOnboarding("register")}
-        onMasuk={() => setOnboarding("login")}
-      />
+      <Suspense fallback={null}>
+        <SplashScreen
+          onAutoMasuk={enterApp}
+          onDaftar={() => setOnboarding("register")}
+          onMasuk={() => setOnboarding("login")}
+        />
+      </Suspense>
     )
   }
   if (onboarding === "register") {
-    return <RegisterScreen onBack={() => setOnboarding("splash")} onSuccess={enterApp} onToLogin={() => setOnboarding("login")} />
+    return <Suspense fallback={null}><RegisterScreen onBack={() => setOnboarding("splash")} onSuccess={enterApp} onToLogin={() => setOnboarding("login")} /></Suspense>
   }
   if (onboarding === "login") {
-    return <LoginScreen onBack={() => setOnboarding("splash")} onSuccess={enterApp} onToRegister={() => setOnboarding("register")} />
+    return <Suspense fallback={null}><LoginScreen onBack={() => setOnboarding("splash")} onSuccess={enterApp} onToRegister={() => setOnboarding("register")} /></Suspense>
   }
 
   return (
+    <Suspense fallback={null}>
     <div className="min-h-[100dvh] bg-[#FFFCF6] text-[#2E3436]">
       <main className={`mx-auto max-w-[480px] px-4 pt-5 ${showBottomNav ? "pb-28" : "pb-0"}`}>
         <div className="w-full">
@@ -159,5 +163,6 @@ export default function App() {
         }}
       />
     </div>
+    </Suspense>
   )
 }

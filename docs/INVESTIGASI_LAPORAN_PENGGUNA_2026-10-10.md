@@ -1,8 +1,10 @@
 # Investigasi Laporan Pengguna
 
 **Tanggal:** 10 Oktober 2026  
-**Status:** Investigasi dan perbaikan peta, mode nifas, isian skrining, serta penyimpanan P4K sudah diterapkan di aplikasi.  
+**Status:** Investigasi selesai; perbaikan P4K, ANC, skrining, peta/mode nifas, dan rekomendasi chatbot sudah diterapkan pada kode/aplikasi sesuai status tiap bagian.  
 **Tujuan:** Merangkum temuan yang dapat dibuktikan, bagian yang masih perlu direproduksi atau dikonfirmasi, dan rancangan solusi sebelum implementasi.
+
+**Pembaruan 11 Oktober 2026:** P4K, ANC, dan perbaikan chatbot sudah diimplementasikan; migration RAG 013 serta Edge Function `chat` versi 25 sudah diterapkan. Frontend baru masih perlu dirilis agar history, FAQ cepat, dan sumber RAG tampil di perangkat. Nomor 9 dikonfirmasi tidak ada.
 
 **Dasar keputusan klinis:** Masukan pada daftar ini berasal dari pakar dan sudah diverifikasi. Frekuensi ANC dan makna BB sebelum hamil diperlakukan sebagai persyaratan yang disetujui; investigasi ini tidak meminta validasi klinis ulang.
 
@@ -10,15 +12,15 @@
 
 | No. | Laporan                                                          | Temuan investigasi                                                                                                                                                                                                                                                                    | Prioritas                                |
 | --- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| 1   | Estimasi dana P4K tidak tersimpan                                | Payload dan kolom cloud sudah memuat estimasi. UI lama hanya memberi status lokal, sementara sync cloud berjalan tanpa status. Jika konflik tampil, field dana tetap editable dan dapat tertimpa saat memilih versi. Snapshot agregat cloud menunjukkan satu record P4K tanpa estimasi dana. | Tinggi |
+| 1   | Estimasi dana P4K tidak tersimpan                                | Akar risiko ditemukan pada status sync yang tidak terlihat dan field dana yang masih dapat diedit saat konflik. Perbaikannya sudah diterapkan; snapshot cloud sebelumnya menunjukkan satu row tanpa estimasi. QA akun pelapor masih perlu dilakukan. | Selesai implementasi, QA menunggu |
 | 2   | BB faktor risiko perlu berlabel “BB sebelum hamil”               | Selesai: label, key data baru, dan validasi memakai BB sebelum hamil; detail lama dengan key `bbKg` tetap dipulihkan. Algoritma skor Poedji tidak berubah.                                                                                                                               | Selesai                                   |
 | 3   | Berbagai form skrining menampilkan data dummy, bukan isian terakhir | Nilai awal contoh ditemukan di beberapa skrining hamil, nifas, dan bayi. Form menginisialisasi ulang nilai itu ketika dibuka dan tidak memuat detail skrining terakhir. Hasil langsung setelah submit tetap perlu direproduksi untuk memastikan apakah masalahnya juga terjadi pada tahap itu. | Tinggi |
-| 4   | Jawaban chatbot tidak konsisten/rancu                            | Ada jalur LLM online dan FAQ berbasis pencocokan kata offline; aturan, cakupan, penandaan verifikasi, dan deteksi eskalasinya tidak sepenuhnya sama.                                                                                                                                  | Tinggi, karena konteks kesehatan         |
-| 5   | Jadwal ANC tidak sesuai; ingin ubah tanggal dan tandai HPL merah | Generator saat ini memakai enam minggu tetap `[10, 12, 20, 28, 32, 36]`; kalender hanya bisa menandai selesai dan mengubah catatan. HPL belum diberikan ke kalender sebagai penanda.                                                                                                  | Tinggi, aturan jadwal perlu dikonfirmasi |
-| 6   | Bagian Tonggak Perjalanan tidak diperlukan                       | Bagian tersebut adalah blok UI mandiri di halaman Pengingat; tidak menjadi sumber jadwal ANC atau HPL.                                                                                                                                                                                | Rendah                                   |
-| 7   | Peta darurat membuka fasyankes yang tersimpan di profil          | Tombol peta tampil untuk semua hasil MERAH, tetapi hanya `tipeKey === "danger"` yang memakai query fasilitas terdekat. Hasil MERAH lain menerima nama fasyankes dari profil.                                                                                                          | Tinggi                                   |
-| 8   | Perlu konfirmasi sebelum kembali dari mode nifas                 | Tombol langsung mengganti mode ke hamil dan menghapus tanggal lahir yang dipakai untuk menghitung hari nifas; belum ada dialog konfirmasi.                                                                                                                                            | Sedang                                   |
-| 9   | Belum ada deskripsi masalah                                      | Tidak ada perilaku atau konteks yang dapat diinvestigasi dari butir ini.                                                                                                                                                                                                              | Perlu keterangan                         |
+| 4   | Jawaban chatbot perlu lebih konsisten, cepat, dan relevan        | Perbaikan sudah diterapkan pada routing cepat, konteks percakapan, latency, dan retrieval hybrid. Edge Function versi 24 aktif; evaluasi jawaban/TTFR di perangkat masih perlu QA. | QA lanjutan |
+| 5   | Jadwal ANC tidak sesuai; ingin ubah tanggal dan tandai HPL merah | Jadwal pakar, edit tanggal, HPL merah, dan sync push telah diimplementasikan; QA penerimaan push/tanggal edit pada perangkat masih menunggu.                                                                                                                                             | Implementasi selesai, QA menunggu        |
+| 6   | Bagian Tonggak Perjalanan tidak diperlukan                       | Blok UI dan kalkulasi milestone khusus sudah dihapus; ringkasan UK/HPL tetap ada.                                                                                                                                                                                                       | Selesai                                  |
+| 7   | Peta darurat membuka fasyankes yang tersimpan di profil          | Semua tombol peta hasil MERAH sekarang memakai query Puskesmas/PMB terdekat, tidak lagi memakai fasyankes profil.                                                                                                                                                                       | Selesai                                  |
+| 8   | Perlu konfirmasi sebelum kembali dari mode nifas                 | Perubahan mode kini meminta konfirmasi; tanggal kelahiran tetap tersimpan.                                                                                                                                                                                                             | Selesai                                  |
+| 9   | Tidak ada laporan tambahan                                      | Pengguna mengonfirmasi bahwa butir ini kosong; tidak ada tindakan lanjutan.                                                                                                                                                                                                           | — |
 
 ## 1. Estimasi dana persalinan P4K tidak tersimpan
 
@@ -95,22 +97,54 @@ Sumber nilai dummy telah ditemukan pada berbagai form: masing-masing memulai den
 
 ## 4. Chatbot AI inkonsisten dan sebagian jawaban rancu
 
-### Yang ditemukan
+### Yang ditemukan sebelum perbaikan
 
 - Ada dua mesin jawaban. Online memanggil Supabase Edge Function/LLM dengan prompt, data skrining, profil terbatas, dan retrieval guideline; offline atau kegagalan online menggunakan FAQ lokal (`app/src/services/chatService.ts`, `supabase/functions/chat/index.ts`).
-- FAQ offline memakai pencocokan substring berdasarkan kata kunci dan urutan array. Kata generik seperti “bayi”, “darah”, “sakit”, atau “menyusu” dapat memicu jawaban yang tidak sesuai konteks; hasil pertama yang cocok langsung dipakai (`app/src/services/chatService.ts`, sekitar baris 8–17; `personality.ts`, sekitar baris 29–71).
-- Beberapa jawaban FAQ diberi `terverifikasiAhli: true` sebagai nilai statis; belum terlihat bukti review/versi pakar pada data FAQ itu sendiri. Online memberi label terverifikasi jika retrieval mengembalikan sumber, walaupun belum ada validasi bahwa jawaban benar-benar memakai kutipan itu (`chatService.ts`, baris 37; `personality.ts`).
-- Kebijakan eskalasi tidak identik. Server memeriksa pola tanda bahaya pada pesan pengguna atau pertanyaan tentang hasil MERAH. Fallback lokal menentukan eskalasi dengan regex pada teks jawaban, yang tidak sama dengan aturan server (`chat/index.ts`, sekitar baris 65–66 dan 199–206; `chatService.ts`, baris 19 dan 29–42).
+- FAQ offline memakai pencocokan substring berdasarkan kata kunci dan urutan array. Kata generik seperti “bayi”, “darah”, “sakit”, atau “menyusu” dapat memicu jawaban yang tidak sesuai konteks; hasil pertama yang cocok langsung dipakai.
+- Beberapa FAQ ditandai terverifikasi dengan flag statis. Jalur online menandai jawaban terverifikasi hanya karena retrieval mengembalikan sumber, tanpa relevance gate.
+- Kebijakan eskalasi berbeda antara server yang memeriksa pesan/hasil MERAH dan fallback lokal yang memeriksa teks jawaban.
 - Prompt mengatur gaya/cakupan, tetapi LLM tetap dapat menghasilkan variasi atau jawaban rancu. Filter sekarang menolak sebagian proses internal/metadata, bukan menguji kesesuaian jawaban dengan pedoman pakar yang sudah disetujui.
-- Review klinis atas masukan pakar dianggap sudah selesai. Pekerjaan yang tersisa adalah menerapkan keputusan tersebut secara konsisten pada jalur online dan fallback, bukan meminta review klinis ulang.
+- Edge Function dahulu tidak menerima riwayat percakapan; pertanyaan lanjutan seperti “yang tadi?” kehilangan konteks.
+- Alur lama menjalankan embedding setelah query konteks, lalu retrieval dan completion secara berurutan. `functions.invoke` tetap menunggu jawaban JSON penuh; belum ada streaming token.
+- Retrieval awal mengambil top-5 cosine vector saja, tanpa relevance gate atau pencarian lexical. `sources` mengikuti top-5 meski konteks dipotong 4.000 karakter.
+- Snapshot RAG Supabase yang diperiksa berisi **456 chunk, satu label sumber, dan halaman 1–113**. PDF `assets/Guideline Chatbot_SIAGA.pdf` memiliki 113 halaman dengan teks terdeteksi di seluruh halaman. Jadi, sumber satu dokumen ini sudah mencakup kehamilan, nifas/laktasi, dan bayi baru lahir; kualitas match belum tentu membaik hanya dengan menambah banyak dokumen.
+- Uji vector-only awal memakai model embedding yang sama dengan Edge Function. Pertanyaan tentang perdarahan aktif pada ibu hamil menghasilkan top-5 halaman `67, 58, 10, 26, 72` dengan similarity sekitar `0,598–0,614`; bagian khusus perdarahan hamil halaman 4 terlewat. Setelah hybrid retrieval diterapkan, smoke test memasukkan halaman 4 ke top-5 dan mengembalikan halaman sasaran untuk tiga query contoh.
+- `scripts/ingest-guideline.py` hanya membaca satu path PDF tetap dan memberi chunk berdasarkan panjang karakter 700 dengan overlap 100. Pemotongan karakter dapat membelah judul, langkah, atau tabel; metadata hanya label sumber dan nomor halaman.
+- FAQ offline dan online sebelumnya tidak memiliki routing intent dan kontrak jawaban bersama.
 
-### Rancangan solusi
+### Saran perbaikan
 
-1. Buat satu matriks perilaku untuk salam, edukasi umum, pertanyaan di luar cakupan, FAQ, tanda bahaya, hasil MERAH, offline, dan kegagalan server.
-2. Samakan kontrak fallback dan online untuk eskalasi, sumber, serta status verifikasi; jangan menandai terverifikasi hanya karena ada sumber retrieval atau flag manual yang belum ditinjau.
-3. Ganti pencocokan kata generik dengan aturan intents yang lebih spesifik dan urutkan tanda bahaya sebelum topik umum. Sediakan fallback aman saat maksud tidak jelas.
-4. Tambahkan evaluasi percakapan tetap terhadap masukan/pedoman pakar yang sudah disetujui. Uji pasangan pertanyaan yang mirip tetapi konteks berbeda, termasuk “golongan darah”, keluhan bayi, dosis obat, kehamilan, nifas, dan tanda bahaya.
-5. Terapkan batasan klinis dan rekomendasi yang telah diputuskan pakar secara identik di LLM dan fallback; jangan biarkan variasi model mengubah arahan tersebut.
+#### Konsistensi dan relevansi
+
+1. Tetapkan kontrak respons bersama untuk online dan offline: intent, jawaban, sumber, status verifikasi, dan eskalasi. FAQ harus memakai intent yang spesifik, bukan substring umum seperti “bayi”, “darah”, atau “sakit”.
+2. Kirim beberapa pesan terakhir secara terbatas sebagai konteks percakapan. Jangan mengirim seluruh chat tanpa batas; data kesehatan dan konteks profil tetap dibatasi ke kebutuhan pertanyaan.
+3. Gunakan hasil skrining/profil hanya ketika relevan. Untuk pertanyaan umum, jangan otomatis menambahkan skrining lama ke prompt.
+4. Terapkan ambang similarity. Jika hasil retrieval lemah, jangan menempelkan sumber yang tidak relevan atau memberi label terverifikasi; jawab dengan informasi umum aman/fallback yang konsisten.
+5. Bentuk set uji percakapan dengan pertanyaan pakar dan variasi parafrasa. Nilai relevansi jawaban, ketepatan sumber, konsistensi antar-mode, serta respons eskalasi.
+
+#### TTFR lebih cepat
+
+1. Ukur waktu tiap tahap dengan durasi: baca konteks, embedding, retrieval, request LLM, dan first token/first response. Tanpa data ini, optimasi provider atau model hanya tebakan.
+2. Jalankan embedding query bersamaan dengan pembacaan konteks pengguna; keduanya tidak saling bergantung. Retrieval tetap menunggu embedding, lalu completion menunggu retrieval.
+3. Untuk salam, pertanyaan penggunaan aplikasi, dan intent darurat yang jelas, gunakan respons deterministik cepat tanpa menunggu embedding/RAG/LLM.
+4. Uji model/provider yang lebih cepat dan kurangi `max_tokens` sesuai batas jawaban produk. `temperature` saat ini sudah rendah, yaitu `0.2`.
+5. Jika latency tetap tinggi, tambahkan streaming dari Edge Function sampai UI. Ini memerlukan jalur fetch/stream di client; `supabase.functions.invoke` sekarang menunggu payload JSON utuh.
+
+#### Apakah perlu digest dokumen lain?
+
+**Belum perlu menambah dokumen secara massal.** Korpus saat ini sudah memuat satu panduan 113 halaman dengan 456 chunk dan mencakup tiga kelompok utama. Uji awal justru memperlihatkan contoh pertanyaan yang tidak mengambil halaman relevan yang sudah ada. Langkah pertama adalah membangun set evaluasi dengan halaman jawaban yang diharapkan, memperbaiki pemotongan chunk dan ranking, serta menambah metadata/topik atau hybrid vector + lexical search. Jangan menetapkan batas similarity sebelum diuji pada set tersebut karena query yang salah peringkat di atas masih memiliki similarity sekitar 0,6. Tambahkan dokumen baru hanya untuk menutup gap cakupan yang terbukti, misalnya pedoman resmi/pakar tentang topik yang tidak ditemukan atau kurang detail di PDF sekarang. Pilih versi yang disetujui dan masih berlaku, catat sumber/halaman/tahun, dan jangan mengindeks storyboard, draft, atau sumber yang saling bertentangan sebagai panduan klinis.
+
+Jika korpus diperluas, ubah ingest agar menerima beberapa PDF dengan label dan halaman masing-masing. Jangan memakai satu label tetap lalu menghapus semua chunk label tersebut, karena ingest ulang satu dokumen dapat mengganti sumber lain. Pertahankan dimensi embedding 1536 yang cocok dengan `vector(1536)` dan evaluasi ulang top-k setelah perubahan.
+
+### Implementasi rekomendasi
+
+- Kebijakan tanda bahaya dan eskalasi kini dibagi di `supabase/functions/_shared/chatPolicy.ts`, dipakai oleh Edge Function dan client. Salam, identitas Kira, tanda bahaya, dan FAQ yang cocok memberi jawaban cepat dan konsisten tanpa memanggil LLM. Kata kunci FAQ yang terlalu umum seperti `bayi`, `darah`, dan `sakit` dipersempit.
+- Client mengirim hingga enam giliran percakapan sebelumnya, dibatasi 1.000 karakter per giliran. Edge Function memvalidasi role/content sebelum menambahkan riwayat itu ke prompt.
+- Embedding pertanyaan kini berjalan bersamaan dengan query konteks akun. Jawaban LLM dibatasi menjadi 480 token; Edge Function mencatat durasi paralel, retrieval, completion, dan total tanpa mencatat teks/PII.
+- RAG memakai pencarian hybrid cosine + lexical, mengurutkan kandidat dengan reciprocal-rank fusion, membatasi konteks pada chunk yang lolos relevance gate, dan hanya mengembalikan sumber yang dipakai di konteks. UI menampilkan label/halaman sumber dan badge terverifikasi hanya untuk jawaban dengan retrieval relevan atau FAQ ahli.
+- Migration `013_chat_hybrid_retrieval.sql` diterapkan, fungsi `chat` di-deploy ulang ke versi 25, dan indeks IVFFlat dilepas agar korpus kecil saat ini mendapat ranking vector exact bersama indeks lexical GIN.
+- Smoke retrieval memakai tiga query pakar dan berhasil menemukan halaman sasaran untuk perdarahan aktif, bayi kuning hari pertama, dan bendungan ASI. Skrip dapat dijalankan dengan `python scripts/check-chat-retrieval.py`; pemeriksaan aturan cepat/eskalasi ada di `scripts/check-chat-policy.mjs`.
+- Streaming token belum diterapkan. Jalur saat ini masih memeriksa seluruh output LLM sebelum ditampilkan untuk mencegah proses internal/metadata bocor; metrik durasi yang dicatat akan menentukan apakah streaming aman dan masih diperlukan.
 
 ## 5. Jadwal ANC, edit tanggal, dan tanda HPL
 
@@ -164,20 +198,15 @@ Gunakan query fasilitas terdekat untuk seluruh tombol **Buka Peta** pada hasil M
 
 Tampilkan dialog konfirmasi dengan aksi batal sebagai default aman dan tombol lanjut yang eksplisit. Hanya setelah konfirmasi ubah mode. Tentukan bersama pemilik produk apakah tanggal lahir tetap disimpan untuk riwayat/perhitungan, atau memang dihapus; jangan menghapus data tanggal secara diam-diam. Uji batal, konfirmasi, refresh, dan perpindahan akun.
 
-## Butir 9
-
-Belum ada keterangan masalah pada butir nomor 9. Perlu deskripsi gejala, langkah untuk memunculkannya, halaman yang terlibat, dan hasil yang diharapkan.
-
 ## Urutan implementasi yang disarankan
 
 1. **Selesai pada 2026-10-10** — peta darurat untuk hasil MERAH dan konfirmasi kembali dari mode nifas.
 2. **Selesai pada 2026-10-10** — nilai contoh berbagai form skrining diganti dengan isian kosong/profil, dan detail terakhir dipulihkan per pengguna serta tipe skrining.
-3. **Berikutnya** — reproduksi estimasi dana P4K pada penyimpanan lokal dan cloud; perbaiki status sinkronisasi dan konflik bila gejala terkonfirmasi.
+3. **Selesai implementasi pada 2026-10-10** — status simpan lokal/cloud, antre durable, retry, dan resolusi konflik P4K. QA browser pada akun pelapor masih menunggu.
 4. **Selesai implementasi pada 2026-10-10** — jadwal ANC pakar, edit tanggal, marker HPL merah, dan sinkronisasi push. QA perangkat/push masih perlu dilakukan.
-5. **Berikutnya** — rapikan konsistensi chatbot terhadap pedoman pakar yang telah disetujui.
+5. **Selesai implementasi pada 2026-10-11** — jawaban cepat/FAQ konsisten, konteks multi-giliran, retrieval hybrid, sumber yang ditampilkan, dan metrik TTFR. QA percakapan langsung serta evaluasi latency end-to-end masih perlu dilanjutkan.
 6. **Selesai pada 2026-10-10** — hapus Tonggak Perjalanan dan perbarui label BB sesuai persyaratan pakar.
-7. Minta klarifikasi laporan nomor 9.
 
 ## Batas investigasi
 
-P4K telah diperiksa dengan build, uji utilitas, dan snapshot agregat database. Jadwal ANC telah diuji dengan skrip pola tanggal dan migration 011–012 telah diterapkan. Belum dilakukan replay end-to-end pada browser/perangkat untuk konflik P4K atau penerimaan push ANC setelah tanggal diedit.
+P4K telah diperiksa dengan build, uji utilitas, dan snapshot agregat database. Jadwal ANC diuji dengan skrip pola tanggal; migration 011–012 diterapkan. RAG diuji dengan tiga query sumber dan migration 013 diterapkan. Belum dilakukan QA end-to-end pada perangkat untuk konflik P4K, push ANC setelah tanggal diedit, variasi jawaban LLM, dan TTFR nyata pengguna.

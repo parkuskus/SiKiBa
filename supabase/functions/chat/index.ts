@@ -5,6 +5,7 @@
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.112.4";
+import { quickChatReply, retrievalTerms, shouldEscalate } from "../_shared/chatPolicy.ts";
 
 const LLM_BASE_URL = Deno.env.get("LLM_BASE_URL") ?? "https://api.openai.com/v1";
 const LLM_API_KEY = Deno.env.get("LLM_API_KEY") ?? "";
@@ -26,6 +27,7 @@ function llmHeaders(): Record<string, string> {
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 const SYSTEM_PROMPT = `Kamu Kira, bidan virtual SIAGA Bunda yang mendengarkan keluhan ibu dan membantu memberi informasi awal serta langkah selanjutnya. Kamu adalah asisten AI, bukan bidan atau dokter manusia dan tidak menggantikan pemeriksaan tenaga kesehatan. Berbicara dengan Bahasa Indonesia yang hangat, empatik, sederhana, dan tidak menggurui.
@@ -42,6 +44,8 @@ Aturan jawaban:
 - Jawab pertanyaan yang benar-benar ditanyakan. Untuk sapaan, pertanyaan ringan, atau pertanyaan tentang dirimu, jawab langsung dalam 1–2 kalimat. Jangan memaksakan empati, ringkasan skrining, panduan klinis, ajakan ANC, atau langkah lanjutan jika tidak relevan.
 - Pertanyaan umum tentang kehamilan, keluhan ibu, bayi, menyusui, dan masa nifas tetap perlu dijawab dengan informasi edukatif yang berguna, walaupun tidak ada potongan guidebook yang cocok. Jangan menolak hanya karena pertanyaannya medis atau tidak tercakup di guidebook.
 - Untuk pertanyaan kesehatan, berikan inti jawaban terlebih dahulu, lalu langkah aman yang bisa dicoba dan tanda kapan perlu diperiksa bila relevan. Jangan menjadikan rujukan ke bidan sebagai satu-satunya isi jawaban untuk keluhan ringan. Gunakan subjudul hanya jika membantu.
+- Gunakan riwayat percakapan singkat hanya untuk memahami rujukan seperti "yang tadi". Pesan saat ini adalah prioritas; abaikan riwayat jika topiknya berubah.
+- Gunakan potongan panduan hanya jika benar-benar sesuai dengan pertanyaan. Jika tidak ada potongan yang relevan, jawab umum dengan aman dan jangan mengklaim jawaban terverifikasi atau mengarang sumber.
 - Jika diminta merangkum profil atau hasil skrining, susun dengan judul Markdown terpisah "## Profil", "## Hasil skrining", dan "## Langkah selanjutnya" bila datanya tersedia. Sajikan tiap informasi sebagai poin singkat, satu informasi per baris. Jangan gabungkan beberapa label dalam satu paragraf. Lewati kategori tanpa data dan jangan mengulang data yang sama. Tampilkan hasil MERAH lebih dahulu dan jelaskan tindakan segera sebelum hasil lain. Jangan berhenti di tengah daftar dan jangan keluarkan JSON mentah.
 - Gunakan profil klinis, data skrining, dan potongan panduan hanya jika relevan dengan pertanyaan. Jika pertanyaan kesehatan ibu atau bayi tidak tercakup di potongan guidebook, tetap berikan informasi umum yang aman dan jelas, lalu sarankan verifikasi kepada bidan atau puskesmas bila perlu. Jangan menolak hanya karena hasil pencarian guidebook kosong. Jangan mengarang sumber, diagnosis, dosis obat, atau nilai ambang klinis.
 - Data profil dan skrining adalah milik pengguna yang sedang masuk. Gunakan hanya untuk konteks jawaban; jangan menyalin detail pribadi atau menyimpulkan bahwa data yang belum tersedia berarti hasilnya normal.
@@ -62,8 +66,9 @@ Batas klinis:
 const INTERNAL_REASONING = /(?:^|\n)\s*(?:here['’]s a thinking process|let me think step by step|thinking process:|chain[- ]of[- ]thought|analyze user input:|identify the core question(?:\/intent)?:|check rules?\s*&\s*constraints:|(?:step|langkah)\s*\d+[.)]\s*(?:analyze|identify|check|analisis|periksa)|<think>|<analysis>)/i;
 const SAFETY_METADATA = /^\s*(?:user safety\s*:|safety categories\s*:)/im;
 const JAWABAN_KEAMANAN = "Kira belum bisa memberi arahan yang berisiko. Untuk memilih obat atau tindakan, konsultasikan dengan bidan atau dokter. Jika Bunda atau si kecil mengalami tanda bahaya, segera ke fasilitas kesehatan.";
-const TANDA_BAHAYA_PESAN = /perdarahan|keluar darah|flek banyak|ketuban.{0,12}pecah|kejang|sesak napas|sulit bernapas|pingsan|nyeri kepala hebat|pandangan.{0,12}kabur|kabur.{0,12}pandangan|nyeri perut hebat|demam tinggi|bayi.{0,40}(?:kuning.{0,25}(?:hari pertama|baru lahir|24 jam|\bjam pertama\b)|(?:tidak mau|malas|sulit).{0,12}(?:menyusu|minum)|sangat lemas)/i;
-const TANYA_HASIL_MERAH = /(?:hasil|skor|kategori|skrining).{0,30}merah|merah.{0,30}(?:hasil|skor|kategori|skrining)/i;
+const MIN_RAG_SIMILARITY = 0.55;
+const MIN_RAG_LEXICAL_MATCHES = 3;
+const SAFE_STREAM_BUFFER = 48;
 
 type Screening = { tipe: string; skor: number | null; kategori: string | null; detail: Record<string, unknown> | null; created_at: string };
 type Profile = { nama: string | null; hpht: string | null; gravida: number | null; para: number | null; abortus: number | null };
@@ -126,6 +131,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405, headers: corsHeaders });
   try {
+    const requestStarted = performance.now();
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
@@ -134,10 +140,27 @@ serve(async (req) => {
     const { data: { user }, error: authErr } = await supabase.auth.getUser();
     if (authErr || !user) return Response.json({ error: "unauthorized" }, { status: 401, headers: corsHeaders });
 
-    const { message } = await req.json() as { message: string };
+    const body = await req.json() as { message: string; history?: unknown };
+    const message = body.message;
     if (!message?.trim()) return Response.json({ error: "message kosong" }, { status: 400, headers: corsHeaders });
+    const quick = quickChatReply(message);
+    if (quick) return Response.json({ ...quick, sources: [], hasRedResult: false }, { headers: corsHeaders });
+    const history = Array.isArray(body.history)
+      ? body.history.slice(-6).flatMap((turn) => {
+        if (!turn || typeof turn !== "object") return [];
+        const item = turn as { role?: unknown; content?: unknown };
+        if ((item.role !== "user" && item.role !== "assistant") || typeof item.content !== "string" || !item.content.trim()) return [];
+        return [{ role: item.role, content: item.content.trim().slice(0, 1000) }];
+      })
+      : [];
+
     // User-scoped JWT + RLS; context excludes email, phone, full DOB, and contact details.
-    const [screeningResult, profileResult, nifasResult, babyResult] = await Promise.all([
+    const parallelStarted = performance.now();
+    const embeddingPromise = embed(message).catch((error) => {
+      console.warn("[chat] embedding skip:", error);
+      return null;
+    });
+    const [screeningResult, profileResult, nifasResult, babyResult, queryEmbedding] = await Promise.all([
       supabase.from("screening_results")
         .select("tipe,skor,kategori,detail,created_at").eq("user_id", user.id)
         .order("created_at", { ascending: false }).limit(10),
@@ -149,7 +172,9 @@ serve(async (req) => {
       supabase.from("bbl_profiles")
         .select("apgar,usia_gestasi").eq("user_id", user.id)
         .order("created_at", { ascending: false }).limit(1),
+      embeddingPromise,
     ]);
+    const parallelMs = Math.round(performance.now() - parallelStarted);
     const contextError = screeningResult.error ?? profileResult.error ?? nifasResult.error ?? babyResult.error;
     if (contextError) {
       console.error("[chat] gagal membaca konteks akun", { code: contextError.code });
@@ -161,49 +186,120 @@ serve(async (req) => {
     const bayi = (babyResult.data ?? []) as BabyProfile[];
     const adaMerah = skrining.some((r) => r.kategori === "MERAH") || nifas.some((r) => r.status === "MERAH");
 
-    // 2. retrieval guideline — RAG top-5
+    // Hybrid retrieval uses exact vector ranking for this small corpus plus lexical terms.
     let guideline = "";
-    let sources: unknown[] = [];
-    try {
-      const qEmb = await embed(message);
-      const { data: chunks } = await supabase.rpc("match_guideline", { query_embedding: qEmb, match_count: 5 });
-      sources = (chunks ?? []).map((c: { sumber_label: string; sumber_halaman: number }) => `${c.sumber_label ?? ""} h.${c.sumber_halaman ?? "?"}`);
-      guideline = (chunks ?? []).map((c: { teks: string }) => c.teks).join("\n---\n").slice(0, 4000);
-    } catch (e) { console.warn("[chat] retrieval skip:", e); }
+    let sources: string[] = [];
+    let verified = false;
+    const retrievalStarted = performance.now();
+    if (queryEmbedding) {
+      try {
+        const { data: chunks, error } = await supabase.rpc("match_guideline_hybrid", {
+          query_text: message,
+          query_terms: retrievalTerms(message),
+          query_embedding: queryEmbedding,
+          match_count: 5,
+        });
+        if (error) throw error;
+        const relevant = (chunks ?? []).filter((chunk: { similarity: number; lexical_score: number }) =>
+          Number(chunk.similarity) >= MIN_RAG_SIMILARITY || Number(chunk.lexical_score) >= MIN_RAG_LEXICAL_MATCHES);
+        const contextChunks = relevant.slice(0, 4) as { teks: string; sumber_label: string | null; sumber_halaman: number | null }[];
+        sources = [...new Set(contextChunks.map((chunk) => `${chunk.sumber_label ?? "Pedoman"} h.${chunk.sumber_halaman ?? "?"}`))];
+        guideline = contextChunks.map((chunk) => `[${chunk.sumber_label ?? "Pedoman"} h.${chunk.sumber_halaman ?? "?"}]\n${chunk.teks}`).join("\n---\n").slice(0, 4000);
+        verified = contextChunks.length > 0;
+      } catch (error) { console.warn("[chat] retrieval skip:", error); }
+    }
+    const retrievalMs = Math.round(performance.now() - retrievalStarted);
 
     // 3. panggil LLM (OpenAI-compatible: OpenAI / Gemini via OpenAI-endpoint / OpenRouter)
-    const userBlock = `PROFIL KLINIS:\n${ringkasProfil(profil)}\n\nHASIL SKRINING:\n${ringkasSkrining(skrining)}\n\nPEMANTAUAN NIFAS:\n${ringkasNifas(nifas)}\n\nPROFIL BAYI:\n${ringkasBayi(bayi)}\n\nPOTONGAN PANDUAN:\n${guideline || "Tidak tersedia."}\n\nPERTANYAAN BUNDA:\n${message}`;
+    const userBlock = `PROFIL KLINIS:\n${ringkasProfil(profil)}\n\nHASIL SKRINING:\n${ringkasSkrining(skrining)}\n\nPEMANTAUAN NIFAS:\n${ringkasNifas(nifas)}\n\nPROFIL BAYI:\n${ringkasBayi(bayi)}\n\nPOTONGAN PANDUAN YANG RELEVAN:\n${guideline || "Tidak ada potongan panduan yang cukup relevan."}\n\nPERTANYAAN TERBARU BUNDA:\n${message}`;
+    const completionStarted = performance.now();
     const llmRes = await fetch(`${LLM_BASE_URL}/chat/completions`, {
       method: "POST",
       headers: llmHeaders(),
       body: JSON.stringify({
-        model: LLM_MODEL, temperature: 0.2, max_tokens: 750,
-        messages: [{ role: "system", content: SYSTEM_PROMPT }, { role: "user", content: userBlock }],
+        model: LLM_MODEL, temperature: 0.2, max_tokens: 480, stream: true,
+        messages: [{ role: "system", content: SYSTEM_PROMPT }, ...history, { role: "user", content: userBlock }],
       }),
     });
     if (!llmRes.ok) throw new Error(`LLM gagal: ${llmRes.status}`);
-    const llmJson = await llmRes.json();
-    const answer = typeof llmJson.choices?.[0]?.message?.content === "string"
-      ? llmJson.choices[0].message.content.trim()
-      : "";
-    if (!answer) throw new Error("LLM mengembalikan jawaban kosong");
-    if (INTERNAL_REASONING.test(answer)) {
-      console.warn("[chat] respons berisi proses internal, disembunyikan", { model: LLM_MODEL });
-      throw new Error("LLM mengembalikan proses internal");
-    }
-    if (SAFETY_METADATA.test(answer)) {
-      console.warn("[chat] metadata safety model disembunyikan", { model: LLM_MODEL });
-      return Response.json({ answer: JAWABAN_KEAMANAN, sources: [], verified: false, escalate: adaMerah }, { headers: corsHeaders });
-    }
+    const escalate = shouldEscalate(message, adaMerah);
+    const reader = llmRes.body?.getReader();
+    if (!reader) throw new Error("LLM tidak menyediakan stream jawaban");
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream<Uint8Array>({
+      async start(controller) {
+        let buffer = "";
+        let pending = "";
+        let answer = "";
+        let firstTokenMs: number | null = null;
+        let blocked = false;
+        const decoder = new TextDecoder();
+        const send = (data: Record<string, unknown>) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+        const processEvent = async (event: string) => {
+          const data = event.split(/\r?\n/).filter((line) => line.startsWith("data:")).map((line) => line.slice(5).trim()).join("\n");
+          if (!data || data === "[DONE]") return;
+          let payload: { choices?: { delta?: { content?: unknown } }[] };
+          try { payload = JSON.parse(data); } catch { return; }
+          const delta = payload.choices?.[0]?.delta?.content;
+          if (typeof delta !== "string" || !delta) return;
+          if (firstTokenMs === null) firstTokenMs = Math.round(performance.now() - requestStarted);
+          answer += delta;
+          pending += delta;
+          if (INTERNAL_REASONING.test(answer) || SAFETY_METADATA.test(answer)) {
+            blocked = true;
+            await reader.cancel();
+            return;
+          }
+          // Keep a safety window large enough to catch internal-marker prefixes before sending them.
+          if (pending.length > SAFE_STREAM_BUFFER) {
+            const safeLength = pending.length - SAFE_STREAM_BUFFER;
+            send({ type: "delta", text: pending.slice(0, safeLength) });
+            pending = pending.slice(safeLength);
+          }
+        };
 
-    // 4. simpan riwayat (fire-and-forget, jangan gagalkan jawaban)
-    const escalate = TANDA_BAHAYA_PESAN.test(message) || (adaMerah && TANYA_HASIL_MERAH.test(message));
-    await supabase.from("chat_messages").insert([
-      { user_id: user.id, role: "user", content: message },
-      { user_id: user.id, role: "assistant", content: answer, sources },
-    ]).then(({ error }) => { if (error) console.warn("[chat] simpan skip:", error); });
-
-    return Response.json({ answer, sources, verified: sources.length > 0, escalate }, { headers: corsHeaders });
+        try {
+          while (true) {
+            const { value, done } = await reader.read();
+            if (value) buffer += decoder.decode(value, { stream: !done });
+            else if (done) buffer += decoder.decode();
+            const events = buffer.split(/\r?\n\r?\n/);
+            buffer = events.pop() ?? "";
+            for (const event of events) {
+              await processEvent(event);
+              if (blocked) break;
+            }
+            if (blocked || done) break;
+          }
+          if (!blocked && buffer.trim()) await processEvent(buffer);
+          if (blocked) {
+            console.warn("[chat] streamed response blocked by output filter", { model: LLM_MODEL });
+            send({ type: "done", answer: JAWABAN_KEAMANAN, sources: [], verified: false, escalate, hasRedResult: adaMerah });
+            controller.close();
+            return;
+          }
+          answer = answer.trim();
+          if (!answer || INTERNAL_REASONING.test(answer) || SAFETY_METADATA.test(answer)) {
+            send({ type: "done", answer: JAWABAN_KEAMANAN, sources: [], verified: false, escalate, hasRedResult: adaMerah });
+            controller.close();
+            return;
+          }
+          if (pending) send({ type: "delta", text: pending });
+          // Chat history is best-effort and must not block the streamed reply.
+          await supabase.from("chat_messages").insert([
+            { user_id: user.id, role: "user", content: message },
+            { user_id: user.id, role: "assistant", content: answer, sources },
+          ]).then(({ error }) => { if (error) console.warn("[chat] simpan skip:", error); });
+          console.info("[chat] timing_ms", { contextAndEmbedding: parallelMs, retrieval: retrievalMs, firstToken: firstTokenMs, completion: Math.round(performance.now() - completionStarted), total: Math.round(performance.now() - requestStarted) });
+          send({ type: "done", answer, sources, verified, escalate, hasRedResult: adaMerah });
+          controller.close();
+        } catch (error) {
+          console.error("[chat] streaming gagal", error);
+          try { send({ type: "error", message: "stream gagal" }); controller.close(); } catch {}
+        }
+      },
+    });
+    return new Response(stream, { headers: { ...corsHeaders, "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no" } });
   } catch (e) {
     console.error("[chat]", e);
     return Response.json({ error: "chat gagal, coba lagi / hubungi bidan" }, { status: 500, headers: corsHeaders });

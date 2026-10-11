@@ -12,6 +12,7 @@ import LaktasiScreen from "@/features/skrining/nifas/LaktasiScreen"
 import IkterusScreen from "@/features/skrining/bbl/IkterusScreen"
 import HipotiroidScreen from "@/features/skrining/bbl/HipotiroidScreen"
 import SkriningResultScreen from "@/features/skrining/components/SkriningResultScreen"
+import { db } from "@/data/db"
 import { getCurrentUserId } from "@/data/currentUser"
 import { shareViaWA } from "@/services/exportService"
 
@@ -88,8 +89,6 @@ export default function SkriningPage({
   useEffect(() => {
     void (async () => {
       try {
-        const { db } = await import("@/data/db")
-        const { getCurrentUserId } = await import("@/data/currentUser")
         const uid = await getCurrentUserId()
         const all = await db.screeningResults.where("userId").equals(uid).toArray()
         const map: Record<string, AnyResult & { createdAt?: string }> = {}

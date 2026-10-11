@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState, type ReactNode } from "react"
-import { ArrowUp, Plus, Share2, X, MapPin, Siren, ShieldCheck } from "lucide-react"
+import { ArrowUp, Plus, X, ShieldCheck } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import { tanyaChatbot } from "@/services/chatService"
 import { getCurrentUserId } from "@/data/currentUser"
 import { shareViaWA } from "@/services/exportService"
 import { AVATAR, GELAR, NAMA, PLACEHOLDER, TYPING, sapaAcak } from "@/features/chatbot/personality"
+import EmergencyOverlay from "@/shared/components/EmergencyOverlay"
 
-type Msg = { dari: "ibu" | "kira"; teks: string; verified?: boolean }
+type Msg = { dari: "ibu" | "kira"; teks: string; verified?: boolean; sources?: string[] }
 
 const TOPIK_CEPAT = ["Mual saat hamil", "Tanda bahaya", "Bayi kuning", "Rasa cemas"]
 
@@ -55,22 +56,40 @@ export default function ChatbotPage({ onClose }: { onClose: () => void }) {
   }, [])
 
   useEffect(() => {
-    messagesEnd.current?.scrollIntoView({ behavior: "smooth", block: "end" })
+    messagesEnd.current?.scrollIntoView({ behavior: loading ? "auto" : "smooth", block: "end" })
   }, [msgs, loading])
 
   async function kirim(text = input) {
     const pesan = text.trim()
     if (!pesan || loading) return
+    const history = msgs.slice(1).slice(-6)
+      .map((message) => ({ role: message.dari === "ibu" ? "user" as const : "assistant" as const, content: message.teks }))
     setInput("")
     if (composer.current) composer.current.style.height = "48px"
     setMsgs((current) => [...current, { dari: "ibu", teks: pesan }])
     setLoading(true)
     try {
-      const reply = await tanyaChatbot(pesan)
-      setMsgs((current) => [...current, { dari: "kira", teks: reply.answer, verified: reply.verified }])
+      const reply = await tanyaChatbot(pesan, history, (delta) => {
+        setMsgs((current) => {
+          const last = current[current.length - 1]
+          if (last?.dari === "kira") return [...current.slice(0, -1), { ...last, teks: last.teks + delta }]
+          return [...current, { dari: "kira", teks: delta }]
+        })
+      })
+      setMsgs((current) => {
+        const last = current[current.length - 1]
+        const answer = { dari: "kira" as const, teks: reply.answer, verified: reply.verified, sources: reply.sources }
+        if (last?.dari === "kira") return [...current.slice(0, -1), answer]
+        return [...current, answer]
+      })
       if (reply.escalate) setEmergency(true)
     } catch {
-      setMsgs((current) => [...current, { dari: "kira", teks: "Maaf Bunda, Kira belum bisa menjawab sekarang. Coba lagi sebentar lagi ya." }])
+      setMsgs((current) => {
+        const error = { dari: "kira" as const, teks: "Maaf Bunda, Kira belum bisa menjawab sekarang. Coba lagi sebentar lagi ya." }
+        const last = current[current.length - 1]
+        if (last?.dari === "kira") return [...current.slice(0, -1), error]
+        return [...current, error]
+      })
     } finally {
       setLoading(false)
     }
@@ -92,8 +111,6 @@ export default function ChatbotPage({ onClose }: { onClose: () => void }) {
       setShareError(true)
     }
   }
-
-  const petaDarurat = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent("Puskesmas atau Praktik Mandiri Bidan (PMB) terdekat")}`
 
   return (
     <div className="relative flex h-full min-h-0 flex-col bg-[#FFFCF6]">
@@ -134,10 +151,11 @@ export default function ChatbotPage({ onClose }: { onClose: () => void }) {
                     <ShieldCheck className="size-3.5" /> Jawaban Terverifikasi Ahli
                   </span>
                 )}
+                {message.sources?.length ? <p className="mt-2 border-t border-[#E8EFEB] pt-2 text-[11px] text-[#536961]">Sumber {message.sources.join(", ")}</p> : null}
               </div>
             </div>
           ))}
-          {loading && (
+          {loading && msgs[msgs.length - 1]?.dari !== "kira" && (
             <div className="flex items-start gap-2.5">
               <span aria-hidden className="mt-0.5 grid size-8 shrink-0 place-items-center overflow-hidden rounded-full bg-[#EAF4F0]"><img src={AVATAR} alt="" className="h-full w-full object-cover object-[50%_28%]" /></span>
               <div aria-live="polite" className="rounded-[20px] rounded-tl-[6px] bg-white px-3.5 py-3 text-xs text-[#33443F] ring-1 ring-[#D9E7E2]">
@@ -181,19 +199,13 @@ export default function ChatbotPage({ onClose }: { onClose: () => void }) {
       </form>
 
       {emergency && (
-        <div className="absolute inset-0 z-20 grid place-items-center bg-[#1D2B29]/45 p-4" role="alertdialog" aria-modal="true" aria-labelledby="kira-emergency-title" aria-describedby="kira-emergency-description">
-          <div className="w-full max-w-[360px] rounded-[24px] bg-white p-5 shadow-xl ring-1 ring-[#E57373]/40">
-            <span className="grid size-12 place-items-center rounded-full bg-[#FDECEC] text-[#C62828]"><Siren className="size-6" /></span>
-            <h2 id="kira-emergency-title" className="mt-3 text-lg font-bold text-[#1D2B29]">Segera cari bantuan</h2>
-            <p id="kira-emergency-description" className="mt-1.5 text-sm leading-relaxed text-[#33443F]">Keluhan yang Bunda ceritakan bisa menjadi tanda bahaya. Segera hubungi bidan atau pergi ke IGD maupun puskesmas PONED terdekat.</p>
-            {shareError && <p role="alert" className="mt-2 text-xs text-[#C62828]">Ringkasan belum dapat dibagikan. Coba lagi sebentar lagi.</p>}
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <a href={petaDarurat} target="_blank" rel="noreferrer" className="flex min-h-11 items-center justify-center gap-1.5 rounded-full bg-[#C62828] px-2 text-xs font-bold text-white"><MapPin className="size-3.5" /> Buka Peta</a>
-              <button onClick={() => void bagikanKeBidan()} className="flex min-h-11 items-center justify-center gap-1.5 rounded-full bg-[#4A6E54] px-2 text-xs font-bold text-white"><Share2 className="size-3.5" /> Ke Bidan</button>
-            </div>
-            <button onClick={() => setEmergency(false)} className="mt-2 min-h-11 w-full rounded-full text-sm font-semibold text-[#4A6E54] hover:bg-[#EAF4F0]">Saya mengerti</button>
-          </div>
-        </div>
+        <EmergencyOverlay
+          description="Keluhan yang Bunda ceritakan bisa menjadi tanda bahaya. Segera hubungi bidan atau pergi ke IGD maupun puskesmas PONED terdekat."
+          mapsQuery="Puskesmas atau Praktik Mandiri Bidan (PMB) terdekat"
+          onShare={() => void bagikanKeBidan()}
+          onDismiss={() => setEmergency(false)}
+          shareError={shareError ? "Ringkasan belum dapat dibagikan. Coba lagi sebentar lagi ya." : undefined}
+        />
       )}
     </div>
   )

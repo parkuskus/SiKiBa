@@ -1,6 +1,7 @@
-import { useEffect } from "react"
-import { Check, TriangleAlert, OctagonAlert, Share2, RotateCcw, Home, MapPin, Siren } from "lucide-react"
+import { useEffect, useState } from "react"
+import { Check, TriangleAlert, OctagonAlert, Share2, RotateCcw, Home } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import EmergencyOverlay from "@/shared/components/EmergencyOverlay"
 
 type Warna = "HIJAU" | "KUNING" | "MERAH"
 
@@ -75,12 +76,12 @@ export default function SkriningResultScreen({
   onBeranda,
   onBagikan,
 }: Props) {
+  const [emergencyOpen, setEmergencyOpen] = useState(warna === "MERAH")
   const cfg = status[warna]
   const Icon = cfg.icon
   const factors = warna === "HIJAU"
     ? (faktorAman.length ? faktorAman : ["Tidak ada faktor risiko tambahan yang teridentifikasi."])
     : (faktorRisiko.length ? faktorRisiko : [warna === "MERAH" ? "Tanda bahaya memerlukan pemeriksaan segera." : "Hasil perlu dipantau lebih lanjut."])
-  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsQuery || "puskesmas PONED terdekat")}`
   const checkedDate = new Date(waktuISO).toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit", year: "numeric" })
   const score = skorLabel
     ? skorLabel.replace(/\s*·\s*/, " (") + (skorLabel.includes("·") ? ")" : "")
@@ -96,7 +97,7 @@ export default function SkriningResultScreen({
   }, [warna, tipeLabel, kategori])
 
   return (
-    <div className="-mx-4 -mt-5 flex min-h-[100dvh] flex-col bg-[#FFFCF6]">
+    <div className="relative -mx-4 -mt-5 flex min-h-[100dvh] flex-col bg-[#FFFCF6]">
       <header className="mx-auto flex w-full max-w-[480px] shrink-0 flex-col items-center rounded-b-[32px] bg-[#4A6E54] px-6 pb-6 pt-6 text-center text-white">
         <h1 className="!m-0 text-xl font-bold leading-tight">Hasil Skrining</h1>
         <div className="mt-2.5 grid size-[120px] place-content-center gap-1 rounded-full bg-white text-[#33443F]">
@@ -135,20 +136,6 @@ export default function SkriningResultScreen({
             ))}
           </ol>
 
-          {warna === "MERAH" && (
-            <div className="mt-3 rounded-[18px] bg-[#FDECEC] p-3 ring-1 ring-[#E57373]">
-              <p className="flex items-center gap-1.5 text-sm font-bold text-[#8E1F1F]"><Siren className="size-4" /> Darurat, jangan tunda</p>
-              <p className="mt-1 text-xs leading-relaxed text-[#6D2525]">Segera menuju IGD atau puskesmas PONED terdekat. Bawa KTP, buku KIA, dan hasil ini.</p>
-              <div className="mt-2.5 grid grid-cols-2 gap-2">
-                <a href={mapsUrl} target="_blank" rel="noreferrer" className="flex min-h-11 items-center justify-center gap-1.5 rounded-full bg-[#C62828] px-2 text-xs font-bold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8E1F1F]">
-                  <MapPin className="size-3.5" /> Buka Peta
-                </a>
-                <button onClick={onBagikan} className="flex min-h-11 items-center justify-center gap-1.5 rounded-full bg-white px-2 text-xs font-bold text-[#8E1F1F] ring-1 ring-[#E57373] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8E1F1F]">
-                  <Share2 className="size-3.5" /> Ke Bidan
-                </button>
-              </div>
-            </div>
-          )}
         </section>
 
         <p className="px-1 text-xs text-[#6C757D]">Diperiksa {checkedDate}</p>
@@ -168,6 +155,14 @@ export default function SkriningResultScreen({
       <div className="relative mx-auto mt-auto w-full max-w-[480px]">
         <img src="/illu/illu-11-florist-2.webp" alt="" aria-hidden className="pointer-events-none w-full select-none object-cover" />
       </div>
+      {emergencyOpen && (
+        <EmergencyOverlay
+          description={`Hasil skrining ${tipeLabel} masuk kategori MERAH. Segera ke IGD atau puskesmas PONED terdekat. Bawa KTP, buku KIA, dan hasil ini.`}
+          mapsQuery={mapsQuery || "Puskesmas atau Praktik Mandiri Bidan (PMB) terdekat"}
+          onShare={onBagikan}
+          onDismiss={() => setEmergencyOpen(false)}
+        />
+      )}
     </div>
   )
 }

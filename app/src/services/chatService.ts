@@ -1,9 +1,15 @@
 import { supabase } from "@/data/supabase"
 import { FAQ, JAWABAN_BINGUNG, JAWABAN_KEAMANAN, JAWABAN_OFFLINE } from "@/features/chatbot/personality"
+import { consumeChatStream, type StreamChatPayload } from "@/services/chatStream"
+import { db } from "@/data/db"
+import { getCurrentUserId } from "@/data/currentUser"
+import { quickChatReply, shouldEscalate } from "../../../supabase/functions/_shared/chatPolicy"
 
 // ponytail: client tipis — online -> Edge Function `chat`, offline -> FAQ hangat lokal. API key tidak pernah di sini.
 
 export type ChatReply = { answer: string; sources: string[]; escalate: boolean; offline: boolean; verified: boolean }
+export type ChatTurn = { role: "user" | "assistant"; content: string }
+type ChatResponse = StreamChatPayload
 
 const normalisasiKata = (teks: string) => ` ${teks.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()} `
 
@@ -16,29 +22,77 @@ function jawabOffline(pesan: string): { answer: string; verified: boolean } {
   return { answer: JAWABAN_BINGUNG, verified: false }
 }
 
-const perluEskalasi = (jawaban: string) => /fasyankes atau bidan sekarang/i.test(jawaban)
+async function adaHasilMerahLokal() {
+  try {
+    const userId = await getCurrentUserId()
+    const [screenings, nifas] = await Promise.all([
+      db.screeningResults.where("userId").equals(userId).filter((row) => row.kategori === "MERAH").count(),
+      db.nifasScreenings.where("userId").equals(userId).filter((row) => row.status === "MERAH").count(),
+    ])
+    return screenings > 0 || nifas > 0
+  } catch {
+    return false
+  }
+}
+
+function jawabFAQ(pesan: string) {
+  const p = normalisasiKata(pesan)
+  return FAQ.find((item) => item.kunci.some((key) => p.includes(normalisasiKata(key))))
+}
+
 const berisiProsesInternal = /(?:^|\n)\s*(?:here['’]s a thinking process|let me think step by step|thinking process:|chain[- ]of[- ]thought|analyze user input:|identify the core question(?:\/intent)?:|check rules?\s*&\s*constraints:|(?:step|langkah)\s*\d+[.)]\s*(?:analyze|identify|check|analisis|periksa)|<think>|<analysis>)/i
 const berisiLabelKeamanan = /^\s*(?:user safety\s*:|safety categories\s*:)/im
 
-export async function tanyaChatbot(pesan: string): Promise<ChatReply> {
+async function invokeChatStream(message: string, history: ChatTurn[], onDelta: (text: string) => void): Promise<ChatResponse> {
+  const url = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.replace(/\/$/, "")
+  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
+  if (!url || !anonKey) throw new Error("Konfigurasi chatbot belum tersedia")
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session?.access_token) throw new Error("Sesi akun belum tersedia")
+
+  const response = await fetch(`${url}/functions/v1/chat`, {
+    method: "POST",
+    headers: {
+      apikey: anonKey,
+      Authorization: `Bearer ${session.access_token}`,
+      "Content-Type": "application/json",
+      Accept: "text/event-stream, application/json",
+    },
+    body: JSON.stringify({ message, history }),
+  })
+  if (!response.ok) throw new Error(`Chat gagal (${response.status})`)
+  if (!response.headers.get("content-type")?.includes("text/event-stream")) return await response.json() as ChatResponse
+  return await consumeChatStream(response, onDelta)
+}
+
+export async function tanyaChatbot(pesan: string, history: ChatTurn[] = [], onDelta: (text: string) => void = () => {}): Promise<ChatReply> {
   const teks = pesan.trim()
   if (!teks) throw new Error("pesan kosong")
+  const offline = typeof navigator !== "undefined" && !navigator.onLine
+  const quick = quickChatReply(teks)
+  if (quick) return { ...quick, sources: [], offline }
+
+  const faq = jawabFAQ(teks)
+  if (faq) return { answer: faq.jawab, sources: [], escalate: shouldEscalate(teks), offline, verified: faq.terverifikasiAhli === true }
+
   // offline -> FAQ lokal, tidak pernah gagal
-  if (typeof navigator !== "undefined" && !navigator.onLine) {
+  if (offline) {
     const local = jawabOffline(teks)
-    return { answer: local.answer, sources: [], escalate: perluEskalasi(local.answer), offline: true, verified: local.verified }
+    const hasRedResult = await adaHasilMerahLokal()
+    return { answer: local.answer, sources: [], escalate: shouldEscalate(teks, hasRedResult), offline: true, verified: local.verified }
   }
   try {
-    const { data, error } = await supabase.functions.invoke("chat", { body: { message: teks } })
-    if (error) throw error
+    const recentHistory = history.slice(-6).map((turn) => ({ role: turn.role, content: turn.content.slice(0, 1000) }))
+    const data = await invokeChatStream(teks, recentHistory, onDelta)
     const answer = typeof data?.answer === "string" ? data.answer.trim() : ""
     if (!answer || berisiProsesInternal.test(answer)) throw new Error("respons chatbot tidak layak ditampilkan")
-    if (berisiLabelKeamanan.test(answer)) return { answer: JAWABAN_KEAMANAN, sources: [], escalate: false, offline: false, verified: false }
-    return { answer, sources: (data.sources as string[]) ?? [], escalate: !!data.escalate, offline: false, verified: data.verified === true }
+    if (berisiLabelKeamanan.test(answer)) return { answer: JAWABAN_KEAMANAN, sources: [], escalate: shouldEscalate(teks, data.hasRedResult === true), offline: false, verified: false }
+    return { answer, sources: (data.sources as string[]) ?? [], escalate: shouldEscalate(teks, data.hasRedResult === true) || data.escalate === true, offline: false, verified: data.verified === true }
   } catch (e) {
     // online gagal (Edge Function belum deploy / belum login) -> fallback lokal biar UX tidak mati
     console.warn("[kira] invoke chat gagal, pakai FAQ lokal:", e)
     const local = jawabOffline(teks)
-    return { answer: local.answer, sources: [], escalate: perluEskalasi(local.answer), offline: true, verified: local.verified }
+    const hasRedResult = await adaHasilMerahLokal()
+    return { answer: local.answer, sources: [], escalate: shouldEscalate(teks, hasRedResult), offline: true, verified: local.verified }
   }
 }

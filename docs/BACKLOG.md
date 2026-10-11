@@ -68,6 +68,7 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 - [x] Form skrining hamil, nifas, dan bayi menghapus nilai awal contoh untuk akun; setiap form memuat detail skrining terakhir berdasarkan `userId` dan tipe, sedangkan umur/UK dapat diisi dari profil. Record lama yang tidak menyimpan jawaban rinci diberi peringatan pada form Faktor Risiko (2026-10-10).
 - [x] P4K menyimpan lokal sebelum sync, memasukkan upsert ke antrean Dexie sebelum request cloud, menunjukkan status lokal/antrean/sukses/gagal, dan menyediakan retry. Autosave cloud diserialkan; konflik membandingkan isi, menampilkan kedua estimasi, serta mengunci field saat pemilihan versi. Snapshot agregat remote menunjukkan 1 row tanpa estimasi dana; pemilik row belum dicocokkan ke sesi uji (2026-10-10).
 - [x] Jadwal ANC mengikuti interval pakar berbasis HPHT sampai HPL, dapat dipindahkan tanggalnya, mempertahankan kunjungan selesai/terlewat, menandai HPL merah, dan menyinkronkan tanggal/metadata edit agar push mengikuti jadwal terbaru. Migration 011–012 sudah diterapkan (2026-10-10).
+- [x] Chatbot menyamakan jalur cepat/eskalasi online-offline, memakai 6 giliran konteks terakhir, retrieval hybrid, dan streaming SSE dengan output-safety guard. Migration 013 dan Edge Function `chat` versi 26 sudah diterapkan; uji live menghasilkan jawaban terverifikasi dari RAG (2026-10-11).
 - [x] Blok Tonggak Perjalanan serta data UI/kalkulasi yang hanya dipakainya dihapus dari Pengingat; field BB Faktor Risiko diberi label “BB sebelum hamil (kg)”, disimpan sebagai `bbPreKg`, dan tetap memulihkan detail lama `bbKg` (2026-10-10).
 
 ### Belum selesai / perlu konfirmasi
@@ -76,9 +77,9 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 - [ ] QA kalender ANC di perangkat: pindahkan tanggal, refresh/offline, pastikan status/catatan tidak hilang, lalu uji push ANC H-2/H-1 memakai tanggal hasil edit.
 - [ ] Validasi seluruh algoritma klinis oleh SpOG/bidan senior. Ambang dan rekomendasi belum boleh dianggap tervalidasi untuk pelayanan.
 - [ ] Ethical Clearance sebelum uji coba dengan partisipan.
-- [ ] QA end-to-end pada perangkat Android dan iOS: OTP/SMTP produksi, offline dan antrean sync, RLS, retensi data, reminder/notifikasi, mode nifas, chatbot, dan alur MERAH. Setelah grant 010, cron terpantau membalas HTTP 200 (`sent: 0`) pada 2026-10-10; jadwal aktif saat itu sudah lewat sehingga penerimaan notifikasi perangkat pada menit jadwal berikutnya masih perlu diuji. Belum ada subscription anonim Dummy pada pemeriksaan saat itu.
+- [ ] QA end-to-end pada perangkat Android dan iOS: OTP/SMTP produksi, offline dan antrean sync, RLS, retensi data, reminder/notifikasi, mode nifas, chatbot, dan alur MERAH. Chatbot membutuhkan evaluasi relevansi/eskalasi dan pengukuran TTFR end-to-end pada perangkat setelah rilis frontend.
 - [ ] Setelah deploy frontend, aktifkan push di perangkat dengan akun riil dan uji penerimaan ketika PWA tertutup, termasuk obat, ANC H-2/H-1, serta upload/crop avatar cloud. Backend sudah di-deploy; izin browser belum dapat diberikan dari agen.
-- [ ] Tinjau kebutuhan overlay darurat bersama untuk eskalasi chatbot dan hasil MERAH.
+- [x] Eskalasi chatbot dan hasil skrining MERAH memakai komponen overlay darurat bersama dengan tombol peta, berbagi ke bidan, dan dismiss.
 - [ ] Finalisasi isi/tampilan PDF bersama stakeholder; pastikan data ekspor dan format berbagi sesuai kebutuhan bidan.
 - [ ] Konfigurasi SMTP produksi, secret Edge Function, dan verifikasi deployment Supabase/Cloudflare Pages.
 - [ ] Siapkan distribusi Google Play melalui TWA setelah PWA production, keamanan data, validasi klinis, dan persyaratan akun/testing siap.
@@ -92,8 +93,8 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 ## Catatan teknis
 - Dexie adalah penyimpanan lokal/offline; Supabase Postgres adalah sumber data cloud dengan RLS per pengguna.
 - `app/src/data/crypto.ts` masih stub/plaintext; enkripsi data kesehatan yang direncanakan di `ARCHITECTURE.md` belum diterapkan.
-- Belum ada test suite formal. Gerbang verifikasi proyek adalah `cd app && npm run build`; cek kecil tersedia di `scripts/check-profile-reminders.mjs`, `scripts/check-screening-draft.mjs`, `scripts/check-birth-plan.mjs`, dan `scripts/check-anc-schedule.mjs`.
-- Build berhasil, tetapi Vite memberi peringatan bundle utama >500 kB dan beberapa dynamic import tidak menghasilkan pemisahan chunk.
+- Belum ada test suite formal. Gerbang verifikasi proyek adalah `cd app && npm run build`; cek kecil tersedia di `scripts/check-profile-reminders.mjs`, `scripts/check-screening-draft.mjs`, `scripts/check-birth-plan.mjs`, `scripts/check-anc-schedule.mjs`, dan `scripts/check-chat-policy.mjs`. Smoke RAG aktual tersedia di `scripts/check-chat-retrieval.py` dan memanggil embedding API.
+- Build berhasil tanpa peringatan ukuran chunk atau dynamic import setelah layar utama dipecah menjadi lazy chunks.
 - Data beranda di `app/src/App.tsx` masih memiliki nilai default UK/progress/countdown/HPL; pastikan nilai yang tampil selalu berasal dari profil sebelum rilis.
 - Konten edukasi, validasi klinis, dan persetujuan etik bergantung pada stakeholder/peneliti.
 

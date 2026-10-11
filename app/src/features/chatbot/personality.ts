@@ -37,7 +37,7 @@ export const FAQ: { kunci: string[]; jawab: string; terverifikasiAhli?: boolean 
     terverifikasiAhli: true,
   },
   {
-    kunci: ["kepala peyang", "kepala datar", "bentuk kepala", "plagiocephaly", "plagiosefali", "tengkorak bayi", "kepala bayi"],
+    kunci: ["kepala peyang", "kepala datar", "bentuk kepala bayi", "plagiocephaly", "plagiosefali", "tengkorak bayi"],
     jawab: "Kira belum bisa memastikan penyebab bentuk kepala bayi lewat chat. Bawa si kecil ke bidan atau dokter anak agar dapat diperiksa langsung. Jangan menggunakan alat koreksi atau terapi tanpa arahan tenaga kesehatan.",
   },
   {
@@ -51,12 +51,12 @@ export const FAQ: { kunci: string[]; jawab: string; terverifikasiAhli?: boolean 
     terverifikasiAhli: true,
   },
   {
-    kunci: ["darah", "perdarahan", "flek", "ketuban", "kejang", "demam", "pecah"],
+    kunci: ["keluar darah saat hamil", "perdarahan ringan", "flek saat hamil", "ketuban pecah", "kejang saat hamil", "demam tinggi saat hamil"],
     jawab: "Bunda, keluhan ini dapat menjadi tanda bahaya. Segera hubungi bidan atau pergi ke fasilitas kesehatan sekarang. Jangan menunggu keluhan memburuk.",
     terverifikasiAhli: true,
   },
   {
-    kunci: ["bayi", "kuning", "ikterus", "menyusu", "asi", "nenen"],
+    kunci: ["bayi kuning", "kuning pada bayi", "ikterus", "bayi sulit menyusu", "bayi tidak mau menyusu"],
     jawab: "Kira memahami Bunda khawatir melihat si kecil kuning. Jika kuning muncul pada hari pertama atau bayi sulit menyusu, segera bawa si kecil ke bidan atau fasilitas kesehatan untuk diperiksa.",
     terverifikasiAhli: true,
   },
@@ -66,7 +66,7 @@ export const FAQ: { kunci: string[]; jawab: string; terverifikasiAhli?: boolean 
     terverifikasiAhli: true,
   },
   {
-    kunci: ["capek", "lelah", "letih", "lemas", "pegal", "nyeri", "sakit"],
+    kunci: ["capek", "lelah", "letih", "badan lemas", "pegal-pegal"],
     jawab: "Wajar sekali Bunda merasa lelah, badan Bunda bekerja keras setiap hari. Coba curi waktu istirahat walau sebentar dan minta bantuan orang rumah untuk tugas berat. Kalau lelahnya sampai pusing berputar atau sesak, segera periksa ke bidan ya. Bunda pantas istirahat.",
     terverifikasiAhli: true,
   },
