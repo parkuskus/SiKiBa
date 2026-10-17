@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { submitDMG } from "@/features/skrining/ibu-hamil/dmgForm"
 import SkriningFormShell from "@/features/skrining/components/SkriningFormShell"
+import { calcIMT } from "@/clinical-rules/imtLila"
 
 export default function DmgScreen({ onBack, onSuccess }: { onBack: () => void; onSuccess: (r: any) => void }) {
   const { loading: draftLoading, userId, detail, profile } = useLatestScreeningDraft("dmg")
-  const [form, setForm] = useState({ usia: "", imtPre: "", ukMinggu: "", riwayatDMG: false, riwayatMakrosomia: false, riwayatDMKeluarga: false, glikosuria: false, pcos: false, etnisRisiko: false })
+  const [form, setForm] = useState({ usia: "", bbPreKg: "", tbCm: "", ukMinggu: "", riwayatDMG: false, riwayatMakrosomia: false, riwayatDMKeluarga: false, glikosuria: false, pcos: false, etnisRisiko: false })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -16,7 +17,8 @@ export default function DmgScreen({ onBack, onSuccess }: { onBack: () => void; o
     if (detail) {
       setForm({
         usia: String(detail.usia ?? ""),
-        imtPre: String(detail.imtPre ?? ""),
+        bbPreKg: String(detail.bbPreKg ?? ""),
+        tbCm: String(detail.tbCm ?? ""),
         ukMinggu: String(detail.ukMinggu ?? ""),
         riwayatDMG: detail.riwayatDMG === true,
         riwayatMakrosomia: detail.riwayatMakrosomia === true,
@@ -30,15 +32,20 @@ export default function DmgScreen({ onBack, onSuccess }: { onBack: () => void; o
     setForm((current) => ({ ...current, usia: ageFromProfile(profile), ukMinggu: ukFromProfile(profile) }))
   }, [draftLoading, detail, profile])
 
+  const bbPreKg = Number(form.bbPreKg)
+  const tbCm = Number(form.tbCm)
+  const validUkuran = Number.isFinite(bbPreKg) && bbPreKg > 0 && Number.isFinite(tbCm) && tbCm > 0
+  const imtPre = validUkuran ? calcIMT(bbPreKg, tbCm) : null
+
   const handle = async () => {
     setError(null)
-    if (!form.usia.trim() || !form.imtPre.trim() || !form.ukMinggu.trim() || ![form.usia, form.imtPre, form.ukMinggu].every((value) => Number.isFinite(Number(value)))) {
-      setError("Isi usia, IMT sebelum hamil, dan usia kehamilan")
+    if (!form.usia.trim() || !form.bbPreKg.trim() || !form.tbCm.trim() || !form.ukMinggu.trim() || ![form.usia, form.bbPreKg, form.tbCm, form.ukMinggu].every((value) => Number.isFinite(Number(value))) || Number(form.bbPreKg) <= 0 || Number(form.tbCm) <= 0) {
+      setError("Isi usia, berat dan tinggi badan sebelum hamil, serta usia kehamilan dengan angka yang valid")
       return
     }
     setLoading(true)
     try {
-      const res = await submitDMG({ userId, usia: Number(form.usia), imtPre: Number(form.imtPre), ukMinggu: Number(form.ukMinggu), riwayatDMG: form.riwayatDMG, riwayatMakrosomia: form.riwayatMakrosomia, riwayatDMKeluarga: form.riwayatDMKeluarga, glikosuria: form.glikosuria, pcos: form.pcos, etnisRisiko: form.etnisRisiko })
+      const res = await submitDMG({ userId, usia: Number(form.usia), bbPreKg, tbCm, imtPre: imtPre!, ukMinggu: Number(form.ukMinggu), riwayatDMG: form.riwayatDMG, riwayatMakrosomia: form.riwayatMakrosomia, riwayatDMKeluarga: form.riwayatDMKeluarga, glikosuria: form.glikosuria, pcos: form.pcos, etnisRisiko: form.etnisRisiko })
       onSuccess(res)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Gagal menyimpan")
@@ -55,14 +62,19 @@ export default function DmgScreen({ onBack, onSuccess }: { onBack: () => void; o
           <div className="grid grid-cols-2 gap-2.5">
             {[
               { key: "usia", label: "Usia (tahun)", value: form.usia },
-              { key: "imtPre", label: "IMT sebelum hamil", value: form.imtPre },
+              { key: "bbPreKg", label: "BB sebelum hamil (kg)", value: form.bbPreKg },
+              { key: "tbCm", label: "Tinggi badan (cm)", value: form.tbCm },
               { key: "ukMinggu", label: "Usia kehamilan (minggu)", value: form.ukMinggu },
             ].map((field) => (
               <div key={field.key} className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
                 <label className="block text-xs text-[#33443F]">{field.label}</label>
-                <Input type="number" aria-label={field.label} value={field.value} onChange={(event) => setForm((current) => ({ ...current, [field.key]: event.target.value }))} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
+                <Input type="number" step="any" aria-label={field.label} value={field.value} onChange={(event) => setForm((current) => ({ ...current, [field.key]: event.target.value }))} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
               </div>
             ))}
+            <div className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
+              <label htmlFor="dmg-imt-pre" className="block text-xs text-[#33443F]">IMT sebelum hamil</label>
+              <Input id="dmg-imt-pre" type="text" readOnly value={imtPre === null ? "" : imtPre.toFixed(1)} placeholder="Terisi otomatis" className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#4A6E54] shadow-none placeholder:text-[#536961] focus-visible:ring-0" />
+            </div>
           </div>
         </section>
 

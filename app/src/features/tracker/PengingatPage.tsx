@@ -50,7 +50,6 @@ export default function PengingatPage({ setShowBottomNav }: { setShowBottomNav: 
   const [targetDraft, setTargetDraft] = useState("")
   const [diaryTitle, setDiaryTitle] = useState("")
   const [diaryText, setDiaryText] = useState("")
-  const [diaryMood, setDiaryMood] = useState<1 | 2 | 3 | 4 | 5>(3)
   const [diaryMsg, setDiaryMsg] = useState<string | null>(null)
   const [diaryList, setDiaryList] = useState<DiaryEntry[]>([])
   const [showDiaryHistory, setShowDiaryHistory] = useState(false)
@@ -135,7 +134,7 @@ export default function PengingatPage({ setShowBottomNav }: { setShowBottomNav: 
 
   const handleDiary = async () => {
     if (!diaryText.trim()) return
-    await submitDiary({ userId: uid, teks: diaryText.trim(), mood: diaryMood, judul: diaryTitle.trim() || undefined })
+    await submitDiary({ userId: uid, teks: diaryText.trim(), mood: 3, judul: diaryTitle.trim() || undefined })
     setDiaryTitle("")
     setDiaryText("")
     setDiaryMsg("Tersimpan")
@@ -337,14 +336,6 @@ export default function PengingatPage({ setShowBottomNav }: { setShowBottomNav: 
               <CardContent className="space-y-2 p-4">
               <Input aria-label="Judul Diary" value={diaryTitle} onChange={(e) => setDiaryTitle(e.target.value)} placeholder="Judul Diary" className="h-11 rounded-[14px] border-[#D9E7E2] bg-white px-4 text-sm font-bold placeholder:text-sm placeholder:font-bold" />
               <textarea value={diaryText} onChange={(e) => setDiaryText(e.target.value)} placeholder="Tulis isi diary Bunda hari ini" className="min-h-[88px] w-full rounded-[14px] bg-white p-3 text-sm ring-1 ring-[#D9E7E2] placeholder:text-[#6C757D] focus:outline-none focus:ring-2 focus:ring-[#7AAE9A]/40" />
-              <div className="flex gap-1.5">
-                {([1, 2, 3, 4, 5] as const).map((v) => (
-                  <button key={v} onClick={() => setDiaryMood(v)} className={`min-h-11 flex-1 rounded-[14px] text-xs font-semibold transition-colors ${diaryMood === v ? "bg-[#4A6E54] text-white" : "bg-white text-[#33443F] ring-1 ring-[#D9E7E2]"}`}>
-                    {v}
-                  </button>
-                ))}
-              </div>
-              <p className="text-[11px] text-[#536961]">Skala 1-5 (1: sangat buruk, 5: sangat baik) </p>
               {diaryMsg && <p className="text-xs text-[#2E7D32] text-center">{diaryMsg}</p>}
               <Button className="min-h-11 w-full rounded-full bg-[#4A6E54] font-semibold text-white hover:bg-[#3D5C46]" onClick={() => void handleDiary()}>
                 Simpan diary

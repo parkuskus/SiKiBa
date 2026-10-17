@@ -77,7 +77,7 @@ export default function ProfileCard({ isPostpartum, hariNifas, beratLahir, panja
         )}
         <div className="mt-3 grid grid-cols-2 gap-3">
           <div className="rounded-2xl bg-white px-3 py-2.5">
-            <p className="flex items-center gap-1 text-[11px] font-medium text-[#33443F]"><CalendarDays className="size-3" /> GPA</p>
+            <p className="text-[11px] font-medium text-[#33443F]">Hamil, Bersalin, dan Keguguran</p>
             <p className="text-sm font-semibold text-[#1D2B29]">{gpa}</p>
           </div>
           <div className="rounded-2xl bg-white px-3 py-2.5">

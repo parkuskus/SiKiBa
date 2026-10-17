@@ -5,6 +5,8 @@ import { syncScreening } from '@/data/sync'
 export type DMGInput = {
   userId: string
   usia: number
+  bbPreKg: number
+  tbCm: number
   imtPre: number
   riwayatDMG?: boolean
   riwayatMakrosomia?: boolean // bayi >4kg

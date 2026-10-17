@@ -5,6 +5,8 @@ import {
   Brain,
   Dna,
   HeartPulse,
+  HeartHandshake,
+  Clock3,
   ShieldAlert,
   type LucideIcon,
 } from "lucide-react"
@@ -16,11 +18,13 @@ const topik = [
   { judul: "Perubahan Fisiologi Kehamilan", keterangan: "Adaptasi tubuh selama kehamilan", icon: HeartPulse, thumbnail: "/s-06/s-06d/Thumbnail.webp", screen: "fisiologi" },
   { judul: "Tanda Bahaya Kehamilan", keterangan: "Kenali gejala yang perlu diperiksa", icon: ShieldAlert, thumbnail: "/s-06/s-06e/Thumbnail.webp", screen: "bahaya" },
   { judul: "Perubahan Psikologi/Emosi", keterangan: "Perubahan perasaan tiap trimester", icon: Brain, thumbnail: "/s-06/s-06f/Thumbnail.webp", screen: "psikologi" },
-] satisfies { judul: string; keterangan: string; icon: LucideIcon; thumbnail?: string; screen?: "fertilisasi" | "janin" | "s06c" | "fisiologi" | "bahaya" | "psikologi" }[]
+  { judul: "IMD", keterangan: "Langkah awal menyusu bagi ibu dan bayi", icon: HeartHandshake, thumbnail: "/s-06/s-06g/thumbnail.webp", screen: "imd" },
+  { judul: "Tanda Persalinan", keterangan: "Kenali tanda dan persiapkan persalinan", icon: Clock3, thumbnail: "/s-06/s-06h/thumbnail.webp", screen: "persalinan" },
+] satisfies { judul: string; keterangan: string; icon: LucideIcon; thumbnail?: string; screen?: "fertilisasi" | "janin" | "s06c" | "fisiologi" | "bahaya" | "psikologi" | "imd" | "persalinan" }[]
 
-type Props = { onOpenFertilisasi: () => void; onOpenJanin: () => void; onOpenPlasenta: () => void; onOpenFisiologi: () => void; onOpenBahaya: () => void; onOpenPsikologi: () => void }
+type Props = { onOpenFertilisasi: () => void; onOpenJanin: () => void; onOpenPlasenta: () => void; onOpenFisiologi: () => void; onOpenBahaya: () => void; onOpenPsikologi: () => void; onOpenImd: () => void; onOpenPersalinan: () => void }
 
-export default function EdukasiMenuScreen({ onOpenFertilisasi, onOpenJanin, onOpenPlasenta, onOpenFisiologi, onOpenBahaya, onOpenPsikologi }: Props) {
+export default function EdukasiMenuScreen({ onOpenFertilisasi, onOpenJanin, onOpenPlasenta, onOpenFisiologi, onOpenBahaya, onOpenPsikologi, onOpenImd, onOpenPersalinan }: Props) {
   return (
     <div className="-mx-4 -mt-5">
       <header className="relative isolate overflow-hidden rounded-b-[32px] bg-[#4A6E54] px-6 pb-11 pt-7 text-white">
@@ -45,7 +49,7 @@ export default function EdukasiMenuScreen({ onOpenFertilisasi, onOpenJanin, onOp
         <div className="grid grid-cols-2 gap-3">
           {topik.map(({ judul, keterangan, icon: Icon, thumbnail, screen }, index) => {
             const siap = Boolean(screen)
-            const bukaTopik = screen === "fertilisasi" ? onOpenFertilisasi : screen === "janin" ? onOpenJanin : screen === "s06c" ? onOpenPlasenta : screen === "bahaya" ? onOpenBahaya : screen === "psikologi" ? onOpenPsikologi : onOpenFisiologi
+            const bukaTopik = screen === "fertilisasi" ? onOpenFertilisasi : screen === "janin" ? onOpenJanin : screen === "s06c" ? onOpenPlasenta : screen === "bahaya" ? onOpenBahaya : screen === "psikologi" ? onOpenPsikologi : screen === "imd" ? onOpenImd : screen === "persalinan" ? onOpenPersalinan : onOpenFisiologi
             const isiTile = (
               <>
                 <span className={`grid h-[92px] place-items-center overflow-hidden rounded-[18px] ${index % 2 === 0 ? "bg-[#EAF4F0]" : "bg-[#FFF1E8]"}`}>

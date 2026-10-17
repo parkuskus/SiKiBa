@@ -1,7 +1,7 @@
-# COMPONENTS.md — komponen bersama SIAGA Bunda (Figma-first)
+# COMPONENTS.md — komponen bersama SIAGA Bunda
 
-> ATURAN: daftar ini didefinisikan dari Figma, bukan dari kode lama. Kode
-> implementasi dibuat belakangan setelah Figma lock. Pola visual mengacu
+> ATURAN: daftar dan rencana layar dalam Markdown menjadi acuan implementasi;
+> Figma opsional untuk eksplorasi atau sinkronisasi. Pola visual mengacu
 > `DESIGN.md`. Satu aksen `primary-dark` untuk semua CTA primer (alasan
 > kontras, lihat DESIGN.md Bagian 2).
 
@@ -35,7 +35,7 @@
 | ANCCalendar | Kalender + strip tanggal | S-07b |
 | SupplementSection | Toggle + kepatuhan | S-07a |
 | MedForm | Form obat: nama, dosis, jam, hari | S-07a |
-| DiaryHistory | List + kalender mood | S-07c |
+| DiaryHistory | Daftar catatan harian | S-07c |
 | ProfileCard | Kartu profil + status kehamilan | S-02a |
 | QuickActionGrid | 4 tile menu | S-02b |
 | LastCheckCard | Status skrining terakhir | S-02c |
@@ -44,6 +44,6 @@
 ## Aturan tambah komponen baru
 
 1. Cek tabel di atas dulu — pakai ulang bila ada yang mirip.
-2. Klon dari Figma S-00/S-01 (PinkStage, WhiteSheet, CTA), bukan dari nol.
+2. Gunakan ulang pola `DESIGN.md` dan komponen yang sudah ada sebelum membuat pola baru.
 3. Tidak ada `• — :` di teks, jam pakai titik, tap target min 44.
-4. Hasil audit a11y Figma harus A. Kode menyusul setelah lock.
+4. Pastikan kontras, fokus keyboard, label aksesibel, dan target sentuh min 44 px. Audit Figma tidak diwajibkan.

@@ -93,7 +93,7 @@ Kuat untuk pemahaman pertama: satu gambar menjelaskan satu kejadian. Seluruh tah
 - Materi berada pada satu sheet utama. Bacaan tidak dibungkus menjadi banyak kartu bertingkat.
 - Ilustrasi anatomi flat digunakan pada tahap fertilisasi. Ilustrasi Bunda menjadi aksen kecil pada indeks, tidak mengganggu diagram.
 
-**Catatan acuan:** beberapa bagian `DESIGN.md` masih menyebut header pink, sementara aturan kontras dan pola komponennya menggunakan sage gelap. Usulan ini mengikuti header sage gelap yang sudah digunakan aplikasi dan aturan teks putih pada `primary-dark`. Warna serta komponen akan dicocokkan dengan canvas Figma sebelum penguncian desain.
+**Catatan acuan:** beberapa bagian `DESIGN.md` masih menyebut header pink, sementara aturan kontras dan pola komponennya menggunakan sage gelap. Usulan ini mengikuti header sage gelap yang sudah digunakan aplikasi dan aturan teks putih pada `primary-dark`. Dokumen Markdown ini menjadi acuan implementasi; canvas Figma opsional.
 
 ## 4. S-06 — Menu Edukasi
 

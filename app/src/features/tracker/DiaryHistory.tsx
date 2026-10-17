@@ -21,7 +21,6 @@ export default function DiaryHistory({ entries, onBack }: { entries: DiaryEntry[
             {entries.map((entry) => (
               <article key={entry.id} className="rounded-[18px] bg-white p-3.5">
                 <div className="flex items-center gap-2.5">
-                  <span className={`grid size-9 shrink-0 place-items-center rounded-full text-xs font-bold text-white ${entry.mood <= 2 ? "bg-[#C62828]" : entry.mood === 3 ? "bg-[#B7791F]" : "bg-[#4A6E54]"}`} aria-label={`Suasana hati ${entry.mood} dari 5`}>{entry.mood}</span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold text-[#1D2B29]">{entry.judul || "Tanpa judul"}</p>
                     <p className="text-xs text-[#536961]">{new Date(`${entry.tanggal}T00:00:00`).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</p>

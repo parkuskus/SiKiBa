@@ -1,6 +1,6 @@
 # AGENTS.md — SIAGA Bunda
 
-PWA skrining kesehatan ibu hamil/nifas/bayi (React 19 + Vite + Tailwind v4 + Dexie + Supabase). Product spec and screen IDs (`S-xx`): `docs/SiKiBa_Spesifikasi_Storyboard_Prototype.md`, current progress: `docs/BACKLOG.md`, design lock: `docs/DESIGN.md`.
+PWA skrining kesehatan ibu hamil/nifas/bayi (React 19 + Vite + Tailwind v4 + Dexie + Supabase). Product spec and screen IDs (`S-xx`): `docs/SiKiBa_Spesifikasi_Storyboard_Prototype.md`, current progress: `docs/BACKLOG.md`, design guidance: `docs/DESIGN.md` and relevant Markdown screen plans in `docs/`.
 
 ## App essentials
 
@@ -13,7 +13,7 @@ PWA skrining kesehatan ibu hamil/nifas/bayi (React 19 + Vite + Tailwind v4 + Dex
 
 ## Design preferences (locked)
 
-- **Figma-first redesign:** never copy old FE structure; Figma is source of truth, code follows after lock. Exception: screening form *content* may follow old FE (clinical fields), but each screening is its own screen — no `N dari 6` labels.
+- **Design workflow:** Markdown screen plans and `docs/DESIGN.md` are sufficient design references; Figma is optional and never a prerequisite to implementation. Reuse existing UI patterns without blindly copying old FE structure. Screening form *content* may follow existing clinical fields, but each screening is its own screen — no `N dari 6` labels.
 - **Signature layout:** colored stage (rounded bottom 32) + white sheet (rounded top 32). Auth sheets bleed behind cards.
 - **Style refs:** Heally teal kit structure + HalloBumil warmth; flat vector illustrations (hijab mother, sage dress, leaves/hearts); floral footer asset; subtle grain texture on plain backgrounds.
 - Labels 1–2 words; hero/mascot slots are placeholders until real PNGs land in `app/public/illu/`.
@@ -39,13 +39,13 @@ PWA skrining kesehatan ibu hamil/nifas/bayi (React 19 + Vite + Tailwind v4 + Dex
 - EYD Indonesian. No `• — :` in UI text, `dan` not `&`, hours with dot (`19.00`), menu labels 1–2 words.
 - Figma a11y audit treats text containing `tab/menu/nav/cta` as a button — never write `menuju`, `Tablet`, etc. in labels.
 
-## Figma workflow (figma-cli lives OUTSIDE repo at `C:\Users\aufar\figma-cli`)
+## Optional Figma workflow (figma-cli lives OUTSIDE repo at `C:\Users\aufar\figma-cli`)
 
 - Run as `node src/index.js <cmd>` from that dir. If commands fail with fetch/connection errors: `daemon start`, then `status` must show the file + daemon running.
 - `connect` often LOOKS stuck (no output within 30s) but is actually already connected — abort it and run `status` to confirm instead of waiting/retrying.
 - Never pass JSX inline through PowerShell (it splits args). Write JSX to a file, render via a small `.mjs` using `execFileSync('node', [CLI, 'render', jsx])`.
 - `roundedTL/TR/BL/BR` props are accepted but silently ignored (upstream bug) — set corner radii afterward via `eval`.
-- White small text only on `primary-dark` (`#4A6E54`); text ≥12px; targets ≥44px; audit must be A before coding a screen.
+- White small text only on `primary-dark` (`#4A6E54`); text ≥12px; targets ≥44px.
 - Images: `create image <url>` needs a public URL and is slow for MBs. For local files, serve `app/public` (`python -m http.server`) and use `http://localhost:<port>/...`. No `file://`.
 - Figma variable collection is `SIAGA Bunda` (`primary #7AAE9A`, `primary-dark #4A6E54`); CSS mirror: `assets/token.css`.
 - User often hand-edits the canvas: `find`/export before assuming IDs, and never re-render over a frame the user touched — fix it with `eval` instead.
