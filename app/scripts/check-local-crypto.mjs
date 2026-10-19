@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { execFileSync } from 'node:child_process'
 import 'fake-indexeddb/auto'
 import Dexie from 'dexie'
 
@@ -99,5 +100,9 @@ await new Promise((resolve, reject) => {
   const request = indexedDB.deleteDatabase('SIAGAKeyring')
   request.onsuccess = resolve
   request.onerror = () => reject(request.error)
+})
+execFileSync(process.execPath, ['--experimental-strip-types', 'scripts/check-local-migration-failure.mjs'], {
+  cwd: process.cwd(),
+  stdio: 'inherit',
 })
 console.log('Enkripsi Dexie, migrasi legacy, antrean offline, dan reopen terverifikasi')

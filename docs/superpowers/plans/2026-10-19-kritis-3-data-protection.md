@@ -44,7 +44,7 @@
 - [x] Run the check and confirm it fails before implementation (initially showed plaintext at rest).
 - [x] Implement persistent non-exportable AES-GCM device key and no-plaintext-fallback behavior.
 - [x] Add idempotent Dexie migration, preserving the original rows until encrypted replacements commit; remove sensitive indexes and retain owner/query indexes.
-- [x] Verify migration and normal Dexie reads/writes using fake IndexedDB; key-loss failure path remains a code-level fail-closed check.
+- [x] Verify migration failure preserves legacy plaintext when a corrupt ciphertext is present; normal Dexie reads/writes use fake IndexedDB.
 - [x] Run the script and `npm run build` from `app/`.
 
 ### Task 2: Authenticated cloud deletion
@@ -64,7 +64,7 @@
 - [x] Implement client error handling that preserves local state on function failure, and owner-scoped local cleanup on success.
 - [x] Assert deletion never clears other local users' profile/health rows; static checks cover cloud-first ordering.
 - [x] Run the policy script, `npm run build`, and `git diff --check`.
-- [ ] Deploy and exercise the Edge Function against a disposable synthetic account; do not use either retained A/B account.
+- [x] Deploy and exercise the Edge Function against a disposable synthetic account; do not use either retained A/B account.
 
 ### Task 3: Cross-account RLS coverage
 
@@ -76,9 +76,9 @@
 - Consume the locally stored `SIAGA_TEST_USER_ID_A/B`, `SIAGA_TEST_EMAIL_A/B`, and `SIAGA_TEST_PASSWORD_A/B` from ignored `supabase/.env`.
 - Use user-scoped anon clients for all row operations; service role may only create/inspect/clean synthetic auth accounts, never perform the RLS assertions.
 
-- [ ] Assert both dedicated accounts exist and obtain fresh user sessions without printing credentials or JWTs.
-- [ ] Statically verify every user-owned policy in migrations uses `auth.uid()` against the owner column.
-- [ ] For every owner table, assert B cannot insert a synthetic row claiming A's owner ID.
-- [ ] Seed unique synthetic rows only in tables where A has an existing owner-scoped delete grant; assert B cannot read, update, or delete those rows, then clean them as A.
-- [ ] Test the private avatar bucket path policy with one tiny synthetic image; assert B cannot read/write A's path and remove the object as A.
-- [ ] Run the script against the configured project and report per-table outcomes; never grant broader delete rights just to make test cleanup possible.
+- [x] Assert both dedicated accounts exist and obtain fresh user sessions without printing credentials or JWTs.
+- [x] Statically verify every user-owned policy in migrations uses `auth.uid()` against the owner column.
+- [x] For every owner table, assert B cannot insert a synthetic row claiming A's owner ID.
+- [x] Seed unique synthetic rows only in tables where A has an existing owner-scoped delete grant; assert B cannot read, update, or delete those rows, then clean them as A.
+- [x] Test the private avatar bucket path policy with one tiny synthetic image; assert B cannot read/write A's path and remove the object as A.
+- [x] Run the script against the configured project and report per-table outcomes; never grant broader delete rights just to make test cleanup possible.
