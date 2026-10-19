@@ -1,6 +1,7 @@
 import { db } from '@/data/db'
 import { syncScreening } from '@/data/sync'
 import { evaluasiGizi } from '@/clinical-rules/imtLila'
+import { validateScreening } from '../screeningCompleteness'
 
 // S-03b: GiziScreen — form-only — spec S-03b:188-194, SK03
 
@@ -14,7 +15,7 @@ export type GiziInput = {
 }
 
 export function validateGizi(v: GiziInput): Record<string, string> {
-  const e: Record<string, string> = {}
+  const e: Record<string, string> = validateScreening('imt_lila', v as unknown as Record<string, unknown>)
   if (!v.userId) e.userId = 'userId wajib'
   if (v.bbPreKg < 20 || v.bbPreKg > 200) e.bbPreKg = 'BB awal (kg) harus 20–200'
   if (v.tbCm < 100 || v.tbCm > 200) e.tbCm = 'Tinggi (cm) harus 100–200'
@@ -39,7 +40,7 @@ export async function submitGizi(input: GiziInput) {
     tipe: 'imt_lila',
     skor: imt,
     kategori: warna,
-    detail: { ...input, imt, imtKat, targetKg, lilaKat, kenaikanAktual, trajectory },
+    detail: { ...input, imt, imtKat, targetKg, lilaKat, kenaikanAktual, trajectory, validasiKelengkapan: 1 },
     createdAt,
   }
   await db.screeningResults.put(row)

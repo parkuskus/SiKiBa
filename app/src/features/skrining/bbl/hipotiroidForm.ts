@@ -1,5 +1,6 @@
 import { db } from '@/data/db'
 import { syncScreening } from '@/data/sync'
+import { validateScreening } from '../screeningCompleteness'
 
 // S-05b: HipotiroidScreen — spec S-05b:340-344
 export type HipotiroidInput = {
@@ -7,6 +8,7 @@ export type HipotiroidInput = {
   sudahTSH: boolean
   usiaBayiHari?: number
   gejala?: { ikterusLama?: boolean; konstipasi?: boolean; tangisanSerak?: boolean; aktivitasKurang?: boolean; lidahBesar?: boolean }
+  gejalaDitinjau?: boolean
 }
 
 const GEJALA_LABEL: Record<string, string> = {
@@ -31,7 +33,8 @@ export function kategoriHipotiroid(v: HipotiroidInput): 'HIJAU' | 'KUNING' | 'ME
 }
 
 export async function submitHipotiroid(input: HipotiroidInput) {
-  if (!input.userId) throw new Error('userId wajib')
+  const errs = validateScreening('hipotiroid', input as unknown as Record<string, unknown>)
+  if (Object.keys(errs).length) throw Object.assign(new Error(Object.values(errs)[0]), { errs })
   const kategori = kategoriHipotiroid(input)
 
   const gejalaAktif = Object.entries(input.gejala ?? {}).filter(([, v]) => v).map(([k]) => GEJALA_LABEL[k] ?? k)
@@ -43,11 +46,11 @@ export async function submitHipotiroid(input: HipotiroidInput) {
 
   const faktorAman: string[] = []
   if (kategori === 'HIJAU') {
-    faktorAman.push('TSH sudah diperiksa pada window 48–72 jam')
+    faktorAman.push('TSH sudah diperiksa; hasil laboratorium perlu dikonfirmasi')
     faktorAman.push('Tanpa gejala mencurigakan')
   }
 
-  const row = { id: globalThis.crypto?.randomUUID?.() ?? ("demo-" + Date.now() + "-" + Math.random().toString(36).slice(2,8)), userId: input.userId, tipe: 'hipotiroid', skor: input.sudahTSH ? 1 : 0, kategori, detail: { ...input, faktorRisiko }, createdAt: new Date().toISOString() }
+  const row = { id: globalThis.crypto?.randomUUID?.() ?? ("demo-" + Date.now() + "-" + Math.random().toString(36).slice(2,8)), userId: input.userId, tipe: 'hipotiroid', skor: input.sudahTSH ? 1 : 0, kategori, detail: { ...input, faktorRisiko, validasiKelengkapan: 1 }, createdAt: new Date().toISOString() }
   await db.screeningResults.put(row)
   syncScreening(row as never)
   return { kategori, warna: kategori, faktorRisiko, faktorAman }

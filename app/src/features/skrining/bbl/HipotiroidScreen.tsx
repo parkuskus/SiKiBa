@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { submitHipotiroid } from "@/features/skrining/bbl/hipotiroidForm"
 import SkriningFormShell from "@/features/skrining/components/SkriningFormShell"
+import ScreeningValidationSheet, { ScreeningMarker } from "../components/ScreeningValidationSheet"
+import useScreeningValidation from "../components/useScreeningValidation"
+import { numericOrMissing } from "../components/screeningValidationUI"
 
 type Result = { kategori: "HIJAU" | "KUNING" | "MERAH"; warna: string; faktorRisiko: string[]; faktorAman: string[] }
 
@@ -30,9 +33,14 @@ export default function HipotiroidScreen({
   })
   const [loading, setLoading] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+  const [gejalaDitinjau, setGejalaDitinjau] = useState(false)
+  const validation = useScreeningValidation("hipotiroid", {
+    userId, ...form, usiaBayiHari: numericOrMissing(form.usiaBayiHari), gejalaDitinjau,
+  }, { sudahTSH: "Pemeriksaan TSH", usiaBayiHari: "Usia bayi", gejala: "Gejala bayi", gejalaDitinjau: "Peninjauan gejala bayi" })
 
   useEffect(() => {
     if (!draftLoading && detail) {
+      setGejalaDitinjau(detail.validasiKelengkapan === 1 && detail.gejalaDitinjau === true)
       const gejala = detail.gejala as Record<string, unknown> | undefined
       setForm({
         sudahTSH: typeof detail.sudahTSH === "boolean" ? detail.sudahTSH : null,
@@ -50,17 +58,15 @@ export default function HipotiroidScreen({
 
   const handle = async () => {
     setErr(null)
-    if (form.sudahTSH === null || (form.sudahTSH === false && (!form.usiaBayiHari.trim() || !Number.isFinite(Number(form.usiaBayiHari))))) {
-      setErr("Pilih status tes TSH dan isi usia bayi bila tes belum dilakukan")
-      return
-    }
+    if (!validation.check()) return
     setLoading(true)
     try {
       const res = await submitHipotiroid({
         userId,
-        sudahTSH: form.sudahTSH,
-        usiaBayiHari: form.sudahTSH ? undefined : Number(form.usiaBayiHari),
+        sudahTSH: form.sudahTSH!,
+        usiaBayiHari: Number(form.usiaBayiHari),
         gejala: form.gejala,
+        gejalaDitinjau,
       })
       onSuccess(res as Result)
     } catch (e: unknown) {
@@ -73,8 +79,8 @@ export default function HipotiroidScreen({
   return (
     <SkriningFormShell title="Hipotiroid Kongenital" subtitle="Cek TSH dan gejala pada bayi" onBack={onBack} illustration="/illu/illu-55-skrining-hipotiroid.webp" loading={draftLoading}>
       <div className="space-y-3.5">
-        <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
-          <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Pemeriksaan TSH</h2>
+        <section role="group" aria-labelledby="tsh-label" aria-invalid={!!validation.errors.sudahTSH} aria-describedby={validation.errors.sudahTSH ? "tsh-error" : undefined} className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
+           <h2 id="tsh-label" data-screening-field="sudahTSH" className="!m-0 text-sm font-bold text-[#1D2B29]">Pemeriksaan TSH<ScreeningMarker id="tsh-error" error={validation.errors.sudahTSH} /></h2>
           <p className="text-xs leading-relaxed text-[#33443F]">Tes skrining bayi baru lahir ideal dilakukan pada usia bayi (2 sampai 3 hari).</p>
           <div className="grid grid-cols-2 gap-2">
             {[{ value: true, label: "Sudah" }, { value: false, label: "Belum" }].map((option) => (
@@ -83,16 +89,16 @@ export default function HipotiroidScreen({
               </button>
             ))}
           </div>
-          {!form.sudahTSH && (
-            <div className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
-              <label className="block text-xs text-[#33443F]">Usia bayi (hari)</label>
-              <Input type="number" aria-label="Usia bayi (hari)" value={form.usiaBayiHari} onChange={(event) => setForm((current) => ({ ...current, usiaBayiHari: event.target.value }))} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
+          {form.sudahTSH !== null && (
+             <div data-screening-field="usiaBayiHari" className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
+               <label className="block text-xs text-[#33443F]">Usia bayi (hari)<ScreeningMarker id="hipotiroid-usia-error" error={validation.errors.usiaBayiHari} /></label>
+               <Input type="number" aria-label="Usia bayi (hari)" aria-invalid={!!validation.errors.usiaBayiHari} aria-describedby={validation.errors.usiaBayiHari ? "hipotiroid-usia-error" : undefined} value={form.usiaBayiHari} onChange={(event) => setForm((current) => ({ ...current, usiaBayiHari: event.target.value }))} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
             </div>
           )}
         </section>
 
         <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
-          <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Gejala yang mungkin ada</h2>
+           <h2 data-screening-field="gejala" className="!m-0 text-sm font-bold text-[#1D2B29]">Gejala yang mungkin ada<ScreeningMarker error={validation.errors.gejala} /></h2>
           {[
             { key: "ikterusLama", label: "Kuning menetap (lebih dari 2 minggu)" },
             { key: "konstipasi", label: "Sembelit" },
@@ -113,6 +119,8 @@ export default function HipotiroidScreen({
         </section>
 
         {err && <p role="alert" className="text-center text-xs text-[#C62828]">{err}</p>}
+         <label data-screening-field="gejalaDitinjau" className="flex min-h-11 items-center gap-2 text-sm text-[#33443F]"><input type="checkbox" aria-invalid={!!validation.errors.gejalaDitinjau} checked={gejalaDitinjau} onChange={(event) => setGejalaDitinjau(event.target.checked)} />Saya sudah meninjau seluruh gejala. Yang tidak dipilih berarti Tidak.<ScreeningMarker error={validation.errors.gejalaDitinjau} /></label>
+         <ScreeningValidationSheet issues={validation.issues} open={validation.open} onOpenChange={validation.setOpen} onComplete={() => { validation.setOpen(false); validation.focus(validation.issues[0]?.key) }} />
         <Button className="min-h-12 w-full rounded-full bg-[#4A6E54] text-base font-bold text-white hover:bg-[#3D5C46]" disabled={loading} onClick={handle}>
           {loading ? "Menyimpan" : "Lihat hasil"}
         </Button>

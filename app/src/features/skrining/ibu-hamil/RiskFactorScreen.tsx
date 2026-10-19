@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { submitRiskFactor } from "@/features/skrining/ibu-hamil/riskFactorForm"
 import SkriningFormShell from "@/features/skrining/components/SkriningFormShell"
+import ScreeningValidationSheet, { ScreeningMarker } from "../components/ScreeningValidationSheet"
+import useScreeningValidation from "../components/useScreeningValidation"
+import { numericOrMissing, type ScreeningIssue } from "../components/screeningValidationUI"
 
 type Result = { skor: number; kategori: string; warna: string; faktorRisiko: string[]; faktorAman: string[] }
 
@@ -94,6 +97,29 @@ export default function RiskFactorScreen({
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fieldErrs, setFieldErrs] = useState<Record<string, string>>({})
+  const [stageIssues, setStageIssues] = useState<ScreeningIssue[]>([])
+  const [stageOpen, setStageOpen] = useState(false)
+  const [stageAttempted, setStageAttempted] = useState(false)
+  const [specialAttempted, setSpecialAttempted] = useState(false)
+
+  const input = {
+    userId, usia: numericOrMissing(usia), ukMinggu: numericOrMissing(ukMinggu), paritas: paritas === "primi" ? 0 : paritas === "grande" ? 4 : paritas === "multi" ? 1 : NaN,
+    jarakTahun: jarak === "lt2" ? 1 : jarak === "gte2" ? 3 : undefined,
+    sistolik: sistolik.trim() ? numericOrMissing(sistolik) : undefined, diastolik: diastolik.trim() ? numericOrMissing(diastolik) : undefined,
+    tbCm: tbCm.trim() ? numericOrMissing(tbCm) : undefined, bbPreKg: bbPreKg.trim() ? numericOrMissing(bbPreKg) : undefined,
+    trb: trb === true, riwayatKomplikasi: kompl.some((x) => ["perdarahan", "prematur", "lainnya", "sc"].includes(x)),
+    riwayatSC: kompl.includes("sc"), riwayatPE: riwayatPE === true, penyakitKronik: kronik.some((x) => x !== "tidak"),
+    kehamilanGanda: gemeli === true, hidramnion: hidramnion === true, kelainanLetak: letak === true,
+    jawabanForm: { paritas, jarak, riwayatKomplikasi: kompl, penyakitKronik: kronik, gemeli, trb, letak, hidramnion },
+  }
+  const validation = useScreeningValidation("poedji_rochjati", input, {
+    usia: "Usia ibu", ukMinggu: "Usia kehamilan", paritas: "Status paritas", jarakTahun: "Jarak kehamilan",
+    jawabanForm: "Riwayat dan kondisi kehamilan", sistolik: "Sistolik", diastolik: "Diastolik", tbCm: "Tinggi badan", bbPreKg: "BB sebelum hamil",
+  }, {
+    paritas: "Pilih Hamil pertama, Hamil ke 2 sampai 3, atau Hamil ke 4 atau lebih",
+    jarakTahun: "Pilih Kurang dari 2, 2 atau lebih, atau Belum pernah hamil sebelumnya",
+  })
+  const stage2Errors = stageAttempted ? { kompl: !kompl.length, kronik: !kronik.length } : { kompl: false, kronik: false }
 
   useEffect(() => {
     if (draftLoading) return
@@ -161,50 +187,43 @@ export default function RiskFactorScreen({
 
   const nextFrom1 = () => {
     setError(null)
-    if (!usia || Number(usia) < 10 || Number(usia) > 60) return setError("Usia Bunda (tahun) harus berada pada rentang 10–60.")
-    if (!ukMinggu || Number(ukMinggu) < 0 || Number(ukMinggu) > 45) return setError("Usia kehamilan (minggu) harus berada pada rentang 0–45.")
-    if (!paritas) return setError("Pilih status paritas")
-    if (!jarak) return setError("Pilih jarak kehamilan terakhir")
+    if (!validation.check(["usia", "ukMinggu", "paritas", "jarakTahun"])) return
     setStep(2)
   }
 
   const nextFrom2 = () => {
     setError(null)
-    if (!kompl.length) return setError("Pilih riwayat komplikasi atau Tidak ada")
-    if (!kronik.length) return setError("Pilih penyakit kronik atau Tidak ada")
+    setStageAttempted(true)
+    const issues = [
+      !kompl.length && { key: "kompl", label: "Riwayat komplikasi", instruction: "Pilih riwayat yang dialami atau Tidak ada" },
+      !kronik.length && { key: "kronik", label: "Penyakit kronik", instruction: "Pilih penyakit yang dialami atau Tidak ada" },
+    ].filter(Boolean) as ScreeningIssue[]
+    if (issues.length) { setStageIssues(issues); setStageOpen(true); return }
     setStep(3)
   }
 
   const handleSubmit = async () => {
     setError(null)
     setFieldErrs({})
-    if ([riwayatPE, gemeli, trb, letak, hidramnion].some((value) => value === null)) {
-      setError("Jawab semua pertanyaan kondisi khusus")
+    if (!kompl.length || !kronik.length) {
+      setStageAttempted(true)
+      setStageIssues([
+        ...(!kompl.length ? [{ key: "kompl", label: "Riwayat komplikasi", instruction: "Pilih riwayat yang dialami atau Tidak ada" }] : []),
+        ...(!kronik.length ? [{ key: "kronik", label: "Penyakit kronik", instruction: "Pilih penyakit yang dialami atau Tidak ada" }] : []),
+      ])
+      setStageOpen(true)
       return
     }
+    setSpecialAttempted(true)
+    const specials = [
+      ["riwayatPE", "Preeklamsia lalu", riwayatPE], ["gemeli", "Hamil kembar", gemeli],
+      ["trb", "Teknik reproduksi berbantu", trb], ["letak", "Bayi sungsang", letak], ["hidramnion", "Ketuban banyak", hidramnion],
+    ].filter(([, , value]) => value === null).map(([key, label]) => ({ key: String(key), label: String(label), instruction: "Pilih Ya atau Tidak" }))
+    if (specials.length) { setStageIssues(specials); setStageOpen(true); return }
+    if (!validation.check()) return
     setSubmitting(true)
     try {
-      const paritasNum = paritas === "primi" ? 0 : paritas === "grande" ? 4 : 1
-      const res = await submitRiskFactor({
-        userId,
-        usia: Number(usia),
-        paritas: paritasNum,
-        jarakTahun: jarak === "lt2" ? 1 : jarak === "gte2" ? 3 : undefined,
-        ukMinggu: ukMinggu ? Number(ukMinggu) : undefined,
-        sistolik: sistolik ? Number(sistolik) : undefined,
-        diastolik: diastolik ? Number(diastolik) : undefined,
-        tbCm: tbCm ? Number(tbCm) : undefined,
-        bbPreKg: bbPreKg ? Number(bbPreKg) : undefined,
-        trb: trb === true,
-        riwayatKomplikasi: kompl.some((x) => ["perdarahan", "prematur", "lainnya", "sc"].includes(x)),
-        riwayatSC: kompl.includes("sc"),
-        riwayatPE: riwayatPE === true,
-        penyakitKronik: kronik.some((x) => x !== "tidak"),
-        kehamilanGanda: gemeli === true,
-        hidramnion: hidramnion === true,
-        kelainanLetak: letak === true,
-        jawabanForm: { paritas, jarak, riwayatKomplikasi: kompl, penyakitKronik: kronik, gemeli, trb, letak, hidramnion },
-      })
+      const res = await submitRiskFactor(input)
       onSuccess(res)
     } catch (e: unknown) {
       const err = e as { errs?: Record<string, string>; message?: string }
@@ -225,7 +244,7 @@ export default function RiskFactorScreen({
         <div className="px-1">
           <div className="flex items-center justify-between text-xs text-[#33443F]">
             <span>Langkah {step} dari 3</span>
-            <span className="font-semibold text-[#DB2777]">{pct} persen</span>
+            <span className="font-semibold text-[#DB2777]">{pct}%</span>
           </div>
           <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-[#FFE2E2]">
             <div className="h-full rounded-full bg-[#4A6E54] transition-all" style={{ width: `${pct}%` }} />
@@ -237,28 +256,28 @@ export default function RiskFactorScreen({
             <h2 className="text-sm font-bold text-[#1D2B29]">Data Kehamilan</h2>
             <div className="grid grid-cols-2 gap-2.5">
               <div className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
-                <label className="block text-xs text-[#33443F]">Usia ibu (tahun)</label>
+                 <label className="block text-xs text-[#33443F]">Usia ibu (tahun)<ScreeningMarker id="risk-usia-error" error={validation.errors.usia} /></label>
                 <div className="flex items-center gap-1">
-                  <Input type="number" aria-label="Usia ibu (tahun)" value={usia} onChange={(e) => setUsia(e.target.value)} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
+                   <Input type="number" data-screening-field="usia" aria-label="Usia ibu (tahun)" aria-invalid={!!validation.errors.usia} aria-describedby={validation.errors.usia ? "risk-usia-error" : undefined} value={usia} onChange={(e) => setUsia(e.target.value)} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
                 </div>
               </div>
               <div className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
-                <label className="block text-xs text-[#33443F]">Usia kehamilan (minggu)</label>
+                 <label className="block text-xs text-[#33443F]">Usia kehamilan (minggu)<ScreeningMarker id="risk-uk-error" error={validation.errors.ukMinggu} /></label>
                 <div className="flex items-center gap-1">
-                  <Input type="number" aria-label="Usia kehamilan (minggu)" value={ukMinggu} onChange={(e) => setUkMinggu(e.target.value)} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
+                   <Input type="number" data-screening-field="ukMinggu" aria-label="Usia kehamilan (minggu)" aria-invalid={!!validation.errors.ukMinggu} aria-describedby={validation.errors.ukMinggu ? "risk-uk-error" : undefined} value={ukMinggu} onChange={(e) => setUkMinggu(e.target.value)} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
                 </div>
               </div>
             </div>
 
-            <div className="space-y-2.5">
-              <p className="text-[13px] font-bold text-[#1D2B29]">Status Paritas</p>
+             <div data-screening-field="paritas" className="space-y-2.5">
+               <p className="text-[13px] font-bold text-[#1D2B29]">Status Paritas<ScreeningMarker error={validation.errors.paritas} /></p>
               <RadioRow selected={paritas === "primi"} label="Hamil pertama" onClick={() => setParitas("primi")} />
               <RadioRow selected={paritas === "multi"} label="Hamil ke 2 sampai 3" onClick={() => setParitas("multi")} />
               <RadioRow selected={paritas === "grande"} label="Hamil ke 4 atau lebih" onClick={() => setParitas("grande")} />
             </div>
 
-            <div className="space-y-2.5">
-              <p className="text-[13px] font-bold text-[#1D2B29]">Jarak kehamilan terakhir (tahun)</p>
+             <div data-screening-field="jarakTahun" className="space-y-2.5">
+               <p className="text-[13px] font-bold text-[#1D2B29]">Jarak kehamilan terakhir (tahun)<ScreeningMarker error={validation.errors.jarakTahun} /></p>
               <RadioRow selected={jarak === "lt2"} label="Kurang dari 2" onClick={() => setJarak("lt2")} />
               <RadioRow selected={jarak === "gte2"} label="2 atau lebih" onClick={() => setJarak("gte2")} />
               <RadioRow selected={jarak === "belum"} label="Belum pernah hamil sebelumnya" onClick={() => setJarak("belum")} />
@@ -268,8 +287,8 @@ export default function RiskFactorScreen({
 
         {step === 2 && (
           <div className="space-y-3.5">
-            <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
-              <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Riwayat Komplikasi</h2>
+             <section data-screening-field="kompl" className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
+               <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Riwayat Komplikasi<ScreeningMarker error={stage2Errors.kompl ? "Pilih riwayat atau Tidak ada" : undefined} /></h2>
               <CheckRow checked={kompl.includes("tidak")} label="Tidak ada" onToggle={() => toggleKompl("tidak")} />
               <CheckRow checked={kompl.includes("perdarahan")} label="Perdarahan hamil lalu" onToggle={() => toggleKompl("perdarahan")} />
               <CheckRow checked={kompl.includes("pe")} label="Preeklamsia lalu" onToggle={() => toggleKompl("pe")} />
@@ -277,8 +296,8 @@ export default function RiskFactorScreen({
               <CheckRow checked={kompl.includes("sc")} label="Operasi caesar" onToggle={() => toggleKompl("sc")} />
               <CheckRow checked={kompl.includes("lainnya")} label="Komplikasi obstetri lainnya" onToggle={() => toggleKompl("lainnya")} />
             </section>
-            <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
-              <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Penyakit Kronik</h2>
+             <section data-screening-field="kronik" className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
+               <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Penyakit Kronik<ScreeningMarker error={stage2Errors.kronik ? "Pilih penyakit atau Tidak ada" : undefined} /></h2>
               <div className="grid grid-cols-6 gap-2">
                 <button type="button" onClick={() => toggleKronik("tidak")} className={`col-span-3 min-h-11 rounded-[14px] px-2 text-xs font-semibold ${kronik.includes("tidak") ? "bg-[#4A6E54] text-white" : "bg-white text-[#33443F] ring-1 ring-[#D9E7E2]"}`}>Tidak ada</button>
                 <button type="button" onClick={() => toggleKronik("hipertensi")} className={`col-span-3 min-h-11 rounded-[14px] px-2 text-xs font-semibold ${kronik.includes("hipertensi") ? "bg-[#4A6E54] text-white" : "bg-white text-[#33443F] ring-1 ring-[#D9E7E2]"}`}>Hipertensi</button>
@@ -301,10 +320,10 @@ export default function RiskFactorScreen({
                   { label: "Tinggi (cm)", value: tbCm, set: setTbCm, key: "tbCm" },
                   { label: "BB sebelum hamil (kg)", value: bbPreKg, set: setBbPreKg, key: "bbPreKg" },
                 ].map((field) => (
-                  <div key={field.key} className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
-                    <label className="block text-xs text-[#33443F]">{field.label}</label>
+                   <div key={field.key} data-screening-field={field.key} className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
+                     <label className="block text-xs text-[#33443F]">{field.label}<ScreeningMarker id={`risk-${field.key}-error`} error={validation.errors[field.key]} /></label>
                     <div className="flex items-center gap-1">
-                      <Input type="number" aria-label={field.label} value={field.value} onChange={(e) => field.set(e.target.value)} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
+                       <Input type="number" aria-label={field.label} aria-invalid={!!validation.errors[field.key]} aria-describedby={validation.errors[field.key] ? `risk-${field.key}-error` : undefined} value={field.value} onChange={(e) => field.set(e.target.value)} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
                     </div>
                     {fieldErrs[field.key] && <p className="text-[11px] text-[#E57373]">{fieldErrs[field.key]}</p>}
                   </div>
@@ -312,16 +331,16 @@ export default function RiskFactorScreen({
               </div>
             </section>
             <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
-              <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Kondisi khusus</h2>
+               <h2 data-screening-field="jawabanForm" className="!m-0 text-sm font-bold text-[#1D2B29]">Kondisi khusus<ScreeningMarker error={validation.errors.jawabanForm} /></h2>
               {[
-                { label: "Preeklamsia lalu", value: riwayatPE, set: setPE },
-                { label: "Hamil kembar", value: gemeli, set: setGemeli },
-                { label: "Teknik reproduksi berbantu", value: trb, set: setTrb },
-                { label: "Bayi sungsang", value: letak, set: setLetak },
-                { label: "Ketuban banyak", value: hidramnion, set: setHidramnion },
+                 { key: "riwayatPE", label: "Preeklamsia lalu", value: riwayatPE, set: setPE },
+                 { key: "gemeli", label: "Hamil kembar", value: gemeli, set: setGemeli },
+                 { key: "trb", label: "Teknik reproduksi berbantu", value: trb, set: setTrb },
+                 { key: "letak", label: "Bayi sungsang", value: letak, set: setLetak },
+                 { key: "hidramnion", label: "Ketuban banyak", value: hidramnion, set: setHidramnion },
               ].map((item) => (
-                <div key={item.label} className="flex min-h-11 items-center justify-between gap-2">
-                  <span className="min-w-0 text-xs text-[#33443F]">{item.label}</span>
+                 <div key={item.key} data-screening-field={item.key} className="flex min-h-11 items-center justify-between gap-2">
+                   <span className="min-w-0 text-xs text-[#33443F]">{item.label}<ScreeningMarker error={specialAttempted && item.value === null ? "Pilih Ya atau Tidak" : undefined} /></span>
                   <YesNo value={item.value} onChange={item.set} />
                 </div>
               ))}
@@ -330,6 +349,7 @@ export default function RiskFactorScreen({
         )}
 
         {error && <p role="alert" className="text-center text-xs text-[#C62828]">{error}</p>}
+         <ScreeningValidationSheet issues={stageOpen ? stageIssues : validation.issues} open={stageOpen || validation.open} onOpenChange={(open) => { setStageOpen(open); validation.setOpen(open) }} onComplete={() => { const key = (stageOpen ? stageIssues : validation.issues)[0]?.key; setStageOpen(false); validation.setOpen(false); if (key && ["usia", "ukMinggu", "paritas", "jarakTahun"].includes(key)) setStep(1); else if (key === "kompl" || key === "kronik" || key === "jawabanForm") setStep(2); validation.focus(key === "jawabanForm" ? "kompl" : key) }} />
         <div className="mt-1 flex gap-2">
           {step > 1 && <Button variant="outline" className="min-h-[46px] flex-1 rounded-full border-[#D9E7E2] bg-white text-[#33443F]" onClick={() => setStep((step - 1) as 1 | 2 | 3)}>Kembali</Button>}
           {step === 1 && <Button variant="outline" className="min-h-[46px] flex-1 rounded-full border-[#D9E7E2] bg-white text-[#33443F]" onClick={onBack}>Batal</Button>}

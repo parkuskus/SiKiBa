@@ -245,7 +245,7 @@ export default function PengingatPage({ setShowBottomNav }: { setShowBottomNav: 
             <div className="mt-3">
               <div className="mb-1.5 flex items-center justify-between text-xs text-[#33443F]">
                 <span>Perjalanan 40 minggu</span>
-                <span className="font-semibold">{Math.round(progress)} persen</span>
+                <span className="font-semibold">{Math.round(progress)}%</span>
               </div>
               <div className="h-2.5 overflow-hidden rounded-full bg-white">
                 <div className="h-full rounded-full bg-[#4A6E54] transition-[width]" style={{ width: `${progress}%` }} />

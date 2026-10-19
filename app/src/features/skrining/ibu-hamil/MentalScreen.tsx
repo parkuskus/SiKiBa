@@ -3,6 +3,9 @@ import { useLatestScreeningDraft } from "@/features/skrining/useLatestScreeningD
 import { Button } from "@/components/ui/button"
 import { submitMental } from "@/features/skrining/ibu-hamil/mentalForm"
 import SkriningFormShell from "@/features/skrining/components/SkriningFormShell"
+import EmergencyOverlay from "@/shared/components/EmergencyOverlay"
+import ScreeningValidationSheet, { ScreeningMarker } from "../components/ScreeningValidationSheet"
+import { toScreeningIssues } from "../components/screeningValidationUI"
 
 // Tabel 1 S-03f (Cox et al. 1987, final Diva) — urutan opsi = skor 0-3
 const QUESTIONS: { q: string; options: [string, string, string, string] }[] = [
@@ -23,18 +26,26 @@ export default function MentalScreen({ onBack, onSuccess }: { onBack: () => void
   const [answers, setAnswers] = useState<(number | null)[]>(Array(10).fill(null))
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [emergencyOpen, setEmergencyOpen] = useState(false)
+  const [attempted, setAttempted] = useState(false)
+  const [validationOpen, setValidationOpen] = useState(false)
 
   useEffect(() => {
     if (!draftLoading && Array.isArray(detail?.answers) && detail.answers.length === 10) {
       setAnswers(detail.answers.map((answer) => typeof answer === "number" ? answer : null))
+      if (typeof detail.answers[9] === "number" && detail.answers[9] >= 1) setEmergencyOpen(true)
     }
   }, [draftLoading, detail])
 
   const answered = answers.filter((a) => a !== null).length
+  const errors = Object.fromEntries(answers.flatMap((answer, idx) => answer === null || !Number.isInteger(answer) || answer < 0 || answer > 3
+    ? [[String(idx), "Pilih satu jawaban bernilai 0 sampai 3 sesuai yang Bunda rasakan"]] : []))
+  const issues = toScreeningIssues(errors, Object.fromEntries(QUESTIONS.map((_, idx) => [String(idx), `Pertanyaan ${idx + 1}`])))
 
   const handle = async () => {
     setError(null)
-    if (answered < 10) return setError(`Masih ada ${10 - answered} pertanyaan belum dijawab`)
+    setAttempted(true)
+    if (issues.length) { setValidationOpen(true); return }
     setLoading(true)
     try {
       const res = await submitMental({ userId, answers: answers as number[] })
@@ -63,10 +74,10 @@ export default function MentalScreen({ onBack, onSuccess }: { onBack: () => void
         </section>
 
         {QUESTIONS.map((item, idx) => (
-          <section key={idx} className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
+          <section key={idx} data-screening-field={idx} className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
             <div className="flex items-start gap-2.5">
               <span className="grid size-7 shrink-0 place-items-center rounded-full bg-white text-xs font-bold text-[#4A6E54] ring-1 ring-[#D9E7E2]">{idx + 1}</span>
-              <p className="pt-1 text-[13px] font-bold leading-snug text-[#1D2B29]">{item.q}</p>
+              <p className="pt-1 text-[13px] font-bold leading-snug text-[#1D2B29]">{item.q}<ScreeningMarker error={attempted ? errors[idx] : undefined} /></p>
             </div>
             <div className="space-y-2">
               {item.options.map((option, value) => {
@@ -76,7 +87,8 @@ export default function MentalScreen({ onBack, onSuccess }: { onBack: () => void
                     key={value}
                     type="button"
                     aria-pressed={selected}
-                    onClick={() => setAnswers((current) => { const next = [...current]; next[idx] = value; return next })}
+                    aria-invalid={attempted && !!errors[idx]}
+                    onClick={() => { setAnswers((current) => { const next = [...current]; next[idx] = value; return next }); if (idx === 9 && value >= 1) setEmergencyOpen(true) }}
                     className={`flex min-h-11 w-full items-center gap-2.5 rounded-[16px] px-3 text-left text-xs leading-snug transition-colors active:scale-[0.99] ${selected ? "bg-[#4A6E54] font-semibold text-white" : "bg-white text-[#33443F] ring-1 ring-[#D9E7E2] hover:bg-[#FFFCF6]"}`}
                   >
                     <span className={`grid size-4 shrink-0 place-items-center rounded-full ring-1 ${selected ? "bg-white ring-white" : "bg-white ring-[#B8C9C1]"}`}>
@@ -92,6 +104,9 @@ export default function MentalScreen({ onBack, onSuccess }: { onBack: () => void
         ))}
 
         {error && <p role="alert" className="text-center text-xs text-[#C62828]">{error}</p>}
+        <ScreeningValidationSheet issues={issues} open={validationOpen && !emergencyOpen} onOpenChange={setValidationOpen} onComplete={() => { setValidationOpen(false); requestAnimationFrame(() => { const field = document.querySelector<HTMLElement>(`[data-screening-field="${issues[0]?.key}"]`); field?.scrollIntoView({ behavior: "smooth", block: "center" }); field?.querySelector<HTMLElement>("button")?.focus({ preventScroll: true }) }) }} />
+        {answers[9] !== null && answers[9] >= 1 && <button type="button" className="min-h-11 w-full rounded-xl bg-[#FDECEC] p-3 text-sm font-bold text-[#8E1F1F]" onClick={() => setEmergencyOpen(true)}>Pikiran menyakiti diri dilaporkan. Cari bantuan sekarang meski kuesioner belum lengkap.</button>}
+        {emergencyOpen && <div className="fixed inset-0 z-50"><EmergencyOverlay description="Pikiran menyakiti diri perlu bantuan segera. Hubungi orang terdekat, bidan, atau fasilitas kesehatan sekarang meski kuesioner belum lengkap; jangan menunggu koneksi internet." mapsQuery="Puskesmas atau IGD terdekat" onShare={() => { window.open(`https://wa.me/?text=${encodeURIComponent('Saya membutuhkan bantuan segera. Kuesioner kesehatan mental SIAGA Bunda belum lengkap.')}`, '_blank', 'noopener,noreferrer') }} onDismiss={() => setEmergencyOpen(false)} /></div>}
         <Button className="min-h-12 w-full rounded-full bg-[#4A6E54] text-base font-bold text-white hover:bg-[#3D5C46]" disabled={loading} onClick={handle}>
           {loading ? "Menyimpan" : "Lihat hasil"}
         </Button>

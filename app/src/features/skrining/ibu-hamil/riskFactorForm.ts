@@ -1,6 +1,7 @@
 import { db } from '@/data/db'
 import { syncScreening } from '@/data/sync'
 import { scorePoedji } from '@/clinical-rules/poedjiRochjati'
+import { validateScreening } from '../screeningCompleteness'
 
 // S-03a: RiskFactorScreen — form-only (FE menyusul) — spec S-03a:171, SK01
 
@@ -27,7 +28,7 @@ export type RiskFactorInput = {
 }
 
 export function validateRiskFactor(v: RiskFactorInput): Record<string, string> {
-  const e: Record<string, string> = {}
+  const e: Record<string, string> = validateScreening('poedji_rochjati', v as unknown as Record<string, unknown>)
   if (!v.userId) e.userId = 'userId wajib'
   if (v.usia < 10 || v.usia > 60) e.usia = 'Usia (tahun) harus 10–60'
   if (v.paritas < 0 || v.paritas > 15) e.paritas = 'Paritas 0-15'
@@ -74,7 +75,7 @@ export async function submitRiskFactor(input: RiskFactorInput) {
   const faktorAman: string[] = []
   if (input.usia >= 20 && input.usia <= 35) faktorAman.push('Usia 20–35 tahun (rentang aman)')
   if (input.paritas >= 1 && input.paritas <= 3) faktorAman.push('Jumlah anak 1–3 (tidak grande)')
-  if (input.jarakTahun === undefined || input.jarakTahun >= 2) faktorAman.push('Jarak kehamilan ≥2 tahun')
+  if (input.jarakTahun !== undefined && input.jarakTahun >= 2) faktorAman.push('Jarak kehamilan ≥2 tahun')
   if (!input.riwayatSC && !input.riwayatKomplikasi) faktorAman.push('Tidak ada riwayat komplikasi/SC')
   if (!input.riwayatPE) faktorAman.push('Tidak ada riwayat preeklamsia')
   if (!input.penyakitKronik) faktorAman.push('Tidak ada penyakit kronik')
@@ -91,7 +92,7 @@ export async function submitRiskFactor(input: RiskFactorInput) {
     tipe: 'poedji_rochjati',
     skor,
     kategori: warna, // HIJAU=HRR KRR, KUNING=KRS, MERAH=KRT — mapping ke traffic light
-    detail: { ...input, kategoriPoedji: kategori, faktorRisiko, trb: input.trb },
+    detail: { ...input, kategoriPoedji: kategori, faktorRisiko, trb: input.trb, validasiKelengkapan: 1 },
     createdAt,
   }
   await db.screeningResults.put(row)

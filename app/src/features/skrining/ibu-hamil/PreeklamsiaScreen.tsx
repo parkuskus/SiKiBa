@@ -6,6 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { submitPreeklamsia } from "@/features/skrining/ibu-hamil/preeklamsiaForm"
 import SkriningFormShell from "@/features/skrining/components/SkriningFormShell"
+import EmergencyOverlay from "@/shared/components/EmergencyOverlay"
+import { kategoriTD } from "@/clinical-rules/mapCalculator"
+import ScreeningValidationSheet, { ScreeningMarker } from "../components/ScreeningValidationSheet"
+import useScreeningValidation from "../components/useScreeningValidation"
+import { numericOrMissing } from "../components/screeningValidationUI"
 
 type PECheck = "pe" | "ht" | "ginjal" | "dm" | "autoimun" | "keluarga"
 
@@ -57,12 +62,25 @@ export default function PreeklamsiaScreen({ onBack, onSuccess }: { onBack: () =>
   const [riwayat, setRiwayat] = useState<PECheck[]>([])
   const [gemeli, setGemeli] = useState(false)
   const [anakPertama, setAnakPertama] = useState(false)
+  const [faktorDitinjau, setFaktorDitinjau] = useState(false)
   const [imtPre, setImtPre] = useState("")
   const [usia, setUsia] = useState("")
   const [jarak, setJarak] = useState("")
   const [err, setErr] = useState<string | null>(null)
   const [fieldErrs, setFieldErrs] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
+  const [emergencyOpen, setEmergencyOpen] = useState(false)
+  const validation = useScreeningValidation("preeklamsia", {
+    userId, sistolik: numericOrMissing(sistolik), diastolik: numericOrMissing(diastolik), ukMinggu: numericOrMissing(ukMinggu),
+    usia: numericOrMissing(usia), imtPre: numericOrMissing(imtPre), jarakTahun: anakPertama ? undefined : numericOrMissing(jarak),
+    proteinuria, riwayatPE: riwayat.includes("pe"), htKronik: riwayat.includes("ht"), ginjalKronik: riwayat.includes("ginjal"),
+    diabetesMelitus: riwayat.includes("dm"), autoimun: riwayat.includes("autoimun"), riwayatKeluargaPE: riwayat.includes("keluarga"),
+    kehamilanGanda: gemeli, nullipara: anakPertama, faktorDitinjau,
+  }, { sistolik: "Sistolik (mmHg)", diastolik: "Diastolik (mmHg)", ukMinggu: "Usia kehamilan", usia: "Usia ibu", imtPre: "IMT sebelum hamil", jarakTahun: "Jarak kehamilan", proteinuria: "Protein urine", faktorDitinjau: "Riwayat dan kondisi kehamilan" })
+  const tekananTerisi = sistolik.trim() !== "" && diastolik.trim() !== "" && Number.isFinite(Number(sistolik)) && Number.isFinite(Number(diastolik))
+  const tekananMerah = (sistolik.trim() !== "" && Number(sistolik) >= 160) || (diastolik.trim() !== "" && Number(diastolik) >= 110)
+  const partialRed = tekananMerah || (tekananTerisi && (kategoriMAP(calcMAP(Number(sistolik), Number(diastolik))) === "MERAH" || (proteinuria === true && Number(ukMinggu) >= 20 && ukMinggu.trim() !== "" && kategoriTD(Number(sistolik), Number(diastolik)) !== "HIJAU")))
+  useEffect(() => { if (partialRed) { validation.setOpen(false); setEmergencyOpen(true) } }, [partialRed])
 
   const toggleRiwayat = (id: PECheck) => {
     setRiwayat((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
@@ -88,20 +106,19 @@ export default function PreeklamsiaScreen({ onBack, onSuccess }: { onBack: () =>
     ] as const).filter(([field]) => detail[field] === true).map(([, key]) => key))
     setGemeli(detail.kehamilanGanda === true)
     setAnakPertama(detail.nullipara === true)
+    setFaktorDitinjau(detail.validasiKelengkapan === 1 && detail.faktorDitinjau === true)
   }, [draftLoading, detail, profile])
 
   const nextFrom1 = () => {
     setErr(null)
-    if (!sistolik || Number(sistolik) < 70 || Number(sistolik) > 250) return setErr("Sistolik (mmHg) harus 70–250")
-    if (!diastolik || Number(diastolik) < 40 || Number(diastolik) > 150) return setErr("Diastolik (mmHg) harus 40–150")
-    if (!ukMinggu || Number(ukMinggu) < 0 || Number(ukMinggu) > 45) return setErr("Usia kehamilan (minggu) harus 0–45")
-    if (proteinuria === null) return setErr("Pilih hasil pemeriksaan protein urine")
+    if (!validation.check(["sistolik", "diastolik", "ukMinggu", "usia", "imtPre", "proteinuria"])) return
     setStep(2)
   }
 
   const handle = async () => {
     setErr(null)
     setFieldErrs({})
+    if (!validation.check()) return
     setLoading(true)
     try {
       const res = await submitPreeklamsia({
@@ -116,11 +133,12 @@ export default function PreeklamsiaScreen({ onBack, onSuccess }: { onBack: () =>
         diabetesMelitus: riwayat.includes("dm"),
         autoimun: riwayat.includes("autoimun"),
         riwayatKeluargaPE: riwayat.includes("keluarga"),
+        faktorDitinjau,
         kehamilanGanda: gemeli,
         nullipara: anakPertama,
         imtPre: imtPre ? Number(imtPre) : undefined,
         usia: usia ? Number(usia) : undefined,
-        jarakTahun: jarak ? Number(jarak) : undefined,
+        jarakTahun: !anakPertama && jarak ? Number(jarak) : undefined,
       })
       onSuccess(res)
     } catch (e: unknown) {
@@ -144,7 +162,7 @@ export default function PreeklamsiaScreen({ onBack, onSuccess }: { onBack: () =>
         <div className="px-1">
           <div className="flex items-center justify-between text-xs text-[#33443F]">
             <span>Langkah {step} dari 2</span>
-            <span className="font-semibold text-[#DB2777]">{pct} persen</span>
+            <span className="font-semibold text-[#DB2777]">{pct}%</span>
           </div>
           <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-[#FFE2E2]">
             <div className="h-full rounded-full bg-[#4A6E54] transition-all" style={{ width: `${pct}%` }} />
@@ -157,16 +175,16 @@ export default function PreeklamsiaScreen({ onBack, onSuccess }: { onBack: () =>
               <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Tekanan Darah dan Data Kehamilan</h2>
               <div className="grid grid-cols-2 gap-2.5">
                 {[
-                  { label: "Sistolik (mmHg)", value: sistolik, set: setSistolik },
-                  { label: "Diastolik (mmHg)", value: diastolik, set: setDiastolik },
-                  { label: "Usia kehamilan (minggu)", value: ukMinggu, set: setUkMinggu },
-                  { label: "Usia ibu (tahun)", value: usia, set: setUsia },
-                  { label: "IMT pra-hamil", value: imtPre, set: setImtPre },
-                  { label: "Jarak kehamilan sebelumnya (tahun)", value: jarak, set: setJarak },
+                  { key: "sistolik", label: "Sistolik (mmHg)", value: sistolik, set: setSistolik },
+                  { key: "diastolik", label: "Diastolik (mmHg)", value: diastolik, set: setDiastolik },
+                  { key: "ukMinggu", label: "Usia kehamilan (minggu)", value: ukMinggu, set: setUkMinggu },
+                  { key: "usia", label: "Usia ibu (tahun)", value: usia, set: setUsia },
+                  { key: "imtPre", label: "IMT pra-hamil", value: imtPre, set: setImtPre },
+                  { key: "jarakTahun", label: "Jarak kehamilan sebelumnya (tahun)", value: jarak, set: setJarak },
                 ].map((field) => (
-                  <div key={field.label} className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
-                    <label className="block text-xs text-[#33443F]">{field.label}</label>
-                    <Input type="number" aria-label={field.label} value={field.value} onChange={(event) => field.set(event.target.value)} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
+                    <div key={field.key} data-screening-field={field.key} className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
+                      <label className="block text-xs text-[#33443F]">{field.label}<ScreeningMarker id={`pe-${field.key}-error`} error={validation.errors[field.key]} /></label>
+                      <Input type="number" aria-label={field.label} aria-invalid={!!validation.errors[field.key]} aria-describedby={validation.errors[field.key] ? `pe-${field.key}-error` : undefined} value={field.value} onChange={(event) => field.set(event.target.value)} className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0" />
                     {(field.label === "Usia kehamilan (minggu)" || field.label === "Usia ibu (tahun)") && <span className="text-[11px] text-[#33443F]">Otomatis dari profil</span>}
                   </div>
                 ))}
@@ -183,8 +201,8 @@ export default function PreeklamsiaScreen({ onBack, onSuccess }: { onBack: () =>
               </section>
             )}
 
-            <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
-              <h2 className="!m-0 text-[13px] font-bold text-[#1D2B29]">Protein urine positif (dipstik)</h2>
+            <section role="group" aria-labelledby="pe-protein-label" aria-invalid={!!validation.errors.proteinuria} aria-describedby={validation.errors.proteinuria ? "pe-protein-error" : undefined} className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
+              <h2 id="pe-protein-label" data-screening-field="proteinuria" className="!m-0 text-[13px] font-bold text-[#1D2B29]">Protein urine positif (dipstik)<ScreeningMarker id="pe-protein-error" error={validation.errors.proteinuria} /></h2>
               {[true, false].map((choice) => (
                 <RadioRow key={String(choice)} selected={proteinuria === choice} label={choice ? "Ya" : "Tidak"} onClick={() => setProteinuria(choice)} />
               ))}
@@ -206,11 +224,15 @@ export default function PreeklamsiaScreen({ onBack, onSuccess }: { onBack: () =>
               <CheckRow checked={gemeli} label="Hamil kembar" onToggle={() => setGemeli((value) => !value)} />
               <CheckRow checked={anakPertama} label="Anak pertama (nullipara)" onToggle={() => setAnakPertama((value) => !value)} />
             </section>
+             <label data-screening-field="faktorDitinjau" className="flex min-h-11 items-center gap-2 text-sm text-[#33443F]"><input type="checkbox" checked={faktorDitinjau} onChange={(event) => setFaktorDitinjau(event.target.checked)} />Saya sudah meninjau semua faktor di atas. Yang tidak dipilih berarti Tidak.<ScreeningMarker error={validation.errors.faktorDitinjau} /></label>
           </div>
         )}
 
         {Object.keys(fieldErrs).length > 0 && <p role="alert" className="text-center text-xs text-[#C62828]">{Object.values(fieldErrs)[0]}</p>}
         {err && <p role="alert" className="text-center text-xs text-[#C62828]">{err}</p>}
+        <ScreeningValidationSheet issues={validation.issues} open={validation.open && !emergencyOpen} onOpenChange={validation.setOpen} onComplete={() => { const key = validation.issues[0]?.key; validation.setOpen(false); if (key && ["sistolik", "diastolik", "ukMinggu", "usia", "imtPre", "proteinuria", "jarakTahun"].includes(key)) setStep(1); validation.focus(key) }} />
+        {partialRed && <button type="button" className="min-h-11 w-full rounded-xl bg-[#FDECEC] p-3 text-sm font-bold text-[#8E1F1F]" onClick={() => setEmergencyOpen(true)}>Tekanan darah atau tanda bahaya dilaporkan. Segera cari bantuan.</button>}
+        {emergencyOpen && <div className="fixed inset-0 z-50"><EmergencyOverlay description="Tanda bahaya preeklamsia dilaporkan. Skrining belum lengkap. Segera periksa ke bidan atau IGD tanpa menunggu koneksi internet." mapsQuery="IGD atau Puskesmas terdekat" onShare={() => window.open(`https://wa.me/?text=${encodeURIComponent('Saya melaporkan tanda bahaya preeklamsia. Skrining SIAGA Bunda belum lengkap. Mohon bantuan segera.')}`, '_blank', 'noopener,noreferrer')} onDismiss={() => setEmergencyOpen(false)} /></div>}
         <div className="flex gap-2">
           {step === 1 ? (
             <>

@@ -5,6 +5,12 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 ## Status saat ini — 2026-10-11
 
 ### Sudah diselesaikan
+- [x] Pengaman Kritis 1 evaluasi ahli media (2026-10-19): validasi kelengkapan di 10 batas submit, pembedaan hasil urine yang belum diperiksa, jalur bantuan untuk tanda MERAH pada form parsial, serta label turunan “Perlu pemeriksaan ulang” pada hasil lama. Tidak ada migrasi/penghitungan ulang hasil lama. Skrip `node --experimental-strip-types scripts/check-screening-completeness.mjs` dan build dijalankan; bukan validasi klinis.
+- [x] Label progres pada form Faktor Risiko, Preeklamsia, dan Perjalanan 40 minggu memakai tanda `%`, bukan kata “persen” (2026-10-19).
+- [x] Sepuluh form skrining menampilkan bottom sheet berisi daftar isian yang kurang/tidak valid setelah tombol lanjut/lihat hasil, tombol menuju isian pertama (atau Profil untuk HPHT), dan `*` merah pada isian bermasalah; kesalahan penyimpanan tetap terpisah dan overlay darurat tetap didahulukan (2026-10-19). Berpindah ke Profil menghapus isian skrining yang belum disimpan setelah konfirmasi; pemeriksaan kode, build, dan skrip belum menggantikan uji interaksi nyata di ponsel/offline.
+- [x] Pesan isian kosong atau tidak valid menjelaskan rentang angka dan pilihan yang diterima formulir, termasuk batas isian opsional bila salah dan satuan tekanan darah; memakai batas validasi yang sudah ada tanpa menambah ambang klinis (2026-10-19).
+- [x] Tindak lanjut validasi skrining (2026-10-19): nilai usia kehamilan tidak valid pada hasil gizi lama memakai HPHT Profil yang diperbaiki; pesan pilihan Faktor Risiko, TSH, dan ASI sesuai tombol nyata; error IMT otomatis menandai BB dan tinggi badan serta mengarahkan ke BB yang bisa diedit.
+- [ ] Kritis 1: minta pakar kebidanan menyetujui matriks kecukupan data serta redaksi arahan; uji interaksi nyata pada ponsel, offline/refresh, sinkronisasi, dan hasil lama sebelum menggunakan data kesehatan sebenarnya.
 - [x] Fondasi PWA React, TypeScript, Vite, Tailwind v4, Dexie, Supabase Auth/Postgres, service worker, dan struktur fitur modular.
 - [x] Onboarding S-00, S-01, S-01b dengan email OTP Supabase, pembuatan profil berbasis Auth UUID, dan template email.
 - [x] Beranda S-02 dengan mode hamil/nifas, kartu profil, aksi cepat, ringkasan reminder, dan pencatatan kelahiran.

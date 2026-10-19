@@ -4,6 +4,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { submitNifas } from "@/features/skrining/nifas/nifasForm"
 import SkriningFormShell from "@/features/skrining/components/SkriningFormShell"
+import EmergencyOverlay from "@/shared/components/EmergencyOverlay"
+import { warnaMEOWS } from "@/clinical-rules/meows"
+import ScreeningValidationSheet, { ScreeningMarker } from "../components/ScreeningValidationSheet"
+import useScreeningValidation from "../components/useScreeningValidation"
+import { numericOrMissing } from "../components/screeningValidationUI"
 
 type NifasResult = { kategori: "HIJAU" | "KUNING" | "MERAH"; warna: string; meows: string; faktorRisiko: string[]; faktorAman: string[] }
 
@@ -33,9 +38,31 @@ export default function NifasScreen({
   const [loading, setLoading] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const [fieldErrs, setFieldErrs] = useState<Record<string, string>>({})
+  const [keluhanDitinjau, setKeluhanDitinjau] = useState(false)
+  const [emergencyOpen, setEmergencyOpen] = useState(false)
+  const validation = useScreeningValidation("nifas", {
+    userId, ...form, hariKe: numericOrMissing(form.hariKe), suhu: numericOrMissing(form.suhu),
+    sistolik: numericOrMissing(form.sistolik), diastolik: numericOrMissing(form.diastolik),
+    perdarahanMl: numericOrMissing(form.perdarahanMl), nyeriSkala: numericOrMissing(form.nyeriSkala),
+    nadi: form.nadi.trim() ? numericOrMissing(form.nadi) : undefined,
+    spo2: form.spo2.trim() ? numericOrMissing(form.spo2) : undefined, keluhanDitinjau,
+  }, {
+    hariKe: "Hari nifas", suhu: "Suhu tubuh", sistolik: "Sistolik", diastolik: "Diastolik",
+    perdarahanMl: "Perdarahan", nyeriSkala: "Skala nyeri", produksiASI: "Produksi ASI", mood: "Suasana hati",
+    keluhanDitinjau: "Keluhan nifas", nadi: "Nadi", spo2: "SpO2",
+  })
+  const vital = (value: string) => value.trim() && Number.isFinite(Number(value)) ? Number(value) : undefined
+  const partialRed = warnaMEOWS({
+    sistolik: vital(form.sistolik) ?? 120, diastolik: vital(form.diastolik) ?? 80,
+    suhu: vital(form.suhu) ?? 37, nadi: vital(form.nadi), spo2: vital(form.spo2),
+    perdarahanMl: vital(form.perdarahanMl),
+    adaDemamNyeriUterus: (vital(form.suhu) ?? 0) > 38 && form.nyeriUterus && form.lochiaBau,
+  }) === "MERAH"
+  useEffect(() => { if (partialRed) { validation.setOpen(false); setEmergencyOpen(true) } }, [partialRed])
 
   useEffect(() => {
     if (!draftLoading && detail) {
+      setKeluhanDitinjau(detail.validasiKelengkapan === 1 && detail.keluhanDitinjau === true)
       setForm((current) => ({
         ...current,
         hariKe: String(detail.hariKe ?? ""),
@@ -58,14 +85,7 @@ export default function NifasScreen({
   const handle = async () => {
     setErr(null)
     setFieldErrs({})
-    if (![form.hariKe, form.suhu, form.sistolik, form.diastolik].every((value) => value.trim() && Number.isFinite(Number(value)))) {
-      setErr("Isi hari nifas, suhu, dan tekanan darah")
-      return
-    }
-    if (!form.produksiASI || form.mood === null) {
-      setErr("Pilih kondisi produksi ASI dan suasana hati")
-      return
-    }
+    if (!validation.check()) return
     setLoading(true)
     try {
       const res = await submitNifas({
@@ -81,8 +101,9 @@ export default function NifasScreen({
         nyeriUterus: form.nyeriUterus,
         lukaBengkak: form.lukaBengkak,
         nyeriSkala: form.nyeriSkala ? Number(form.nyeriSkala) : undefined,
-        produksiASI: form.produksiASI,
-        mood: form.mood,
+        produksiASI: form.produksiASI!,
+        mood: form.mood!,
+        keluhanDitinjau,
       })
       onSuccess(res as NifasResult)
     } catch (e: unknown) {
@@ -110,12 +131,14 @@ export default function NifasScreen({
               { key: "perdarahanMl", label: "Perdarahan (mL)", value: form.perdarahanMl },
               { key: "nyeriSkala", label: "Skala nyeri (0–10)", value: form.nyeriSkala },
             ].map((field) => (
-              <div key={field.key} className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
-                <label className="block text-xs text-[#33443F]">{field.label}</label>
+              <div key={field.key} data-screening-field={field.key} className="rounded-[16px] bg-white px-3 py-2.5 ring-1 ring-[#D9E7E2]">
+                <label className="block text-xs text-[#33443F]">{field.label}<ScreeningMarker id={`nifas-${field.key}-error`} error={validation.errors[field.key]} /></label>
                 <Input
                   type="number"
                   step={"step" in field ? field.step : undefined}
                   aria-label={field.label}
+                  aria-invalid={!!validation.errors[field.key]}
+                  aria-describedby={validation.errors[field.key] ? `nifas-${field.key}-error` : undefined}
                   value={field.value}
                   onChange={(event) => setForm((current) => ({ ...current, [field.key]: event.target.value }))}
                   className="h-auto border-0 bg-transparent p-0 text-base font-bold text-[#DB2777] shadow-none focus-visible:ring-0"
@@ -127,8 +150,8 @@ export default function NifasScreen({
           </div>
         </section>
 
-        <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
-          <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Produksi ASI</h2>
+        <section role="group" aria-labelledby="nifas-asi-label" aria-invalid={!!validation.errors.produksiASI} aria-describedby={validation.errors.produksiASI ? "nifas-asi-error" : undefined} className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
+           <h2 id="nifas-asi-label" data-screening-field="produksiASI" className="!m-0 text-sm font-bold text-[#1D2B29]">Produksi ASI<ScreeningMarker id="nifas-asi-error" error={validation.errors.produksiASI} /></h2>
           <div className="grid grid-cols-3 gap-2">
             {(["ada", "sedikit", "tidak"] as const).map((value) => (
                 <button key={value} type="button" aria-pressed={form.produksiASI === value} onClick={() => setForm((current) => ({ ...current, produksiASI: value }))} className={`min-h-11 rounded-[14px] px-2 text-xs font-semibold transition-colors ${form.produksiASI === value ? "bg-[#4A6E54] text-white" : "bg-white text-[#33443F] ring-1 ring-[#D9E7E2]"}`}>
@@ -138,8 +161,8 @@ export default function NifasScreen({
           </div>
         </section>
 
-        <section className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
-          <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Suasana hati hari ini</h2>
+        <section role="group" aria-labelledby="nifas-mood-label" aria-invalid={!!validation.errors.mood} aria-describedby={validation.errors.mood ? "nifas-mood-error" : undefined} className="space-y-2.5 rounded-[24px] bg-[#EAF4F0] p-3.5">
+           <h2 id="nifas-mood-label" data-screening-field="mood" className="!m-0 text-sm font-bold text-[#1D2B29]">Suasana hati hari ini<ScreeningMarker id="nifas-mood-error" error={validation.errors.mood} /></h2>
           <div className="grid grid-cols-5 gap-2">
               {[1, 2, 3, 4, 5].map((value) => (
               <button key={value} type="button" aria-label={`Suasana hati ${value}`} aria-pressed={form.mood === value} onClick={() => setForm((current) => ({ ...current, mood: value as 1 | 2 | 3 | 4 | 5 }))} className={`min-h-11 rounded-[14px] text-sm font-bold transition-colors ${form.mood === value ? "bg-[#4A6E54] text-white" : "bg-white text-[#33443F] ring-1 ring-[#D9E7E2]"}`}>
@@ -170,6 +193,10 @@ export default function NifasScreen({
         </section>
 
         {err && <p role="alert" className="text-center text-xs text-[#C62828]">{err}</p>}
+        {partialRed && <button type="button" className="min-h-11 w-full rounded-xl bg-[#FDECEC] p-3 text-sm font-bold text-[#8E1F1F]" onClick={() => setEmergencyOpen(true)}>Tanda bahaya nifas terlapor. Cari bantuan meski formulir belum lengkap.</button>}
+        {emergencyOpen && <div className="fixed inset-0 z-50"><EmergencyOverlay description="Tanda bahaya nifas dilaporkan. Skrining belum lengkap. Segera ke bidan atau IGD; jangan menunggu koneksi internet." mapsQuery="IGD atau Puskesmas terdekat" onShare={() => window.open(`https://wa.me/?text=${encodeURIComponent('Saya melaporkan tanda bahaya nifas. Skrining SIAGA Bunda belum lengkap. Mohon bantuan segera.')}`, '_blank', 'noopener,noreferrer')} onDismiss={() => setEmergencyOpen(false)} /></div>}
+         <label data-screening-field="keluhanDitinjau" className="flex min-h-11 items-center gap-2 text-sm text-[#33443F]"><input type="checkbox" aria-invalid={!!validation.errors.keluhanDitinjau} checked={keluhanDitinjau} onChange={(event) => setKeluhanDitinjau(event.target.checked)} />Saya sudah meninjau keluhan di atas. Yang tidak dipilih berarti Tidak.<ScreeningMarker error={validation.errors.keluhanDitinjau} /></label>
+         <ScreeningValidationSheet issues={validation.issues} open={validation.open && !emergencyOpen} onOpenChange={validation.setOpen} onComplete={() => { validation.setOpen(false); validation.focus(validation.issues[0]?.key) }} />
         <Button className="min-h-12 w-full rounded-full bg-[#4A6E54] text-base font-bold text-white hover:bg-[#3D5C46]" disabled={loading} onClick={handle}>
           {loading ? "Menyimpan" : "Lihat hasil"}
         </Button>

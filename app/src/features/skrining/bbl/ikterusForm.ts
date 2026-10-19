@@ -1,6 +1,7 @@
 import { db } from '@/data/db'
 import { syncScreening } from '@/data/sync'
 import { kategoriKramer } from '@/clinical-rules/kramerZone'
+import { validateScreening } from '../screeningCompleteness'
 
 // S-05a: IkterusScreen — spec S-05a:328-333 — wrap kramerZone.ts
 export type IkterusInput = {
@@ -11,10 +12,12 @@ export type IkterusInput = {
   fesesDempul?: boolean
   aktivitas?: 'aktif' | 'mengantuk' | 'tidak mau minum'
   prematur?: boolean
+  gejalaDitinjau?: boolean
 }
 
 export async function submitIkterus(input: IkterusInput) {
-  if (!input.userId) throw new Error('userId wajib')
+  const errs = validateScreening('ikterus', input as unknown as Record<string, unknown>)
+  if (Object.keys(errs).length) throw Object.assign(new Error(Object.values(errs)[0]), { errs })
   const { status, warna } = kategoriKramer({ zona: input.zona, onsetJam: input.onsetJam, fesesDempul: input.fesesDempul })
   // zona 4-5 atau onset<24 sudah MERAH via kramerZone; prematur + zona3 → eskalasi
   let kategori: 'HIJAU' | 'KUNING' | 'MERAH' = warna
@@ -37,7 +40,7 @@ export async function submitIkterus(input: IkterusInput) {
     if (input.aktivitas === 'aktif') faktorAman.push('Bayi aktif menyusu baik')
   }
 
-  const row = { id: globalThis.crypto?.randomUUID?.() ?? ("demo-" + Date.now() + "-" + Math.random().toString(36).slice(2,8)), userId: input.userId, tipe: 'ikterus', skor: input.zona, kategori, detail: { ...input, statusKramer: status, faktorRisiko }, createdAt: new Date().toISOString() }
+  const row = { id: globalThis.crypto?.randomUUID?.() ?? ("demo-" + Date.now() + "-" + Math.random().toString(36).slice(2,8)), userId: input.userId, tipe: 'ikterus', skor: input.zona, kategori, detail: { ...input, statusKramer: status, faktorRisiko, validasiKelengkapan: 1 }, createdAt: new Date().toISOString() }
   await db.screeningResults.put(row)
   syncScreening(row as never)
   return { status, kategori, warna: kategori, faktorRisiko, faktorAman }

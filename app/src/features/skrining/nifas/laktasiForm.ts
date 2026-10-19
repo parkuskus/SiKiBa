@@ -1,5 +1,6 @@
 import { db } from '@/data/db'
 import { syncScreening } from '@/data/sync'
+import { validateScreening } from '../screeningCompleteness'
 
 // S-04a: LaktasiScreen — spec S-04a:304-310
 export type LaktasiInput = {
@@ -27,7 +28,8 @@ export function kategoriLaktasi(v: LaktasiInput): { warna: 'HIJAU' | 'KUNING' | 
 }
 
 export async function submitLaktasi(input: LaktasiInput) {
-  if (!input.userId) throw new Error('userId wajib')
+  const errs = validateScreening('laktasi', input as unknown as Record<string, unknown>)
+  if (Object.keys(errs).length) throw Object.assign(new Error(Object.values(errs)[0]), { errs })
   const { warna, masalah } = kategoriLaktasi(input)
 
   const faktorRisiko: string[] = []
@@ -43,7 +45,7 @@ export async function submitLaktasi(input: LaktasiInput) {
     faktorAman.push('Pelekatan dan payudara normal')
   }
 
-  const row = { id: globalThis.crypto?.randomUUID?.() ?? ("demo-" + Date.now() + "-" + Math.random().toString(36).slice(2,8)), userId: input.userId, tipe: 'laktasi', skor: input.bakPerHari, kategori: warna, detail: { ...input, masalah, faktorRisiko }, createdAt: new Date().toISOString() }
+  const row = { id: globalThis.crypto?.randomUUID?.() ?? ("demo-" + Date.now() + "-" + Math.random().toString(36).slice(2,8)), userId: input.userId, tipe: 'laktasi', skor: input.bakPerHari, kategori: warna, detail: { ...input, masalah, faktorRisiko, validasiKelengkapan: 1 }, createdAt: new Date().toISOString() }
   await db.screeningResults.put(row)
   syncScreening(row as never)
   return { warna, kategori: warna, masalah, faktorRisiko, faktorAman }

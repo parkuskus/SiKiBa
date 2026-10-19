@@ -1,5 +1,6 @@
 import { db } from '@/data/db'
 import { syncScreening } from '@/data/sync'
+import { validateScreening } from '../screeningCompleteness'
 
 // S-03c: DangerSignScreen — spec S-03c:200-207, SK04
 export type DangerSignInput = {
@@ -47,7 +48,8 @@ export function kategoriDanger(v: DangerSignInput): 'HIJAU' | 'KUNING' | 'MERAH'
 }
 
 export async function submitDangerSign(input: DangerSignInput) {
-  if (!input.userId) throw new Error('userId wajib')
+  const errs = validateScreening('danger_sign', input as unknown as Record<string, unknown>)
+  if (Object.keys(errs).length) throw Object.assign(new Error(Object.values(errs)[0]), { errs })
   const kategori = kategoriDanger(input)
   const flags = Object.entries(input).filter(([k, v]) => k !== 'userId' && v === true).map(([k]) => k)
   if ((input.nyeriKepalaSkala ?? 0) > 0 && !flags.includes('nyeriKepalaHebat')) flags.push('nyeriKepalaHebat')
@@ -65,7 +67,7 @@ export async function submitDangerSign(input: DangerSignInput) {
     faktorAman.push('Gerakan janin baik dan tidak ada keluhan akut')
   }
 
-  const row = { id: globalThis.crypto?.randomUUID?.() ?? ("demo-" + Date.now() + "-" + Math.random().toString(36).slice(2,8)), userId: input.userId, tipe: 'danger_sign', skor: flags.length, kategori, detail: { ...input, flags, faktorRisiko }, createdAt: new Date().toISOString() }
+  const row = { id: globalThis.crypto?.randomUUID?.() ?? ("demo-" + Date.now() + "-" + Math.random().toString(36).slice(2,8)), userId: input.userId, tipe: 'danger_sign', skor: flags.length, kategori, detail: { ...input, flags, faktorRisiko, validasiKelengkapan: 1 }, createdAt: new Date().toISOString() }
   await db.screeningResults.put(row)
   syncScreening(row as never)
   return { kategori, flags, faktorRisiko, faktorAman }

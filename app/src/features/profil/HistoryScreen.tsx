@@ -3,6 +3,7 @@ import { ArrowLeft, Lock, Trash2 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { db } from "@/data/db"
 import type { ScreeningResult } from "@/data/db"
+import { needsRepeat } from "@/features/skrining/screeningCompleteness"
 
 const TIPE_LABEL: Record<string, string> = {
   poedji_rochjati: "Faktor Risiko",
@@ -53,17 +54,19 @@ export default function HistoryScreen({ history, onBack, onChanged }: { history:
             {history.length ? (
               history.map((r) => {
                 const locked = r.kategori === "MERAH"
-                const dot = r.kategori === "MERAH" ? "bg-[#E57373]" : r.kategori === "KUNING" ? "bg-[#F5C16C]" : "bg-[#7ACB8A]"
-                const badge = r.kategori === "MERAH" ? "bg-[#FDECEC] text-[#C62828] ring-[#E57373]/20" : r.kategori === "KUNING" ? "bg-[#FFF8EC] text-[#8A6D00] ring-[#F5C16C]/20" : "bg-[#EDF6EF] text-[#2E7D32] ring-[#7ACB8A]/20"
+                const repeat = needsRepeat(r)
+                const dot = locked ? "bg-[#E57373]" : repeat ? "bg-[#8A8F93]" : r.kategori === "KUNING" ? "bg-[#F5C16C]" : "bg-[#7ACB8A]"
+                const badge = locked ? "bg-[#FDECEC] text-[#C62828] ring-[#E57373]/20" : repeat ? "bg-[#F7F2EB] text-[#545C59] ring-[#8A8F93]/25" : r.kategori === "KUNING" ? "bg-[#FFF8EC] text-[#8A6D00] ring-[#F5C16C]/20" : "bg-[#EDF6EF] text-[#2E7D32] ring-[#7ACB8A]/20"
                 return (
                   <div key={r.id} className="flex items-center gap-3 px-4 py-3">
                     <span className={`size-2 shrink-0 rounded-full ${dot}`} />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold text-[#1E2326]">{TIPE_LABEL[r.tipe] ?? r.tipe}</p>
                       <p className="text-xs text-[#8A8F93]">{new Date(r.createdAt).toLocaleString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })} · skor {r.skor}</p>
+                      {repeat && <p className="text-xs font-semibold text-[#8E2424]">Perlu pemeriksaan ulang{locked ? ". Hasil bahaya tetap memerlukan pertolongan." : ""}</p>}
                     </div>
                     <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${badge}`}>
-                      {r.kategori === "MERAH" ? "Rujuk" : r.kategori === "KUNING" ? "Waspada" : "Aman"}
+                       {locked ? "Rujuk" : repeat ? "Cek ulang" : r.kategori === "KUNING" ? "Waspada" : "Aman"}
                     </span>
                     {locked ? (
                       <span title="Hasil MERAH tidak dapat dihapus" className="grid size-8 shrink-0 place-items-center rounded-full bg-[#F7F2EB] text-[#8A8F93]">

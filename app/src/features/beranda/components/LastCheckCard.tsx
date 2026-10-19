@@ -13,6 +13,8 @@ export default function LastCheckCard({ label, dateLabel, kategori, onLihat }: P
   const tone =
     kategori === "MERAH"
       ? { card: "bg-[#FDECEC] ring-[#E57373]/30", iconBg: "bg-[#E57373]", icon: <OctagonAlert className="size-5 text-white" /> }
+      : kategori === "PERLU_ULANG"
+        ? { card: "bg-[#F7F2EB] ring-[#8A8F93]/25", iconBg: "bg-[#8A8F93]", icon: <TriangleAlert className="size-5 text-white" /> }
       : kategori === "KUNING"
         ? { card: "bg-[#FFF8EC] ring-[#F5C16C]/40", iconBg: "bg-[#F5C16C]", icon: <TriangleAlert className="size-5 text-white" /> }
         : { card: "bg-[#EDF6EF] ring-[#7ACB8A]/25", iconBg: "bg-[#7ACB8A]", icon: <ShieldCheck className="size-5 text-white" /> }

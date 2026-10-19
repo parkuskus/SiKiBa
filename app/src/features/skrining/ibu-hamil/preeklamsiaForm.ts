@@ -1,6 +1,7 @@
 import { db } from '@/data/db'
 import { syncScreening } from '@/data/sync'
 import { calcMAP, kategoriMAP, kategoriTD } from '@/clinical-rules/mapCalculator'
+import { validateScreening } from '../screeningCompleteness'
 
 // S-03d: PreeklamsiScreen — spec S-03d:216-222, SK02 (MAP <90 / 90-99 / >99)
 export type PreeklamsiaInput = {
@@ -20,10 +21,11 @@ export type PreeklamsiaInput = {
   usia?: number
   jarakTahun?: number
   riwayatKeluargaPE?: boolean
+  faktorDitinjau?: boolean
 }
 
 export function validatePreeklamsia(v: PreeklamsiaInput): Record<string, string> {
-  const e: Record<string, string> = {}
+  const e: Record<string, string> = validateScreening('preeklamsia', v as unknown as Record<string, unknown>)
   if (!v.userId) e.userId = 'userId wajib'
   if (v.sistolik < 70 || v.sistolik > 250) e.sistolik = 'Sistolik 70-250'
   if (v.diastolik < 40 || v.diastolik > 150) e.diastolik = 'Diastolik 40-150'
@@ -66,13 +68,13 @@ export async function submitPreeklamsia(input: PreeklamsiaInput) {
   const faktorAman: string[] = []
   if (tdKat === 'HIJAU') faktorAman.push(`TD ${input.sistolik}/${input.diastolik} normal`)
   if (mapKat === 'HIJAU') faktorAman.push(`MAP ${map} normal (<90)`)
-  if (!input.proteinuria) faktorAman.push('Protein urine negatif')
+  if (input.proteinuria === false) faktorAman.push('Protein urine negatif')
   if (!risikoTinggiEfektif) faktorAman.push('Tidak ada faktor risiko tinggi NICE')
 
   // aspirin profilaksis 75–150mg bila risiko tinggi & UK<16 — anjuran untuk dokter/bidan
   const perluAspirin = risikoTinggiEfektif && input.ukMinggu < 16
 
-  const detail: Record<string, unknown> = { ...input, map, mapKat, tdKat, risikoTinggi: risikoTinggiEfektif, moderatCount, curigaPE, faktorRisiko, perluAspirin }
+  const detail: Record<string, unknown> = { ...input, map, mapKat, tdKat, risikoTinggi: risikoTinggiEfektif, moderatCount, curigaPE, faktorRisiko, perluAspirin, validasiKelengkapan: 1 }
   const row = { id: globalThis.crypto?.randomUUID?.() ?? ("demo-" + Date.now() + "-" + Math.random().toString(36).slice(2,8)), userId: input.userId, tipe: 'preeklamsia', skor: map, kategori, detail, createdAt: new Date().toISOString() }
   await db.screeningResults.put(row)
   syncScreening(row as never)

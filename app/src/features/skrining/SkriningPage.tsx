@@ -15,10 +15,11 @@ import SkriningResultScreen from "@/features/skrining/components/SkriningResultS
 import { db } from "@/data/db"
 import { getCurrentUserId } from "@/data/currentUser"
 import { shareViaWA } from "@/services/exportService"
+import { needsRepeat } from "@/features/skrining/screeningCompleteness"
 
 type SkriningTab = "hamil" | "nifas" | "bbl"
 type ActiveForm = null | "risk" | "gizi" | "danger" | "preeklamsia" | "dmg" | "mental" | "nifas" | "laktasi" | "ikterus" | "hipotiroid"
-type AnyResult = { warna: string; kategori?: string; skor?: number; extra?: string }
+type AnyResult = { warna: string; kategori?: string; skor?: number; extra?: string; perluUlang?: boolean }
 
 export default function SkriningPage({
   setTab,
@@ -68,7 +69,7 @@ export default function SkriningPage({
   const NIFAS_BBL_KEYS = ["nifas", "laktasi", "ikterus", "hipotiroid"] as const
 
   const relevantKeys = isNifasActive ? (NIFAS_BBL_KEYS as unknown as string[]) : (HAMIL_KEYS as unknown as string[])
-  const doneCount = relevantKeys.filter((k) => results[k] && isToday((results[k] as { createdAt?: string }).createdAt)).length
+  const doneCount = relevantKeys.filter((k) => results[k] && !results[k].perluUlang && isToday((results[k] as { createdAt?: string }).createdAt)).length
   const totalForMode = relevantKeys.length
   const progressPct = totalForMode ? Math.round((doneCount / totalForMode) * 100) : 0
 
@@ -106,7 +107,7 @@ export default function SkriningPage({
         }
         for (const r of all.sort((a, b) => b.createdAt.localeCompare(a.createdAt))) {
           const k = tipeToKey[r.tipe] ?? r.tipe
-          if (!map[k]) map[k] = { warna: r.kategori, kategori: r.kategori, skor: r.skor, extra: String(r.skor), createdAt: r.createdAt }
+          if (!map[k]) map[k] = { warna: r.kategori, kategori: r.kategori, skor: r.skor, extra: String(r.skor), createdAt: r.createdAt, perluUlang: needsRepeat(r) }
         }
         setResults((current) => {
           const latest = { ...map }
@@ -143,7 +144,7 @@ export default function SkriningPage({
   const urgensiFor = (warna: "HIJAU" | "KUNING" | "MERAH") => (warna === "HIJAU" ? "Pantau mandiri" : warna === "KUNING" ? "Kunjungi bidan" : "Segera ke IGD")
 
   const handleSuccess = (key: string, r: AnyResult, meta?: { tipeLabel: string; faktorRisiko?: string[]; faktorAman?: string[]; skor?: number | string; kategori?: string; skorLabel?: string; rekomendasiTambahan?: string[] }) => {
-    const withDate = { ...r, createdAt: new Date().toISOString() } as AnyResult & { createdAt: string }
+    const withDate = { ...r, perluUlang: false, createdAt: new Date().toISOString() } as AnyResult & { createdAt: string }
     setResults((prev) => ({ ...prev, [key]: withDate }))
     setActiveForm(null)
     if (meta) {
@@ -186,7 +187,7 @@ export default function SkriningPage({
   if (activeForm === "gizi") {
     return (
       <div className="space-y-4">
-        <GiziScreen onBack={() => setActiveForm(null)} onSuccess={(r: any) => handleSuccess("gizi", { warna: (r as { warna: string }).warna, kategori: (r as { imtKat: string }).imtKat, extra: `${(r as { kenaikanAktual: number }).kenaikanAktual} kg, ${(r as { trajectory: string }).trajectory}` }, { tipeLabel: "Status Gizi", kategori: (r as { imtKat: string }).imtKat, skor: (r as { imt: number }).imt?.toFixed(1), skorLabel: `IMT ${(r as { imt: number }).imt?.toFixed(1)} · ${(r as { imtKat: string }).imtKat}`, faktorRisiko: (r as { warna: string }).warna === "HIJAU" ? [] : [`${(r as { imtKat: string }).imtKat}${(r as { lilaKat: string }).lilaKat === "KEK" ? " + KEK" : ""} · kenaikan ${(r as { trajectory: string }).trajectory}`], faktorAman: (r as { warna: string }).warna === "HIJAU" ? ["IMT dan LILA normal", `Kenaikan BB ${(r as { trajectory: string }).trajectory}`] : [] })} />
+        <GiziScreen onBack={() => setActiveForm(null)} onOpenProfile={() => { setActiveForm(null); setTab("profil") }} onSuccess={(r: any) => handleSuccess("gizi", { warna: (r as { warna: string }).warna, kategori: (r as { imtKat: string }).imtKat, extra: `${(r as { kenaikanAktual: number }).kenaikanAktual} kg, ${(r as { trajectory: string }).trajectory}` }, { tipeLabel: "Status Gizi", kategori: (r as { imtKat: string }).imtKat, skor: (r as { imt: number }).imt?.toFixed(1), skorLabel: `IMT ${(r as { imt: number }).imt?.toFixed(1)} · ${(r as { imtKat: string }).imtKat}`, faktorRisiko: (r as { warna: string }).warna === "HIJAU" ? [] : [`${(r as { imtKat: string }).imtKat}${(r as { lilaKat: string }).lilaKat === "KEK" ? " + KEK" : ""} · kenaikan ${(r as { trajectory: string }).trajectory}`], faktorAman: (r as { warna: string }).warna === "HIJAU" ? ["IMT dan LILA normal", `Kenaikan BB ${(r as { trajectory: string }).trajectory}`] : [] })} />
       </div>
     )
   }
@@ -352,12 +353,14 @@ export default function SkriningPage({
             const result = results[item.key]
             const statusClass = !result
               ? "border border-[#D9E7E2] bg-white text-[#33443F]"
-              : result.warna === "MERAH"
-                ? "bg-[#FDECEC] text-[#C62828]"
-                : result.warna === "KUNING"
+               : result.warna === "MERAH"
+                 ? "bg-[#FDECEC] text-[#C62828]"
+                 : result.perluUlang
+                   ? "bg-[#F7F2EB] text-[#545C59]"
+                 : result.warna === "KUNING"
                   ? "bg-[#FFF8EC] text-[#7A5F00]"
                   : "bg-[#EDF6EF] text-[#2E7D32]"
-            const statusText = !result ? "Belum" : result.warna === "MERAH" ? "Perlu rujuk" : result.warna === "KUNING" ? "Waspada" : "Selesai"
+             const statusText = !result ? "Belum" : result.warna === "MERAH" ? "Perlu rujuk" : result.perluUlang ? "Perlu cek ulang" : result.warna === "KUNING" ? "Waspada" : "Selesai"
             return (
               <button
                 key={item.key}
@@ -367,7 +370,8 @@ export default function SkriningPage({
                 <span className={`grid size-[46px] shrink-0 place-items-center rounded-[15px] ${item.iconBg}`}>{item.icon}</span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-[13px] font-bold leading-tight text-[#1D2B29]">{item.title}</span>
-                  <span className="block text-xs leading-tight text-[#33443F]">{item.sub}</span>
+                   <span className="block text-xs leading-tight text-[#33443F]">{item.sub}</span>
+                   {result?.perluUlang && <span className="block text-xs font-semibold text-[#8E2424]">Perlu pemeriksaan ulang</span>}
                 </span>
                 <span className={`shrink-0 rounded-xl px-2.5 py-1 text-xs font-bold leading-normal ${statusClass}`}>{statusText}</span>
               </button>

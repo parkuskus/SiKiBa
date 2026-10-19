@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { Bell, Smile, ChevronRight, X, ClipboardList } from "lucide-react"
 import { liveQuery } from "dexie"
 import { db } from "@/data/db"
+import { needsRepeat } from "@/features/skrining/screeningCompleteness"
 import { getCurrentProfile, getCurrentUserId } from "@/data/currentUser"
 import { weeksFromHpht, calcHPL, progressPercent } from "@/clinical-rules/ukHpl"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
@@ -123,7 +124,7 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
   const countdown = hpl ? Math.max(0, Math.ceil((new Date(hpl).getTime() - new Date().getTime()) / 86400000)) : profile ? null : countdownProp
   const gpa = profile ? `G${profile.gravida}P${profile.para}A${profile.abortus}` : "G2P1A0"
   const nama = profile?.nama ? profile.nama.split(" ")[0] : "Siti"
-  const lastLabel = last ? `${last.kategori === "HIJAU" ? "Kondisi aman" : last.kategori === "KUNING" ? "Skrining Terakhir (Waspada)" : "Skrining Terakhir (Bahaya)"}` : "Belum ada skrining"
+  const lastLabel = last ? `${needsRepeat(last) ? last.kategori === "MERAH" ? "Bahaya, perlu pemeriksaan ulang" : "Perlu pemeriksaan ulang" : last.kategori === "HIJAU" ? "Kondisi aman" : last.kategori === "KUNING" ? "Skrining Terakhir (Waspada)" : "Skrining Terakhir (Bahaya)"}` : "Belum ada skrining"
   const lastDate = last ? new Date(last.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short" }) : "Lakukan skrining pertama"
 
   if (showBirthPlan) return <BirthPlanScreen userId={birthPlanUserId} onClose={() => setShowBirthPlan(false)} />
@@ -181,7 +182,7 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
           <ChevronRight className="size-5 shrink-0 text-[#536961]" />
         </button>}
         <p className="text-[15px] font-bold py-2 text-[#1D2B29]">Skrining Kesehatan</p>
-        <LastCheckCard label={lastLabel} dateLabel={lastDate} kategori={last?.kategori} onLihat={() => setTab("skrining")} />
+        <LastCheckCard label={lastLabel} dateLabel={lastDate} kategori={last && needsRepeat(last) && last.kategori !== "MERAH" ? "PERLU_ULANG" : last?.kategori} onLihat={() => setTab("skrining")} />
         <button onClick={() => setTab("tracker")} className="flex w-full items-center gap-3 rounded-[24px] bg-white p-4 text-left ring-2 ring-[#FFCFCF] active:scale-[0.99] transition">
           <span className="grid size-12 shrink-0 place-items-center rounded-full bg-[#FFE2E2] text-[#DB2777]"><Smile className="size-7" /></span>
           <span className="min-w-0 flex-1">
