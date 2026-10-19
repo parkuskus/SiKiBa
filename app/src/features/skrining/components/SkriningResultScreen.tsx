@@ -16,6 +16,7 @@ type Props = {
   rekomendasi: string[]
   urgensiLabel: string
   waktuISO: string
+  perluTinjauGizi?: boolean
   mapsQuery?: string
   onUlangi: () => void
   onBeranda: () => void
@@ -32,10 +33,10 @@ const status: Record<Warna, {
   number: string
 }> = {
   HIJAU: {
-    title: "Kondisi aman",
-    badge: "AMAN",
+    title: "Hasil skrining",
+    badge: "HIJAU",
     icon: Check,
-    factorTitle: "Kondisi aman",
+    factorTitle: "Yang dinilai",
     factorCard: "bg-[#EDF6EF] ring-[#7ACB8A]/50",
     factorDot: "bg-[#2E7D32]",
     number: "bg-[#4A6E54]",
@@ -71,16 +72,19 @@ export default function SkriningResultScreen({
   rekomendasi,
   urgensiLabel,
   waktuISO,
+  perluTinjauGizi = false,
   mapsQuery,
   onUlangi,
   onBeranda,
   onBagikan,
 }: Props) {
   const [emergencyOpen, setEmergencyOpen] = useState(warna === "MERAH")
-  const cfg = status[warna]
+  const cfg = status[perluTinjauGizi && warna === "HIJAU" ? "KUNING" : warna]
   const Icon = cfg.icon
-  const factors = warna === "HIJAU"
-    ? (faktorAman.length ? faktorAman : ["Tidak ada faktor risiko tambahan yang teridentifikasi."])
+  const factors = perluTinjauGizi && warna === "HIJAU"
+    ? (faktorRisiko.length ? faktorRisiko : ["Kenaikan BB perlu ditinjau bersama tenaga kesehatan."])
+    : warna === "HIJAU"
+    ? (faktorAman.length ? faktorAman : ["Tidak ada faktor tambahan yang teridentifikasi dari jawaban ini."])
     : (faktorRisiko.length ? faktorRisiko : [warna === "MERAH" ? "Tanda bahaya memerlukan pemeriksaan segera." : "Hasil perlu dipantau lebih lanjut."])
   const checkedDate = new Date(waktuISO).toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit", year: "numeric" })
   const score = skorLabel
@@ -101,14 +105,20 @@ export default function SkriningResultScreen({
       <header className="mx-auto flex w-full max-w-[480px] shrink-0 flex-col items-center rounded-b-[32px] bg-[#4A6E54] px-6 pb-6 pt-6 text-center text-white">
         <h1 className="!m-0 text-xl font-bold leading-tight">Hasil Skrining</h1>
         <div className="mt-2.5 grid size-[120px] place-content-center gap-1 rounded-full bg-white text-[#33443F]">
-          <Icon className={`mx-auto size-8 ${warna === "HIJAU" ? "text-[#2E7D32]" : warna === "KUNING" ? "text-[#B7791F]" : "text-[#C62828]"}`} strokeWidth={2.2} />
-          <span className={`text-xs font-extrabold ${warna === "HIJAU" ? "text-[#2E7D32]" : warna === "KUNING" ? "text-[#8A5B0A]" : "text-[#C62828]"}`}>{cfg.badge}</span>
+          <Icon className={`mx-auto size-8 ${perluTinjauGizi && warna === "HIJAU" ? "text-[#B7791F]" : warna === "HIJAU" ? "text-[#2E7D32]" : warna === "KUNING" ? "text-[#B7791F]" : "text-[#C62828]"}`} strokeWidth={2.2} />
+          <span className={`text-xs font-extrabold ${perluTinjauGizi && warna === "HIJAU" ? "text-[#8A5B0A]" : warna === "HIJAU" ? "text-[#2E7D32]" : warna === "KUNING" ? "text-[#8A5B0A]" : "text-[#C62828]"}`}>{perluTinjauGizi && warna === "HIJAU" ? "TINJAU BB" : cfg.badge}</span>
         </div>
         <p className="mt-2 text-sm font-bold leading-normal">{score}</p>
         <p className="text-xs leading-normal text-white/90">{tipeLabel}</p>
       </header>
 
       <main className="mx-auto flex w-full max-w-[480px] flex-1 flex-col gap-3.5 px-6 pb-5 pt-5">
+        {perluTinjauGizi && warna !== "MERAH" && (
+          <section role="alert" className="rounded-[24px] bg-[#FFF8EC] p-3.5 ring-1 ring-[#F5C16C]">
+            <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Kenaikan BB perlu ditinjau</h2>
+            <p className="mt-2 text-sm leading-relaxed text-[#33443F]">Perhitungan menunjukkan kenaikan BB lebih dari perkiraan aplikasi. Warna hasil belum menilai apakah kenaikan ini aman untuk Anda. Bawa hasil ini saat berkonsultasi dengan bidan atau dokter.</p>
+          </section>
+        )}
         <section className={`rounded-[24px] p-3.5 ring-1 ${cfg.factorCard}`}>
           <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">{cfg.factorTitle}</h2>
           <ul className="mt-2 space-y-1.5">
@@ -137,6 +147,8 @@ export default function SkriningResultScreen({
           </ol>
 
         </section>
+
+        <p className="px-1 text-sm leading-relaxed text-[#33443F]">Hasil ini hanya berdasarkan data yang diisi dan diperiksa pada skrining {tipeLabel.toLowerCase()}. Hasil ini bukan diagnosis dan tidak menilai kondisi lain yang belum diperiksa. Jika muncul keluhan atau tanda bahaya, segera hubungi tenaga kesehatan.</p>
 
         <p className="px-1 text-xs text-[#6C757D]">Diperiksa {checkedDate}</p>
         <div className="grid grid-cols-2 gap-2.5">

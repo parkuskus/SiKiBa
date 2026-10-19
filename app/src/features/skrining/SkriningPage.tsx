@@ -16,10 +16,11 @@ import { db } from "@/data/db"
 import { getCurrentUserId } from "@/data/currentUser"
 import { shareViaWA } from "@/services/exportService"
 import { needsRepeat } from "@/features/skrining/screeningCompleteness"
+import { needsGiziReview } from "@/features/skrining/giziReview"
 
 type SkriningTab = "hamil" | "nifas" | "bbl"
 type ActiveForm = null | "risk" | "gizi" | "danger" | "preeklamsia" | "dmg" | "mental" | "nifas" | "laktasi" | "ikterus" | "hipotiroid"
-type AnyResult = { warna: string; kategori?: string; skor?: number; extra?: string; perluUlang?: boolean }
+type AnyResult = { warna: string; kategori?: string; skor?: number; extra?: string; perluUlang?: boolean; perluTinjauGizi?: boolean }
 
 export default function SkriningPage({
   setTab,
@@ -51,6 +52,7 @@ export default function SkriningPage({
     rekomendasi: string[]
     urgensiLabel: string
     waktuISO: string
+    perluTinjauGizi?: boolean
   }>(null)
 
   const isToday = (iso?: string) => {
@@ -107,7 +109,7 @@ export default function SkriningPage({
         }
         for (const r of all.sort((a, b) => b.createdAt.localeCompare(a.createdAt))) {
           const k = tipeToKey[r.tipe] ?? r.tipe
-          if (!map[k]) map[k] = { warna: r.kategori, kategori: r.kategori, skor: r.skor, extra: String(r.skor), createdAt: r.createdAt, perluUlang: needsRepeat(r) }
+          if (!map[k]) map[k] = { warna: r.kategori, kategori: r.kategori, skor: r.skor, extra: String(r.skor), createdAt: r.createdAt, perluUlang: needsRepeat(r), perluTinjauGizi: needsGiziReview(r) }
         }
         setResults((current) => {
           const latest = { ...map }
@@ -143,7 +145,7 @@ export default function SkriningPage({
 
   const urgensiFor = (warna: "HIJAU" | "KUNING" | "MERAH") => (warna === "HIJAU" ? "Pantau mandiri" : warna === "KUNING" ? "Kunjungi bidan" : "Segera ke IGD")
 
-  const handleSuccess = (key: string, r: AnyResult, meta?: { tipeLabel: string; faktorRisiko?: string[]; faktorAman?: string[]; skor?: number | string; kategori?: string; skorLabel?: string; rekomendasiTambahan?: string[] }) => {
+  const handleSuccess = (key: string, r: AnyResult, meta?: { tipeLabel: string; faktorRisiko?: string[]; faktorAman?: string[]; skor?: number | string; kategori?: string; skorLabel?: string; rekomendasiTambahan?: string[]; perluTinjauGizi?: boolean }) => {
     const withDate = { ...r, perluUlang: false, createdAt: new Date().toISOString() } as AnyResult & { createdAt: string }
     setResults((prev) => ({ ...prev, [key]: withDate }))
     setActiveForm(null)
@@ -158,9 +160,10 @@ export default function SkriningPage({
         skorLabel: meta.skorLabel,
         faktorRisiko: meta.faktorRisiko ?? (r.extra ? [r.extra] : []),
         faktorAman: meta.faktorAman ?? (warna === "HIJAU" ? ["Tidak ada tanda bahaya terdeteksi", "Kondisi umum baik"] : []),
-        rekomendasi: [...(meta.rekomendasiTambahan ?? []), ...rekomFor(warna, meta.tipeLabel)],
-        urgensiLabel: urgensiFor(warna),
+        rekomendasi: [...(meta.perluTinjauGizi ? ["Konsultasikan hasil pengukuran berat badan dengan bidan atau dokter"] : []), ...(meta.rekomendasiTambahan ?? []), ...rekomFor(warna, meta.tipeLabel)],
+        urgensiLabel: meta.perluTinjauGizi ? "Kenaikan BB perlu ditinjau" : urgensiFor(warna),
         waktuISO: new Date().toISOString(),
+        perluTinjauGizi: meta.perluTinjauGizi,
       })
     }
   }
@@ -187,7 +190,7 @@ export default function SkriningPage({
   if (activeForm === "gizi") {
     return (
       <div className="space-y-4">
-        <GiziScreen onBack={() => setActiveForm(null)} onOpenProfile={() => { setActiveForm(null); setTab("profil") }} onSuccess={(r: any) => handleSuccess("gizi", { warna: (r as { warna: string }).warna, kategori: (r as { imtKat: string }).imtKat, extra: `${(r as { kenaikanAktual: number }).kenaikanAktual} kg, ${(r as { trajectory: string }).trajectory}` }, { tipeLabel: "Status Gizi", kategori: (r as { imtKat: string }).imtKat, skor: (r as { imt: number }).imt?.toFixed(1), skorLabel: `IMT ${(r as { imt: number }).imt?.toFixed(1)} · ${(r as { imtKat: string }).imtKat}`, faktorRisiko: (r as { warna: string }).warna === "HIJAU" ? [] : [`${(r as { imtKat: string }).imtKat}${(r as { lilaKat: string }).lilaKat === "KEK" ? " + KEK" : ""} · kenaikan ${(r as { trajectory: string }).trajectory}`], faktorAman: (r as { warna: string }).warna === "HIJAU" ? ["IMT dan LILA normal", `Kenaikan BB ${(r as { trajectory: string }).trajectory}`] : [] })} />
+        <GiziScreen onBack={() => setActiveForm(null)} onOpenProfile={() => { setActiveForm(null); setTab("profil") }} onSuccess={(r) => handleSuccess("gizi", { warna: r.warna, kategori: r.imtKat, extra: `${r.kenaikanAktual} kg, ${r.trajectory}`, perluTinjauGizi: needsGiziReview({ tipe: "imt_lila", kategori: r.warna, detail: { trajectory: r.trajectory } }) }, { tipeLabel: "Status Gizi", kategori: r.imtKat, skor: r.imt.toFixed(1), skorLabel: `IMT ${r.imt.toFixed(1)} · ${r.imtKat}`, faktorRisiko: r.warna === "HIJAU" && r.trajectory !== "lebih" ? [] : [`IMT ${r.imtKat}, LILA ${r.lilaKat}, kenaikan BB ${r.trajectory}`], faktorAman: r.warna === "HIJAU" && r.trajectory !== "lebih" ? [`IMT ${r.imtKat} dan LILA ${r.lilaKat}`, `Kenaikan BB ${r.kenaikanAktual} kg dinilai ${r.trajectory} oleh aplikasi`] : [`Kenaikan BB tercatat ${r.kenaikanAktual} kg`], perluTinjauGizi: needsGiziReview({ tipe: "imt_lila", kategori: r.warna, detail: { trajectory: r.trajectory } }) })} />
       </div>
     )
   }
@@ -273,6 +276,7 @@ export default function SkriningPage({
         rekomendasi={activeResult.rekomendasi}
         urgensiLabel={activeResult.urgensiLabel}
         waktuISO={activeResult.waktuISO}
+        perluTinjauGizi={activeResult.perluTinjauGizi}
         mapsQuery="Puskesmas atau Praktik Mandiri Bidan (PMB) terdekat"
         onUlangi={() => {
           const k = activeResult.tipeKey as ActiveForm
@@ -357,10 +361,10 @@ export default function SkriningPage({
                  ? "bg-[#FDECEC] text-[#C62828]"
                  : result.perluUlang
                    ? "bg-[#F7F2EB] text-[#545C59]"
-                 : result.warna === "KUNING"
+                  : result.perluTinjauGizi || result.warna === "KUNING"
                   ? "bg-[#FFF8EC] text-[#7A5F00]"
                   : "bg-[#EDF6EF] text-[#2E7D32]"
-             const statusText = !result ? "Belum" : result.warna === "MERAH" ? "Perlu rujuk" : result.perluUlang ? "Perlu cek ulang" : result.warna === "KUNING" ? "Waspada" : "Selesai"
+              const statusText = !result ? "Belum" : result.warna === "MERAH" ? "Perlu rujuk" : result.perluUlang ? "Perlu cek ulang" : result.perluTinjauGizi ? "Tinjau BB" : result.warna === "KUNING" ? "Waspada" : "Selesai"
             return (
               <button
                 key={item.key}

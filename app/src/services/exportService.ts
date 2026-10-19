@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf'
 import { db, type BirthPlan } from '@/data/db'
+import { needsGiziReview } from '@/features/skrining/giziReview'
 
 const C = {
   sage: [74, 110, 84] as [number, number, number],
@@ -94,7 +95,8 @@ export async function generateRingkasanPDF(userId: string): Promise<Blob> {
   if (!results.length) row('Status', 'Belum ada riwayat skrining')
   for (const result of results) {
     ensure(13)
-    const color = categoryColor(result.kategori)
+    const review = needsGiziReview(result)
+    const color = review ? C.yellow : categoryColor(result.kategori)
     doc.setFillColor(255, 255, 255)
     doc.setDrawColor(...C.border)
     doc.roundedRect(left, y, contentW, 11, 3, 3, 'FD')
@@ -113,8 +115,9 @@ export async function generateRingkasanPDF(userId: string): Promise<Blob> {
     doc.setTextColor(255, 255, 255)
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(6.5)
-    doc.text(result.kategori, right - 15.5, y + 6.5, { align: 'center' })
+    doc.text(review ? 'TINJAU BB' : result.kategori, right - 15.5, y + 6.5, { align: 'center' })
     y += 13
+    if (review) row('Catatan', 'Kenaikan BB lebih menurut perkiraan aplikasi. Kategori tersimpan HIJAU belum menilai apakah kenaikan ini aman. Konsultasikan dengan bidan atau dokter.')
   }
 
   section('Pemantauan')
