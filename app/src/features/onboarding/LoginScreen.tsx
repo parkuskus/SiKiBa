@@ -127,7 +127,7 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
       try {
         localStorage.removeItem("siaga_demo_user_id")
         if (data.user) localStorage.setItem("siaga_active_user_id", data.user.id)
-      } catch {}
+      } catch { /* Validasi login tetap berjalan tanpa storage lokal. */ }
       onSuccess()
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Kode salah atau kadaluarsa"

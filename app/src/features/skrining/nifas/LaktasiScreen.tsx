@@ -43,6 +43,7 @@ export default function LaktasiScreen({
     volumeASI: "Volume ASI", bbBayiTren: "Perubahan berat bayi", urin: "Warna urin", demam: "Demam",
   })
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Restore the user's saved lactation screening draft after Dexie loads it. */
   useEffect(() => {
     if (!draftLoading && detail) {
       setForm({
@@ -59,6 +60,7 @@ export default function LaktasiScreen({
       })
     }
   }, [draftLoading, detail])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handle = async () => {
     setErr(null)

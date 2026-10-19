@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import EdukasiMenuScreen from "./EdukasiMenuScreen"
 import FertilisasiScreen from "./FertilisasiScreen"
 import JaninWeekScreen from "./JaninWeekScreen"
@@ -8,9 +8,14 @@ import TandaBahayaScreen from "./TandaBahayaScreen"
 import PsikologiScreen from "./PsikologiScreen"
 import ImdScreen from "./ImdScreen"
 import TandaPersalinanScreen from "./TandaPersalinanScreen"
+import type { ResultEducationTopic } from "./resultTopics"
 
-export default function EdukasiPage({ onOpenSkriningMental, isPostpartum }: { onOpenSkriningMental: () => void; isPostpartum: boolean }) {
-  const [screen, setScreen] = useState<"menu" | "fertilisasi" | "janin" | "s06c" | "fisiologi" | "bahaya" | "psikologi" | "imd" | "persalinan">("menu")
+export default function EdukasiPage({ onOpenSkriningMental, isPostpartum, initialTopic = null, onTopicConsumed }: { onOpenSkriningMental: () => void; isPostpartum: boolean; initialTopic?: ResultEducationTopic | null; onTopicConsumed: () => void }) {
+  const [screen, setScreen] = useState<"menu" | "fertilisasi" | "janin" | "s06c" | "fisiologi" | "bahaya" | "psikologi" | "imd" | "persalinan">(() => initialTopic ?? "menu")
+
+  useEffect(() => {
+    if (initialTopic) onTopicConsumed()
+  }, [initialTopic, onTopicConsumed])
 
   if (screen === "fertilisasi") {
     return <FertilisasiScreen onBack={() => setScreen("menu")} />

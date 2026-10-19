@@ -70,9 +70,8 @@ async function fireOrQueue(table: string, op: Op, payload: Record<string, unknow
     if (error) {
       const failure = error as { code?: string; message?: string }
       if (['42501', '23503', 'PGRST301', '401', '403'].includes(failure.code ?? '') || /row-level|foreign key|JWT/i.test(failure.message ?? '')) {
-        await clearDurableQueue()
         console.warn('[sync] blocked by authorization')
-        return 'failed'
+        return await queued() ? 'queued' : 'failed'
       }
       const saved = await queued()
       console.warn('[sync] queued after sync error')
@@ -115,10 +114,8 @@ export async function flushSyncQueue(): Promise<number> {
       if (error) {
         const msg = String(error)
         if (msg.includes('violates row-level') || msg.includes('foreign key') || msg.includes('JWT')) {
-          // hapus biar tidak loop selamanya untuk data invalid auth
-          await db.syncQueue.delete(it.id!)
-          console.warn('[sync] dropped queue item blocked by authorization')
-          continue
+          console.warn('[sync] blocked by authorization; queued data retained')
+          break
         }
         // network error → stop, coba lagi next online
         break
@@ -153,7 +150,7 @@ export function syncProfile(p: { id: string; nama: string; email: string; tangga
 
 export function syncScreening(r: { id: string; userId: string; tipe: string; skor: number; kategori: string; detail: Record<string, unknown>; createdAt: string }) {
   void fireOrQueue('screening_results', 'insert', {
-    id: r.id, user_id: r.userId, tipe: r.tipe, skor: r.skor, kategori: r.kategori, detail: r.detail,
+    id: r.id, user_id: r.userId, tipe: r.tipe, skor: r.skor, kategori: r.kategori, detail: r.detail, created_at: r.createdAt,
   })
 }
 

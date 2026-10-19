@@ -9,13 +9,14 @@ import ScreeningValidationSheet, { ScreeningMarker } from "../components/Screeni
 import useScreeningValidation from "../components/useScreeningValidation"
 import { numericOrMissing } from "../components/screeningValidationUI"
 
-export default function DmgScreen({ onBack, onSuccess }: { onBack: () => void; onSuccess: (r: any) => void }) {
+export default function DmgScreen({ onBack, onSuccess }: { onBack: () => void; onSuccess: (r: Awaited<ReturnType<typeof submitDMG>>) => void }) {
   const { loading: draftLoading, userId, detail, profile } = useLatestScreeningDraft("dmg")
   const [form, setForm] = useState({ usia: "", bbPreKg: "", tbCm: "", ukMinggu: "", riwayatDMG: false, riwayatMakrosomia: false, riwayatDMKeluarga: false, glikosuria: null as boolean | null, pcos: false, etnisRisiko: false })
   const [faktorDitinjau, setFaktorDitinjau] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Restore the user's saved screening draft after Dexie loads it. */
   useEffect(() => {
     if (draftLoading) return
     if (detail) {
@@ -36,6 +37,7 @@ export default function DmgScreen({ onBack, onSuccess }: { onBack: () => void; o
     }
     setForm((current) => ({ ...current, usia: ageFromProfile(profile), ukMinggu: ukFromProfile(profile) }))
   }, [draftLoading, detail, profile])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const bbPreKg = Number(form.bbPreKg)
   const tbCm = Number(form.tbCm)

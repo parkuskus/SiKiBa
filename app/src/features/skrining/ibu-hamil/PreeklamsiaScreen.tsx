@@ -52,7 +52,7 @@ function RadioRow({ selected, label, onClick }: { selected: boolean; label: stri
   )
 }
 
-export default function PreeklamsiaScreen({ onBack, onSuccess }: { onBack: () => void; onSuccess: (r: any) => void }) {
+export default function PreeklamsiaScreen({ onBack, onSuccess }: { onBack: () => void; onSuccess: (r: Awaited<ReturnType<typeof submitPreeklamsia>>) => void }) {
   const { loading: draftLoading, userId, detail, profile } = useLatestScreeningDraft("preeklamsia")
   const [step, setStep] = useState<1 | 2>(1)
   const [sistolik, setSistolik] = useState("")
@@ -80,12 +80,16 @@ export default function PreeklamsiaScreen({ onBack, onSuccess }: { onBack: () =>
   const tekananTerisi = sistolik.trim() !== "" && diastolik.trim() !== "" && Number.isFinite(Number(sistolik)) && Number.isFinite(Number(diastolik))
   const tekananMerah = (sistolik.trim() !== "" && Number(sistolik) >= 160) || (diastolik.trim() !== "" && Number(diastolik) >= 110)
   const partialRed = tekananMerah || (tekananTerisi && (kategoriMAP(calcMAP(Number(sistolik), Number(diastolik))) === "MERAH" || (proteinuria === true && Number(ukMinggu) >= 20 && ukMinggu.trim() !== "" && kategoriTD(Number(sistolik), Number(diastolik)) !== "HIJAU")))
-  useEffect(() => { if (partialRed) { validation.setOpen(false); setEmergencyOpen(true) } }, [partialRed])
+  const { setOpen: setValidationOpen } = validation
+  /* eslint-disable react-hooks/set-state-in-effect -- A computed red flag must immediately open emergency guidance. */
+  useEffect(() => { if (partialRed) { setValidationOpen(false); setEmergencyOpen(true) } }, [partialRed, setValidationOpen])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const toggleRiwayat = (id: PECheck) => {
     setRiwayat((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
   }
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Restore fields from the saved screening or profile after Dexie loads. */
   useEffect(() => {
     if (draftLoading) return
     if (!detail) {
@@ -108,6 +112,7 @@ export default function PreeklamsiaScreen({ onBack, onSuccess }: { onBack: () =>
     setAnakPertama(detail.nullipara === true)
     setFaktorDitinjau(detail.validasiKelengkapan === 1 && detail.faktorDitinjau === true)
   }, [draftLoading, detail, profile])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const nextFrom1 = () => {
     setErr(null)

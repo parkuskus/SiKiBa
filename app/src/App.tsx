@@ -6,6 +6,8 @@ import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { supabase } from "@/data/supabase"
 import { db } from "@/data/db"
 import { getCurrentUserId } from "@/data/currentUser"
+import SyncStatusNotice from "@/features/sync/SyncStatusNotice"
+import type { ResultEducationTopic } from "@/features/edukasi/resultTopics"
 
 const BerandaPage = lazy(() => import("@/features/beranda/BerandaPage"))
 const SkriningPage = lazy(() => import("@/features/skrining/SkriningPage"))
@@ -28,33 +30,37 @@ export default function App() {
   const [showBirth, setShowBirth] = useState(false)
   const [showChat, setShowChat] = useState(false)
   const [openMentalFromEdu, setOpenMentalFromEdu] = useState(false)
+  const [educationTopic, setEducationTopic] = useState<ResultEducationTopic | null>(null)
   const [onboarding, setOnboarding] = useState<Onboarding>("splash")
   const [showBottomNav, setShowBottomNav] = useState(true)
 
   const enterApp = useCallback(() => {
-    try { localStorage.removeItem("siaga_logged_out") } catch {}
-    try { setIsPostpartum(localStorage.getItem("siaga_isPostpartum") === "true") } catch {}
+    try { localStorage.removeItem("siaga_logged_out") } catch { /* Lanjutkan masuk bila storage browser dibatasi. */ }
+    try { setIsPostpartum(localStorage.getItem("siaga_isPostpartum") === "true") } catch { /* Gunakan nilai awal bila storage browser dibatasi. */ }
     setOnboarding("app")
   }, [])
   const consumeMentalDeepLink = useCallback(() => setOpenMentalFromEdu(false), [])
+  const openEducationTopic = useCallback((topic: ResultEducationTopic) => {
+    setEducationTopic(topic)
+    setTab("edukasi")
+  }, [])
+  const consumeEducationTopic = useCallback(() => setEducationTopic(null), [])
 
   useEffect(() => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "INITIAL_SESSION" && session?.user) {
-        let demoMode = false
         try {
-          demoMode = localStorage.getItem("siaga_demo_user_id") === "demo-dummy"
-          if (!demoMode) {
+          if (localStorage.getItem("siaga_demo_user_id") !== "demo-dummy") {
             localStorage.removeItem("siaga_logged_out")
             localStorage.setItem("siaga_active_user_id", session.user.id)
           }
-        } catch {}
+        } catch { /* Sesi Auth tetap dapat dibuka tanpa localStorage. */ }
         setOnboarding("app")
       }
       if (event === "SIGNED_OUT") {
-        try { localStorage.setItem("siaga_logged_out", "true") } catch {}
+        try { localStorage.setItem("siaga_logged_out", "true") } catch { /* Auth tetap keluar meski penanda lokal gagal. */ }
         setOnboarding("splash")
       }
     })
@@ -63,7 +69,7 @@ export default function App() {
 
   // persist isPostpartum & cek 42 hari nifas selesai → buka kunci hamil lagi
   useEffect(() => {
-    try { localStorage.setItem("siaga_isPostpartum", String(isPostpartum)) } catch {}
+    try { localStorage.setItem("siaga_isPostpartum", String(isPostpartum)) } catch { /* Status tetap hidup di state aplikasi. */ }
   }, [isPostpartum])
 
   useEffect(() => {
@@ -76,7 +82,7 @@ export default function App() {
           // biarkan tetap postpartum sampai user konfirmasi, tapi Skrining akan unlock hamil
         }
       }
-    } catch {}
+    } catch { /* Profil lokal bisa tidak tersedia pada mode privat. */ }
   }, [isPostpartum])
 
   const uk = 28
@@ -106,6 +112,7 @@ export default function App() {
     <Suspense fallback={null}>
     <div className="min-h-[100dvh] bg-[#FFFCF6] text-[#2E3436]">
       <main className={`mx-auto max-w-[480px] px-4 pt-5 ${showBottomNav ? "pb-28" : "pb-0"}`}>
+        <SyncStatusNotice />
         <div className="w-full">
           {tab === "beranda" && (
             <BerandaPage
@@ -119,8 +126,8 @@ export default function App() {
               setShowBottomNav={setShowBottomNav}
             />
           )}
-          {tab === "skrining" && <SkriningPage setTab={setTab} setShowBirth={setShowBirth} isPostpartum={isPostpartum} setShowBottomNav={setShowBottomNav} initialForm={openMentalFromEdu ? "mental" : null} onInitialFormConsumed={consumeMentalDeepLink} />}
-          {tab === "edukasi" && <EdukasiPage isPostpartum={isPostpartum} onOpenSkriningMental={() => { if (isPostpartum) return; setOpenMentalFromEdu(true); setTab("skrining") }} />}
+          {tab === "skrining" && <SkriningPage setTab={setTab} setShowBirth={setShowBirth} isPostpartum={isPostpartum} setShowBottomNav={setShowBottomNav} initialForm={openMentalFromEdu ? "mental" : null} onInitialFormConsumed={consumeMentalDeepLink} onOpenEducationTopic={openEducationTopic} />}
+          {tab === "edukasi" && <EdukasiPage isPostpartum={isPostpartum} initialTopic={educationTopic} onTopicConsumed={consumeEducationTopic} onOpenSkriningMental={() => { if (isPostpartum) return; setOpenMentalFromEdu(true); setTab("skrining") }} />}
           {tab === "tracker" && <PengingatPage setShowBottomNav={setShowBottomNav} />}
           {tab === "profil" && <ProfilPage uk={uk} hplLabel={hplLabel} setShowBottomNav={setShowBottomNav} />}
         </div>
@@ -150,13 +157,13 @@ export default function App() {
         onOpenChange={setShowBirth}
         onSave={async ({ tanggal, jam, bb, pb }) => {
           const iso = new Date(`${tanggal}T${jam || "00:00"}`).toISOString()
-          try { localStorage.setItem("siaga_birth_date", iso) } catch {}
+          try { localStorage.setItem("siaga_birth_date", iso) } catch { /* Pencatatan lokal utama tetap dilanjutkan. */ }
           try {
             const uid = await getCurrentUserId()
             await db.bblProfiles.put({ id: uid, userId: uid, dataLahir: iso, apgar: undefined, usiaGestasi: undefined } as never)
             // simpan juga berat/panjang di detail jika ada field
             await db.nifasScreenings.put({ id: `birth-${Date.now()}`, userId: uid, hariKe: 0, parameterVital: { bb, pb, tanggal, jam }, status: "lahir", createdAt: iso } as never)
-          } catch {}
+          } catch { /* UI tetap dapat melanjutkan; kegagalan simpan tidak mengubah alur lama. */ }
           setIsPostpartum(true)
           setShowBirth(false)
           setTab("beranda")

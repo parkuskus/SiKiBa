@@ -50,5 +50,5 @@ export async function activateDemoAccount() {
     localStorage.setItem("siaga_isPostpartum", "false")
     localStorage.removeItem("siaga_birth_date")
     localStorage.removeItem("siaga_logged_out")
-  } catch {}
+  } catch { /* Mode demo tetap dapat dipakai tanpa storage browser. */ }
 }

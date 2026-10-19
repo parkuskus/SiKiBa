@@ -21,7 +21,7 @@ const GEJALA: { k: string; l: string; Icon: LucideIcon; tint?: boolean; hint?: s
   { k: "sesakNapas", l: "Sesak napas mendadak", Icon: Wind },
 ]
 
-export default function DangerSignScreen({ onBack, onSuccess }: { onBack: () => void; onSuccess: (r: any) => void }) {
+export default function DangerSignScreen({ onBack, onSuccess }: { onBack: () => void; onSuccess: (r: Awaited<ReturnType<typeof submitDangerSign>>) => void }) {
   const { loading: draftLoading, userId, detail } = useLatestScreeningDraft("danger_sign")
   const [form, setForm] = useState<Record<string, boolean | null>>({
     perdarahan: null,
@@ -43,8 +43,12 @@ export default function DangerSignScreen({ onBack, onSuccess }: { onBack: () => 
     nyeriKepalaSkala: nyeriSkala, tdTinggi,
   }, { ...Object.fromEntries(GEJALA.map((item) => [item.k, item.l])), nyeriKepalaSkala: "Skala nyeri kepala", tdTinggi: "Tekanan darah tinggi" })
   const redKnown = kategoriDanger({ ...Object.fromEntries(Object.entries(form).map(([key, value]) => [key, value === true])), nyeriKepalaHebat: (nyeriSkala ?? 0) >= 4, nyeriKepalaSkala: nyeriSkala ?? 0, tdTinggi: tdTinggi === true } as never) === "MERAH"
-  useEffect(() => { if (redKnown) { validation.setOpen(false); setEmergencyOpen(true) } }, [redKnown])
+  const { setOpen: setValidationOpen } = validation
+  /* eslint-disable react-hooks/set-state-in-effect -- A computed red flag must immediately open emergency guidance. */
+  useEffect(() => { if (redKnown) { setValidationOpen(false); setEmergencyOpen(true) } }, [redKnown, setValidationOpen])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Restore the user's saved screening draft after Dexie loads it. */
   useEffect(() => {
     if (!draftLoading && detail) {
       setForm({
@@ -61,6 +65,7 @@ export default function DangerSignScreen({ onBack, onSuccess }: { onBack: () => 
       setTdTinggi(typeof detail.tdTinggi === "boolean" ? detail.tdTinggi : null)
     }
   }, [draftLoading, detail])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const answer = (k: string, value: boolean) => {
     if (k === "nyeriKepalaHebat") {

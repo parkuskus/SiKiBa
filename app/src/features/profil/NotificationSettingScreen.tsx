@@ -12,7 +12,6 @@ export default function NotificationSettingScreen({ onBack }: { onBack: () => vo
   const [error, setError] = useState("")
 
   useEffect(() => {
-    if (supportsPush()) setNotifPerm(Notification.permission)
     void getCurrentUserId().then((id) => {
       setUserId(id)
       return isPushLinked(id)

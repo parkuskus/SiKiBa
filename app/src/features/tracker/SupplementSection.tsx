@@ -51,6 +51,7 @@ export default function SupplementSection({ onAdd }: { onAdd: () => void }) {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Reload the selected user's reminders from Dexie.
     void load()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected])

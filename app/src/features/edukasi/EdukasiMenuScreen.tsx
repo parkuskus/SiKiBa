@@ -54,7 +54,7 @@ export default function EdukasiMenuScreen({ onOpenFertilisasi, onOpenJanin, onOp
               <>
                 <span className={`grid h-[92px] place-items-center overflow-hidden rounded-[18px] ${index % 2 === 0 ? "bg-[#EAF4F0]" : "bg-[#FFF1E8]"}`}>
                   {thumbnail ? (
-                    <img src={thumbnail} alt="" aria-hidden="true" className="h-full w-full object-cover" />
+                    <img src={thumbnail} alt="" aria-hidden="true" loading="lazy" className="h-full w-full object-cover" />
                   ) : (
                     <Icon className="size-9 text-[#4A6E54]" strokeWidth={1.7} aria-hidden="true" />
                   )}

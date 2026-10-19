@@ -21,7 +21,7 @@ const QUESTIONS: { q: string; options: [string, string, string, string] }[] = [
   { q: "Pikiran untuk melukai diri sendiri telah terjadi pada saya", options: ["Tidak pernah", "Hanya sesekali", "Ya, cukup sering", "Ya, hampir setiap waktu"] },
 ]
 
-export default function MentalScreen({ onBack, onSuccess }: { onBack: () => void; onSuccess: (r: any) => void }) {
+export default function MentalScreen({ onBack, onSuccess }: { onBack: () => void; onSuccess: (r: Awaited<ReturnType<typeof submitMental>>) => void }) {
   const { loading: draftLoading, userId, detail } = useLatestScreeningDraft("epds")
   const [answers, setAnswers] = useState<(number | null)[]>(Array(10).fill(null))
   const [loading, setLoading] = useState(false)
@@ -30,12 +30,14 @@ export default function MentalScreen({ onBack, onSuccess }: { onBack: () => void
   const [attempted, setAttempted] = useState(false)
   const [validationOpen, setValidationOpen] = useState(false)
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Restore the saved EPDS answers and safety flag after Dexie loads them. */
   useEffect(() => {
     if (!draftLoading && Array.isArray(detail?.answers) && detail.answers.length === 10) {
       setAnswers(detail.answers.map((answer) => typeof answer === "number" ? answer : null))
       if (typeof detail.answers[9] === "number" && detail.answers[9] >= 1) setEmergencyOpen(true)
     }
   }, [draftLoading, detail])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const answered = answers.filter((a) => a !== null).length
   const errors = Object.fromEntries(answers.flatMap((answer, idx) => answer === null || !Number.isInteger(answer) || answer < 0 || answer > 3

@@ -7,6 +7,7 @@ export default function ProfileAvatar({ profile }: { profile: Profile | null }) 
   useEffect(() => {
     let cancelled = false
     let objectUrl = ""
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Clear the previous account's avatar before loading the new one.
     setUrl("")
     void (async () => {
       let blob = profile?.avatarBlob

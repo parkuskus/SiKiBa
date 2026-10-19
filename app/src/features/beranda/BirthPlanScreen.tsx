@@ -176,7 +176,7 @@ export default function BirthPlanScreen({ userId, readOnly = false, onClose }: P
     const task = saveChainRef.current.then(simpanTerbaru, simpanTerbaru)
     saveChainRef.current = task.then(() => undefined, () => undefined)
     return task
-  }, [readOnly, retrySync, userId])
+  }, [readOnly, userId])
 
   useEffect(() => {
     let active = true

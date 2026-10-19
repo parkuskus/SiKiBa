@@ -40,8 +40,12 @@ export default function IkterusScreen({
   const onset = form.onsetJam.trim() ? Number(form.onsetJam) : undefined
   const kramerRed = form.fesesDempul || (onset !== undefined && Number.isFinite(onset) && onset >= 0 && onset < 24) || (form.zona !== null && kategoriKramer({ zona: form.zona, onsetJam: onset ?? 24 }).warna === "MERAH")
   const partialRed = kramerRed || (form.prematur && form.zona === 3) || (form.aktivitas === "tidak mau minum" && (form.zona === 3 || (onset !== undefined && Number.isFinite(onset) && onset >= 0 && onset < 24)))
-  useEffect(() => { if (partialRed) { validation.setOpen(false); setEmergencyOpen(true) } }, [partialRed])
+  const { setOpen: setValidationOpen } = validation
+  /* eslint-disable react-hooks/set-state-in-effect -- A computed red flag must immediately open emergency guidance. */
+  useEffect(() => { if (partialRed) { setValidationOpen(false); setEmergencyOpen(true) } }, [partialRed, setValidationOpen])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Restore the user's saved screening draft after Dexie loads it. */
   useEffect(() => {
     if (!draftLoading && detail) {
       setGejalaDitinjau(detail.validasiKelengkapan === 1 && detail.gejalaDitinjau === true)
@@ -55,6 +59,7 @@ export default function IkterusScreen({
       })
     }
   }, [draftLoading, detail])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handle = async () => {
     setErr(null)

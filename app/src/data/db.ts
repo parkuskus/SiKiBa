@@ -1,4 +1,4 @@
-import Dexie, { type DBCore, type DBCoreCursor, type DBCoreTable, type DBCoreTransaction, type Middleware, type Table } from 'dexie'
+import Dexie, { type DBCore, type DBCoreCursor, type DBCoreTable, type DBCoreTransaction, type Table } from 'dexie'
 import { decryptJson, encryptJson, getOrCreateDeviceKey, loadDeviceKey, type EncryptedJson } from './crypto.ts'
 
 // ponytail: local mirror Supabase Postgres (ARCHITECTURE.md:91) — sync ke Supabase nanti, sekarang Dexie-only

@@ -121,6 +121,7 @@ export default function RiskFactorScreen({
   })
   const stage2Errors = stageAttempted ? { kompl: !kompl.length, kronik: !kronik.length } : { kompl: false, kronik: false }
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Restore fields from the saved screening or profile after Dexie loads. */
   useEffect(() => {
     if (draftLoading) return
     if (!detail) {
@@ -158,6 +159,7 @@ export default function RiskFactorScreen({
       setLegacyAnswersIncomplete(true)
     }
   }, [draftLoading, detail, profile])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const toggleKompl = (id: string) => {
     if (id === "pe") setRiwayatPE((value) => value === true ? false : true)

@@ -82,7 +82,7 @@ export async function enablePushNotifications(userId: string) {
   }, { onConflict: "endpoint" })
   if (error) throw error
   if (userId === DEMO_USER_ID) {
-    try { localStorage.setItem(DEMO_PUSH_OWNER_KEY, pushUserId) } catch {}
+    try { localStorage.setItem(DEMO_PUSH_OWNER_KEY, pushUserId) } catch { /* Push tetap aktif walau preferensi lokal gagal disimpan. */ }
   }
   // Existing local reminders also need their complete schedules on the server.
   const [medicines, visits, doses] = await Promise.all([
@@ -110,10 +110,13 @@ export async function disablePushNotifications() {
   const registration = await navigator.serviceWorker.getRegistration()
   const subscription = await registration?.pushManager.getSubscription()
   const { data: { session } } = await supabase.auth.getSession()
-  if (subscription && session) {
-    const { error } = await supabase.from("push_subscriptions").delete().eq("endpoint", subscription.endpoint).eq("user_id", session.user.id)
+  const deleteRemote = subscription && session
+    ? supabase.from("push_subscriptions").delete().eq("endpoint", subscription.endpoint).eq("user_id", session.user.id)
+    : null
+  if (subscription) await subscription.unsubscribe()
+  try { localStorage.removeItem(DEMO_PUSH_OWNER_KEY) } catch { /* Cleanup push tidak boleh menghalangi logout. */ }
+  if (deleteRemote) {
+    const { error } = await deleteRemote
     if (error) throw error
   }
-  if (subscription) await subscription.unsubscribe()
-  try { localStorage.removeItem(DEMO_PUSH_OWNER_KEY) } catch {}
 }

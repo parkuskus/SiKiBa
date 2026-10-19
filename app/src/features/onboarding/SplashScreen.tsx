@@ -25,7 +25,7 @@ export default function SplashScreen({ onDaftar, onMasuk, onAutoMasuk }: Props) 
     const timer = setTimeout(async () => {
       if (cancelled) return
       let loggedOut = false
-      try { loggedOut = localStorage.getItem("siaga_logged_out") === "true" } catch {}
+      try { loggedOut = localStorage.getItem("siaga_logged_out") === "true" } catch { /* Pakai alur splash standar tanpa storage browser. */ }
       if (loggedOut) {
         setPhase("action")
         return

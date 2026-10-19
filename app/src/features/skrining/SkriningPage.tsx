@@ -12,6 +12,8 @@ import LaktasiScreen from "@/features/skrining/nifas/LaktasiScreen"
 import IkterusScreen from "@/features/skrining/bbl/IkterusScreen"
 import HipotiroidScreen from "@/features/skrining/bbl/HipotiroidScreen"
 import SkriningResultScreen from "@/features/skrining/components/SkriningResultScreen"
+import { getEducationTopicForResult } from "@/features/edukasi/resultTopics"
+import type { ResultEducationTopic } from "@/features/edukasi/resultTopics"
 import { db } from "@/data/db"
 import { getCurrentUserId } from "@/data/currentUser"
 import { shareViaWA } from "@/services/exportService"
@@ -29,6 +31,7 @@ export default function SkriningPage({
   setShowBottomNav,
   initialForm = null,
   onInitialFormConsumed,
+  onOpenEducationTopic,
 }: {
   setTab: (t: "beranda" | "skrining" | "edukasi" | "tracker" | "profil") => void
   setShowBirth: (v: boolean) => void
@@ -36,6 +39,7 @@ export default function SkriningPage({
   setShowBottomNav: (v: boolean) => void
   initialForm?: ActiveForm
   onInitialFormConsumed?: () => void
+  onOpenEducationTopic: (topic: ResultEducationTopic) => void
 }) {
   const [skriningTab, setSkriningTab] = useState<SkriningTab>("hamil")
   const [activeForm, setActiveForm] = useState<ActiveForm>(initialForm)
@@ -76,6 +80,7 @@ export default function SkriningPage({
   const progressPct = totalForMode ? Math.round((doneCount / totalForMode) * 100) : 0
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Keep the active screening category consistent when postpartum mode changes.
     if (isNifasActive && skriningTab === "hamil") setSkriningTab("nifas")
   }, [isNifasActive, skriningTab])
 
@@ -118,7 +123,7 @@ export default function SkriningPage({
           }
           return latest
         })
-      } catch {}
+      } catch { /* Hasil terbaru tetap di state lokal sesi ini. */ }
     })()
   }, [])
 
@@ -172,7 +177,7 @@ export default function SkriningPage({
     try {
       const uid = await getCurrentUserId()
       await shareViaWA(uid)
-    } catch {}
+    } catch { /* Berbagi tidak wajib untuk meninjau hasil skrining. */ }
   }
 
 
@@ -197,28 +202,28 @@ export default function SkriningPage({
   if (activeForm === "danger") {
     return (
       <div className="space-y-4">
-        <DangerSignScreen onBack={() => setActiveForm(null)} onSuccess={(r: any) => handleSuccess("danger", { warna: (r as { kategori: string }).kategori }, { tipeLabel: "Tanda Bahaya Kehamilan", kategori: (r as { kategori: string }).kategori, faktorRisiko: (r as { faktorRisiko?: string[] }).faktorRisiko ?? [], faktorAman: (r as { faktorAman?: string[] }).faktorAman ?? [] })} />
+        <DangerSignScreen onBack={() => setActiveForm(null)} onSuccess={(r) => handleSuccess("danger", { warna: r.kategori }, { tipeLabel: "Tanda Bahaya Kehamilan", kategori: r.kategori, faktorRisiko: r.faktorRisiko, faktorAman: r.faktorAman })} />
       </div>
     )
   }
   if (activeForm === "preeklamsia") {
     return (
       <div className="space-y-4">
-        <PreeklamsiaScreen onBack={() => setActiveForm(null)} onSuccess={(r: any) => handleSuccess("preeklamsia", { warna: (r as { kategori: string }).kategori, extra: `MAP ${(r as { map: number }).map}` }, { tipeLabel: "Preeklamsia", kategori: (r as { kategori: string }).kategori, skor: (r as { map: number }).map, skorLabel: `MAP ${(r as { map: number }).map}`, faktorRisiko: (r as { faktorRisiko?: string[] }).faktorRisiko ?? [], faktorAman: (r as { faktorAman?: string[] }).faktorAman ?? [], rekomendasiTambahan: (r as { perluAspirin?: boolean }).perluAspirin ? ["Konsultasikan aspirin dosis rendah 75–150 mg ke dokter atau bidan (anjuran tenaga kesehatan bila usia kehamilan di bawah 16 minggu)"] : [] })} />
+        <PreeklamsiaScreen onBack={() => setActiveForm(null)} onSuccess={(r) => handleSuccess("preeklamsia", { warna: r.kategori, extra: `MAP ${r.map}` }, { tipeLabel: "Preeklamsia", kategori: r.kategori, skor: r.map, skorLabel: `MAP ${r.map}`, faktorRisiko: r.faktorRisiko, faktorAman: r.faktorAman, rekomendasiTambahan: r.perluAspirin ? ["Konsultasikan aspirin dosis rendah 75–150 mg ke dokter atau bidan (anjuran tenaga kesehatan bila usia kehamilan di bawah 16 minggu)"] : [] })} />
       </div>
     )
   }
   if (activeForm === "dmg") {
     return (
       <div className="space-y-4">
-        <DmgScreen onBack={() => setActiveForm(null)} onSuccess={(r: any) => handleSuccess("dmg", { warna: (r as { kategori: string }).kategori, extra: (r as { perluTTGO: boolean }).perluTTGO ? "Perlu TTGO" : "Tidak perlu TTGO" }, { tipeLabel: "Diabetes Gestasional", kategori: (r as { kategori: string }).kategori, faktorRisiko: (r as { faktorRisiko?: string[] }).faktorRisiko ?? [], faktorAman: (r as { faktorAman?: string[] }).faktorAman ?? [], rekomendasiTambahan: (r as { perluTTGO?: boolean }).perluTTGO ? ["Lakukan tes TTGO pada UK 24–28 minggu di fasyankes"] : [] })} />
+        <DmgScreen onBack={() => setActiveForm(null)} onSuccess={(r) => handleSuccess("dmg", { warna: r.kategori, extra: r.perluTTGO ? "Perlu TTGO" : "Tidak perlu TTGO" }, { tipeLabel: "Diabetes Gestasional", kategori: r.kategori, faktorRisiko: r.faktorRisiko, faktorAman: r.faktorAman, rekomendasiTambahan: r.perluTTGO ? ["Lakukan tes TTGO pada UK 24–28 minggu di fasyankes"] : [] })} />
       </div>
     )
   }
   if (activeForm === "mental") {
     return (
       <div className="space-y-4">
-        <MentalScreen onBack={() => setActiveForm(null)} onSuccess={(r: any) => handleSuccess("mental", { warna: (r as { kategori: string }).kategori, skor: (r as { total: number }).total }, { tipeLabel: "Kesehatan Mental (EPDS)", kategori: (r as { kategori: string }).kategori, skor: (r as { total: number }).total, skorLabel: `EPDS ${(r as { total: number }).total}`, faktorRisiko: (r as { kategori: string }).kategori !== "HIJAU" ? [`Skor EPDS ${(r as { total: number }).total} — ${(r as { kategori: string }).kategori}`] : [], faktorAman: (r as { kategori: string }).kategori === "HIJAU" ? ["Suasana hati dalam batas normal"] : [] })} />
+        <MentalScreen onBack={() => setActiveForm(null)} onSuccess={(r) => handleSuccess("mental", { warna: r.kategori, skor: r.total }, { tipeLabel: "Kesehatan Mental (EPDS)", kategori: r.kategori, skor: r.total, skorLabel: `EPDS ${r.total}`, faktorRisiko: r.kategori !== "HIJAU" ? [`Skor EPDS ${r.total} — ${r.kategori}`] : [], faktorAman: r.kategori === "HIJAU" ? ["Suasana hati dalam batas normal"] : [] })} />
       </div>
     )
   }
@@ -264,6 +269,7 @@ export default function SkriningPage({
   }
 
   if (activeResult) {
+    const relatedTopic = getEducationTopicForResult(activeResult.tipeKey)
     return (
       <SkriningResultScreen
         tipeLabel={activeResult.tipeLabel}
@@ -278,6 +284,7 @@ export default function SkriningPage({
         waktuISO={activeResult.waktuISO}
         perluTinjauGizi={activeResult.perluTinjauGizi}
         mapsQuery="Puskesmas atau Praktik Mandiri Bidan (PMB) terdekat"
+        onOpenEducation={relatedTopic ? () => onOpenEducationTopic(relatedTopic) : undefined}
         onUlangi={() => {
           const k = activeResult.tipeKey as ActiveForm
           setActiveResult(null)
@@ -335,15 +342,17 @@ export default function SkriningPage({
       </header>
 
       <section className="space-y-3.5 rounded-t-[32px] bg-[#FFFCF6] px-6 pb-6 pt-5">
-        <div className="flex w-full items-center">
+        <div className="flex w-full items-center" role="group" aria-label="Pilihan jenis skrining">
           {(["hamil", "nifas", "bbl"] as SkriningTab[]).map((t) => {
             const lockedHamil = isNifasActive && t === "hamil"
             return (
               <button
                 key={t}
+                type="button"
                 disabled={lockedHamil}
                 onClick={() => !lockedHamil && setSkriningTab(t)}
-                className={`min-h-9 flex-1 rounded-[20px] px-2 text-[13px] transition-colors ${skriningTab === t ? "bg-[#4A6E54] font-bold text-white" : "bg-[#EAF4F0] text-[#33443F]"} ${lockedHamil ? "cursor-not-allowed opacity-40" : ""}`}
+                aria-pressed={skriningTab === t}
+                className={`min-h-11 flex-1 rounded-[20px] px-2 text-[13px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1D2B29] ${skriningTab === t ? "bg-[#4A6E54] font-bold text-white" : "bg-[#EAF4F0] text-[#33443F]"} ${lockedHamil ? "cursor-not-allowed opacity-40" : ""}`}
                 title={lockedHamil ? "Terkunci selama masa nifas (42 hari)" : undefined}
               >
                 {t === "hamil" ? "Hamil" : t === "nifas" ? "Nifas" : "Bayi"}

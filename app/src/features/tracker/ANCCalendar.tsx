@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Bell, CalendarDays, Check } from "lucide-react"
+import { Bell, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DateInput } from "@/components/ui/date-input"

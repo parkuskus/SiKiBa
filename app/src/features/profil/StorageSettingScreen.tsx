@@ -12,10 +12,11 @@ export default function StorageSettingScreen({ onBack }: { onBack: () => void })
     try {
       if (navigator.storage?.persisted) setPersisted(await navigator.storage.persisted())
       if (navigator.storage?.estimate) setEstimate(await navigator.storage.estimate())
-    } catch {}
+    } catch { /* Estimasi storage tidak tersedia di semua browser. */ }
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Read browser storage estimates on entry; API results update asynchronously.
     void refreshStorage()
   }, [])
 
@@ -25,7 +26,7 @@ export default function StorageSettingScreen({ onBack }: { onBack: () => void })
         setPersisted(await navigator.storage.persist())
         await refreshStorage()
       }
-    } catch {}
+    } catch { /* Permintaan persist bersifat best-effort menurut browser. */ }
   }
 
   const handleClear = async () => {
@@ -94,7 +95,7 @@ export default function StorageSettingScreen({ onBack }: { onBack: () => void })
             <Trash2 className="size-4" />
             <h2 className="!m-0 text-sm font-bold">Hapus data lokal</h2>
           </div>
-          <p className="text-xs leading-relaxed text-[#6D2525]">Data pada ponsel ini akan dihapus. Data yang belum tersinkron ke Supabase dapat hilang.</p>
+      <p className="text-xs leading-relaxed text-[#6D2525]">Semua data SIAGA Bunda pada ponsel ini akan dihapus, termasuk data yang masih menunggu dikirim. Data yang belum tersimpan di akun tidak dapat dipulihkan dari Supabase.</p>
           <Button variant="outline" className="min-h-11 w-full rounded-full border-[#E57373] bg-white text-sm font-semibold text-[#C62828] hover:bg-[#FFF8F8]" disabled={clearing} onClick={() => void handleClear()}>
             <Trash2 className="size-4" /> {clearing ? "Menghapus" : "Hapus data lokal"}
           </Button>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Check, TriangleAlert, OctagonAlert, Share2, RotateCcw, Home } from "lucide-react"
+import { BookOpen, Check, TriangleAlert, OctagonAlert, Share2, RotateCcw, Home } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import EmergencyOverlay from "@/shared/components/EmergencyOverlay"
 
@@ -18,6 +18,7 @@ type Props = {
   waktuISO: string
   perluTinjauGizi?: boolean
   mapsQuery?: string
+  onOpenEducation?: () => void
   onUlangi: () => void
   onBeranda: () => void
   onBagikan: () => void
@@ -74,6 +75,7 @@ export default function SkriningResultScreen({
   waktuISO,
   perluTinjauGizi = false,
   mapsQuery,
+  onOpenEducation,
   onUlangi,
   onBeranda,
   onBagikan,
@@ -97,7 +99,7 @@ export default function SkriningResultScreen({
       if (typeof Notification !== "undefined" && Notification.permission === "granted") {
         new Notification("SIAGA Bunda: perlu rujukan segera", { body: `${tipeLabel} — ${kategori}. Segera ke fasyankes.` })
       }
-    } catch {}
+    } catch { /* Berbagi tetap opsional jika API browser tidak tersedia. */ }
   }, [warna, tipeLabel, kategori])
 
   return (
@@ -162,6 +164,11 @@ export default function SkriningResultScreen({
         <Button onClick={onBagikan} className="min-h-11 w-full rounded-full bg-[#FFE2E2] font-bold text-[#9D2553] hover:bg-[#FFCFCF]">
           <Share2 className="size-4" /> Bagikan ke Bidan
         </Button>
+        {onOpenEducation && (
+          <Button variant="outline" onClick={onOpenEducation} className="min-h-11 w-full rounded-full border-[#D9E7E2] bg-white font-bold text-[#33443F]">
+            <BookOpen className="size-4" /> Baca materi terkait
+          </Button>
+        )}
       </main>
 
       <div className="relative mx-auto mt-auto w-full max-w-[480px]">

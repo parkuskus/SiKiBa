@@ -38,6 +38,7 @@ export default function HipotiroidScreen({
     userId, ...form, usiaBayiHari: numericOrMissing(form.usiaBayiHari), gejalaDitinjau,
   }, { sudahTSH: "Pemeriksaan TSH", usiaBayiHari: "Usia bayi", gejala: "Gejala bayi", gejalaDitinjau: "Peninjauan gejala bayi" })
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Restore the user's saved screening draft after Dexie loads it. */
   useEffect(() => {
     if (!draftLoading && detail) {
       setGejalaDitinjau(detail.validasiKelengkapan === 1 && detail.gejalaDitinjau === true)
@@ -55,6 +56,7 @@ export default function HipotiroidScreen({
       })
     }
   }, [draftLoading, detail])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handle = async () => {
     setErr(null)

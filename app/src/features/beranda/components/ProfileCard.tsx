@@ -1,4 +1,4 @@
-import { Baby, CalendarDays } from "lucide-react"
+import { Baby } from "lucide-react"
 
 type Props = {
   isPostpartum: boolean

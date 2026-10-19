@@ -32,7 +32,7 @@ export default function TandaPersalinanScreen({ onBack }: { onBack: () => void }
           <ol className="mt-3 space-y-3">
             {tanda.map((item, index) => (
               <li key={item.judul} className="overflow-hidden rounded-[20px] bg-white ring-1 ring-[#D9E7E2]">
-                <img src={item.gambar} alt={item.alt} className="block h-auto w-full bg-transparent object-contain" />
+                <img src={item.gambar} alt={item.alt} loading="lazy" className="block h-auto w-full bg-transparent object-contain" />
                 <div className="flex items-start gap-3 p-4">
                   <span className="grid size-8 shrink-0 place-items-center rounded-full bg-[#4A6E54] text-sm font-bold text-white">{index + 1}</span>
                   <div><h3 className="text-sm font-bold text-[#1D2B29]">{item.judul}</h3><p className="mt-1.5 text-sm leading-relaxed text-[#33443F]">{item.isi}</p></div>

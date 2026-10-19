@@ -128,7 +128,7 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
           .select("id").eq("id", userId).maybeSingle()
         if (profileError) throw profileError
         if (existingProfile) {
-          try { localStorage.removeItem("siaga_demo_user_id") } catch {}
+          try { localStorage.removeItem("siaga_demo_user_id") } catch { /* Pendaftaran akun tetap lanjut tanpa storage browser. */ }
           onSuccess()
           return
         }
@@ -144,7 +144,7 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
           fasyankes: form.fasyankes,
           namaBidan: form.namaBidan,
         }, userId)
-        try { localStorage.removeItem("siaga_demo_user_id") } catch {}
+        try { localStorage.removeItem("siaga_demo_user_id") } catch { /* Pendaftaran akun tetap lanjut tanpa storage browser. */ }
         onSuccess()
         return
       } catch (e: unknown) {

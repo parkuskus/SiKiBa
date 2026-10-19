@@ -20,12 +20,6 @@ import MedForm from "@/features/tracker/MedForm"
 import type { WeightEntry, ANCVisit, DiaryEntry } from "@/data/db"
 
 const DEMO_HPHT = "2026-02-12"
-const SUPLEMEN_DEFAULT = [
-  { id: "Fe", nama: "Zat besi", jam: "19.00" },
-  { id: "Folat", nama: "Asam folat", jam: "07.30" },
-  { id: "Ca", nama: "Kalsium", jam: "12.00" },
-]
-
 export default function PengingatPage({ setShowBottomNav }: { setShowBottomNav: (visible: boolean) => void }) {
   const [weights, setWeights] = useState<WeightEntry[]>([])
   const [anc, setAnc] = useState<ANCVisit[]>([])
@@ -70,7 +64,7 @@ export default function PengingatPage({ setShowBottomNav }: { setShowBottomNav: 
       const d = gizi[0]?.detail as { bbPreKg?: number; tbCm?: number } | undefined
       if (d?.bbPreKg) { bbPreLok = d.bbPreKg; dariGizi = true }
       if (d?.tbCm) tbLok = d.tbCm
-    } catch {}
+    } catch { /* Pengingat lokal tetap berjalan tanpa data profil tersimpan. */ }
     const w = await db.weightEntries.where("userId").equals(id).toArray()
     w.sort((a, b) => a.tanggal.localeCompare(b.tanggal))
     if (!dariGizi && w.length) bbPreLok = w[0].beratKg
@@ -92,7 +86,7 @@ export default function PengingatPage({ setShowBottomNav }: { setShowBottomNav: 
         const kenaikan = Math.round((w[w.length - 1].beratKg - bbPreLok) * 10) / 10
         const targetProp = ((targetKg[0] + targetKg[1]) / 2) * (ukNow / 40)
         setBbStatus({ kenaikan, trajectory: kenaikan < targetProp - 1 ? "Kurang" : kenaikan > targetProp + 2 ? "Lebih" : "Normal" })
-      } catch {}
+      } catch { /* Data tracker opsional; jangan hentikan tampilan utama. */ }
     } else setBbStatus(null)
     const a = await reconcileANC(id, h)
     a.sort((x, y) => x.tanggalTerjadwal.localeCompare(y.tanggalTerjadwal))
@@ -103,6 +97,7 @@ export default function PengingatPage({ setShowBottomNav }: { setShowBottomNav: 
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Load Dexie-backed tracker state on screen entry.
     void load()
   }, [])
 
@@ -111,7 +106,7 @@ export default function PengingatPage({ setShowBottomNav }: { setShowBottomNav: 
     if (!v || v < 20 || v > 250) return
     try {
       localStorage.setItem("siaga_bb_target", String(v))
-    } catch {}
+    } catch { /* Penyimpanan target opsional; state layar tetap dipakai. */ }
     setTargetManual(v)
     setEditingTarget(false)
   }

@@ -60,10 +60,11 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp, setShowBotto
     try {
       const { data } = await supabase.auth.getSession()
       setVerified(!!data.session?.user)
-    } catch {}
+    } catch { /* Profil tetap dapat dibuka tanpa status jaringan Auth. */ }
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Load Dexie/Supabase-backed profile state on screen entry.
     void load()
   }, [])
 
@@ -102,13 +103,14 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp, setShowBotto
   const handleLogout = async () => {
     if (!window.confirm("Keluar dari akun? Data lokal tetap tersimpan di ponsel.")) return
     try {
-      await disablePushNotifications()
-      const { error } = await supabase.auth.signOut()
+      void disablePushNotifications().catch(() => undefined)
+      const { error } = await supabase.auth.signOut({ scope: "local" })
       if (error) throw error
       try {
         localStorage.removeItem("siaga_demo_user_id")
+        localStorage.removeItem("siaga_active_user_id")
         localStorage.setItem("siaga_logged_out", "true")
-      } catch {}
+      } catch { /* Logout tetap lokal meski penyimpanan browser gagal. */ }
       window.location.reload()
     } catch {
       alert("Gagal keluar. Periksa koneksi, lalu coba lagi.")

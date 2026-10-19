@@ -18,6 +18,7 @@ export default function GiziScreen({ onBack, onSuccess, onOpenProfile }: { onBac
   const [loading, setLoading] = useState(false)
   const [fieldErrs, setFieldErrs] = useState<Record<string, string>>({})
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Restore the user's saved screening draft after Dexie loads it. */
   useEffect(() => {
     if (draftLoading) return
     if (detail) {
@@ -32,6 +33,7 @@ export default function GiziScreen({ onBack, onSuccess, onOpenProfile }: { onBac
     }
     setForm((current) => ({ ...current, ukMinggu: ukFromProfile(profile) }))
   }, [draftLoading, detail, profile])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const bbPreKg = numericOrMissing(form.bbPreKg)
   const tbCm = numericOrMissing(form.tbCm)

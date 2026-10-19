@@ -58,8 +58,12 @@ export default function NifasScreen({
     perdarahanMl: vital(form.perdarahanMl),
     adaDemamNyeriUterus: (vital(form.suhu) ?? 0) > 38 && form.nyeriUterus && form.lochiaBau,
   }) === "MERAH"
-  useEffect(() => { if (partialRed) { validation.setOpen(false); setEmergencyOpen(true) } }, [partialRed])
+  const { setOpen: setValidationOpen } = validation
+  /* eslint-disable react-hooks/set-state-in-effect -- A computed red flag must immediately open emergency guidance. */
+  useEffect(() => { if (partialRed) { setValidationOpen(false); setEmergencyOpen(true) } }, [partialRed, setValidationOpen])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
+  /* eslint-disable react-hooks/set-state-in-effect -- Restore the user's saved postpartum screening draft after Dexie loads it. */
   useEffect(() => {
     if (!draftLoading && detail) {
       setKeluhanDitinjau(detail.validasiKelengkapan === 1 && detail.keluhanDitinjau === true)
@@ -81,6 +85,7 @@ export default function NifasScreen({
       }))
     }
   }, [draftLoading, detail])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handle = async () => {
     setErr(null)

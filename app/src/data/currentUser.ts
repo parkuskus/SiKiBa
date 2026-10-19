@@ -6,7 +6,7 @@ export async function getCurrentUserId(): Promise<string> {
   try {
     const demoId = localStorage.getItem("siaga_demo_user_id")
     if (demoId === "demo-dummy") return demoId
-  } catch {}
+  } catch { /* Coba sumber identitas berikutnya bila localStorage tidak tersedia. */ }
   try {
     const { data } = await supabase.auth.getSession()
     const uid = data.session?.user?.id
@@ -54,7 +54,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
           await db.profiles.put(merged)
           return merged
         }
-      } catch {}
+      } catch { /* Profil lokal tetap menjadi fallback. */ }
     }
     return p
   }

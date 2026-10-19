@@ -112,7 +112,7 @@ export default function BerandaPage({ uk: ukProp, progress: progressProp, countd
       error: () => { setMeds([]); setNextAncLabel(null) },
     })
     return () => subscription.unsubscribe()
-  }, [profile?.id, clock])
+  }, [profile, clock])
 
   const hpht = profile?.hpht?.trim() || ""
   const reminderCount = meds.reduce((sum, med) => sum + med.waktu.length, 0) + (nextAncLabel ? 1 : 0)
