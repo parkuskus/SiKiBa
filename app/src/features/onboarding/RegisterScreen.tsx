@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DateInput } from "@/components/ui/date-input"
 import { Label } from "@/components/ui/label"
-import { submitRegister, formatGPA } from "@/features/onboarding/registerForm"
+import { submitRegister } from "@/features/onboarding/registerForm"
 import { supabase } from "@/data/supabase"
 
 type Props = { onBack: () => void; onSuccess: () => void; onToLogin: () => void }
@@ -132,7 +132,7 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
           onSuccess()
           return
         }
-        const result = await submitRegister({
+        await submitRegister({
           nama: form.nama,
           email: emailForOtp,
           tanggalLahir: form.tanggalLahir,
@@ -145,7 +145,6 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
           namaBidan: form.namaBidan,
         }, userId)
         try { localStorage.removeItem("siaga_demo_user_id") } catch {}
-        console.log("[register] GPA", formatGPA(result.profile.gravida, result.profile.para, result.profile.abortus), "uid", userId)
         onSuccess()
         return
       } catch (e: unknown) {

@@ -156,8 +156,8 @@ serve(async (req) => {
 
     // User-scoped JWT + RLS; context excludes email, phone, full DOB, and contact details.
     const parallelStarted = performance.now();
-    const embeddingPromise = embed(message).catch((error) => {
-      console.warn("[chat] embedding skip:", error);
+    const embeddingPromise = embed(message).catch(() => {
+      console.warn("[chat] embedding unavailable");
       return null;
     });
     const [screeningResult, profileResult, nifasResult, babyResult, queryEmbedding] = await Promise.all([
@@ -206,7 +206,7 @@ serve(async (req) => {
         sources = [...new Set(contextChunks.map((chunk) => `${chunk.sumber_label ?? "Pedoman"} h.${chunk.sumber_halaman ?? "?"}`))];
         guideline = contextChunks.map((chunk) => `[${chunk.sumber_label ?? "Pedoman"} h.${chunk.sumber_halaman ?? "?"}]\n${chunk.teks}`).join("\n---\n").slice(0, 4000);
         verified = contextChunks.length > 0;
-      } catch (error) { console.warn("[chat] retrieval skip:", error); }
+      } catch { console.warn("[chat] retrieval unavailable"); }
     }
     const retrievalMs = Math.round(performance.now() - retrievalStarted);
 
@@ -289,19 +289,19 @@ serve(async (req) => {
           await supabase.from("chat_messages").insert([
             { user_id: user.id, role: "user", content: message },
             { user_id: user.id, role: "assistant", content: answer, sources },
-          ]).then(({ error }) => { if (error) console.warn("[chat] simpan skip:", error); });
+          ]).then(({ error }) => { if (error) console.warn("[chat] history save failed"); });
           console.info("[chat] timing_ms", { contextAndEmbedding: parallelMs, retrieval: retrievalMs, firstToken: firstTokenMs, completion: Math.round(performance.now() - completionStarted), total: Math.round(performance.now() - requestStarted) });
           send({ type: "done", answer, sources, verified, escalate, hasRedResult: adaMerah });
           controller.close();
-        } catch (error) {
-          console.error("[chat] streaming gagal", error);
+        } catch {
+          console.error("[chat] streaming failed");
           try { send({ type: "error", message: "stream gagal" }); controller.close(); } catch {}
         }
       },
     });
     return new Response(stream, { headers: { ...corsHeaders, "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no" } });
-  } catch (e) {
-    console.error("[chat]", e);
+  } catch {
+    console.error("[chat] request failed");
     return Response.json({ error: "chat gagal, coba lagi / hubungi bidan" }, { status: 500, headers: corsHeaders });
   }
 });

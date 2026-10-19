@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { ChevronRight, ClipboardList, Share2, Bell, Camera, Database, CircleHelp, Pencil, FileDown, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { db } from "@/data/db"
+import { db, deleteLocalAccountData } from "@/data/db"
 import { supabase } from "@/data/supabase"
 import { getCurrentProfile, getCurrentUserId } from "@/data/currentUser"
 import { weeksFromHpht, calcHPL } from "@/clinical-rules/ukHpl"
@@ -119,16 +119,19 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp, setShowBotto
     if (!window.confirm("Hapus akun? Semua data lokal di ponsel ini akan dihapus permanen dan Anda keluar.")) return
     if (!window.confirm("Yakin? Tindakan ini tidak dapat dibatalkan.")) return
     try {
-      await supabase.auth.signOut()
-    } catch {}
-    try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      if (sessionError || !session?.user) throw new Error("Sesi masuk tidak ditemukan")
+      const { error } = await supabase.functions.invoke("delete-account", { method: "POST" })
+      if (error) throw error
+      await deleteLocalAccountData(session.user.id)
+      await supabase.auth.signOut({ scope: "local" })
       for (const k of ["siaga_isPostpartum", "siaga_birth_date", "siaga_bb_target"]) localStorage.removeItem(k)
       localStorage.removeItem("siaga_demo_user_id")
-    } catch {}
-    try {
-      await db.delete()
-    } catch {}
-    window.location.reload()
+      localStorage.setItem("siaga_logged_out", "true")
+      window.location.reload()
+    } catch {
+      alert("Akun belum dapat dihapus. Data lokal tetap dipertahankan, coba lagi saat koneksi stabil.")
+    }
   }
 
   if (showNotif) return <NotificationSettingScreen onBack={() => setShowNotif(false)} />

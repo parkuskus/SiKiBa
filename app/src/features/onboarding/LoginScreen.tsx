@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react"
-import { ChevronLeft, ChevronRight, LogIn, Mail, ShieldCheck } from "lucide-react"
+import { ChevronLeft, LogIn, Mail, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { db } from "@/data/db"
 import { supabase } from "@/data/supabase"
 import { activateDemoAccount, DEMO_EMAIL, DEMO_OTP } from "@/features/onboarding/demoAccount"
+import { loginMode } from "@/features/onboarding/loginPolicy"
 import { disablePushNotifications } from "@/services/pushNotifications"
 
 type Props = { onBack: () => void; onSuccess: () => void; onToRegister: () => void }
@@ -56,30 +56,18 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
       else setErr("Alamat email tidak valid")
       return
     }
-    if (normalizedEmail === DEMO_EMAIL) {
+    const mode = loginMode(navigator.onLine, normalizedEmail === DEMO_EMAIL)
+    if (mode === "demo") {
       setEmailForOtp(DEMO_EMAIL)
       setOtp("")
       setResendCooldown(0)
       setStep("otp")
       return
     }
-    if (!navigator.onLine) {
-      if (resending) {
-        setOtpErr("Periksa koneksi internet, lalu coba kirim ulang.")
-        return
-      }
-      const profiles = await db.profiles.toArray()
-      const found = profiles.find((p) => p.email?.toLowerCase() === normalizedEmail)
-      if (!found) {
-        if (profiles.length === 0) setErr("Belum ada akun di ponsel ini. Silakan daftar terlebih dahulu.")
-        else setErr("Email tidak ditemukan. Periksa kembali atau daftar akun baru.")
-        return
-      }
-      try {
-        localStorage.removeItem("siaga_demo_user_id")
-        localStorage.setItem("siaga_active_user_id", found.id)
-      } catch {}
-      onSuccess()
+    if (mode === "offline") {
+      const message = "Koneksi internet diperlukan untuk masuk dengan email. Coba lagi setelah terhubung."
+      if (resending) setOtpErr(message)
+      else setErr(message)
       return
     }
     setLoading(true)
@@ -188,7 +176,7 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
               )
             })}
           </div>
-          {otpErr && <p className="text-center text-xs text-[#E57373]">{otpErr}</p>}
+          {otpErr && <p role="alert" className="text-center text-xs text-[#E57373]">{otpErr}</p>}
           <Button onClick={handleVerifyOtp} disabled={otpLoading} className="w-full rounded-full bg-[#4A6E54] px-4 py-5 mt-3 text-base font-bold text-white hover:bg-[#3D5C46]">
             {otpLoading ? "Memeriksa" : "Verifikasi"}
           </Button>
@@ -224,7 +212,7 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
             <p className="text-[13px] leading-normal text-[#33443F]">Masukkan e-mail terdaftar</p>
             <Input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="nama@email.com" aria-label="Email" className="h-12 rounded-2xl border-[#D9E7E2] bg-white px-3.5 text-sm mt-2" />
 
-            {err && <p className="text-xs text-[#E57373] text-center">{err}</p>}
+            {err && <p role="alert" className="text-xs text-[#E57373] text-center">{err}</p>}
 
             <Button onClick={handleRequestOtp} disabled={loading || resendCooldown > 0} className="w-full rounded-full bg-[#4A6E54] px-4 py-5 text-base font-bold text-white hover:bg-[#3D5C46]">
                 {loading ? "Mengirim kode" : resendCooldown > 0 ? `Tunggu ${resendCooldown} detik` : "Kirim Kode OTP"}

@@ -71,18 +71,18 @@ async function fireOrQueue(table: string, op: Op, payload: Record<string, unknow
       const failure = error as { code?: string; message?: string }
       if (['42501', '23503', 'PGRST301', '401', '403'].includes(failure.code ?? '') || /row-level|foreign key|JWT/i.test(failure.message ?? '')) {
         await clearDurableQueue()
-        console.warn('[sync] skip (auth):', error)
+        console.warn('[sync] blocked by authorization')
         return 'failed'
       }
       const saved = await queued()
-      console.warn('[sync] queued after error:', error)
+      console.warn('[sync] queued after sync error')
       return saved ? 'queued' : 'failed'
     }
     await clearDurableQueue()
     return 'synced'
-  } catch (e) {
+  } catch {
     const saved = await queued()
-    console.warn('[sync] queued offline:', e)
+    console.warn('[sync] queued after connection error')
     return saved ? 'queued' : 'failed'
   }
 }
@@ -117,7 +117,7 @@ export async function flushSyncQueue(): Promise<number> {
         if (msg.includes('violates row-level') || msg.includes('foreign key') || msg.includes('JWT')) {
           // hapus biar tidak loop selamanya untuk data invalid auth
           await db.syncQueue.delete(it.id!)
-          console.warn('[sync] drop (auth) queue id', it.id, error)
+          console.warn('[sync] dropped queue item blocked by authorization')
           continue
         }
         // network error → stop, coba lagi next online

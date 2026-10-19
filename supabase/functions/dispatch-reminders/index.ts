@@ -112,7 +112,7 @@ Deno.serve(async (request) => {
     return Response.json({ ok: true, sent });
   } catch (error) {
     const detail = error as { code?: string; message?: string };
-    console.error("[push] dispatch failed", { stage, code: detail?.code ?? "unknown", message: detail?.message ?? "unknown" });
+    console.error("[push] dispatch failed", { stage, code: detail?.code ?? "unknown" });
     return Response.json({ error: "Reminder dispatch failed", stage, code: detail?.code ?? "unknown", detail: detail?.message?.slice(0, 240) ?? "unknown" }, { status: 500 });
   }
 });

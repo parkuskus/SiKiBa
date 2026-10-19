@@ -88,9 +88,9 @@ export async function tanyaChatbot(pesan: string, history: ChatTurn[] = [], onDe
     if (!answer || berisiProsesInternal.test(answer)) throw new Error("respons chatbot tidak layak ditampilkan")
     if (berisiLabelKeamanan.test(answer)) return { answer: JAWABAN_KEAMANAN, sources: [], escalate: shouldEscalate(teks, data.hasRedResult === true), offline: false, verified: false }
     return { answer, sources: (data.sources as string[]) ?? [], escalate: shouldEscalate(teks, data.hasRedResult === true) || data.escalate === true, offline: false, verified: data.verified === true }
-  } catch (e) {
+  } catch {
     // online gagal (Edge Function belum deploy / belum login) -> fallback lokal biar UX tidak mati
-    console.warn("[kira] invoke chat gagal, pakai FAQ lokal:", e)
+    console.warn("[kira] layanan daring gagal, memakai FAQ lokal")
     const local = jawabOffline(teks)
     const hasRedResult = await adaHasilMerahLokal()
     return { answer: local.answer, sources: [], escalate: shouldEscalate(teks, hasRedResult), offline: true, verified: local.verified }
