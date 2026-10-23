@@ -104,6 +104,7 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp, setShowBotto
     if (!window.confirm("Keluar dari akun? Data lokal tetap tersimpan di ponsel.")) return
     try {
       void disablePushNotifications().catch(() => undefined)
+      try { await supabase.functions.invoke("mfa-revoke", { method: "POST" }) } catch { /* Local logout must proceed if the network is unavailable. */ }
       const { error } = await supabase.auth.signOut({ scope: "local" })
       if (error) throw error
       try {

@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react"
-import { ChevronRight, Mail } from "lucide-react"
+import { ChevronRight, Eye, EyeOff, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DateInput } from "@/components/ui/date-input"
 import { Label } from "@/components/ui/label"
 import { submitRegister } from "@/features/onboarding/registerForm"
 import { supabase } from "@/data/supabase"
+import { hasVerifiedMfaToken, maskEmail } from "@/features/onboarding/authFlow"
+import { validatePassword } from "@/features/onboarding/passwordPolicy"
 
 type Props = { onBack: () => void; onSuccess: () => void; onToLogin: () => void }
 
@@ -22,6 +24,10 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
     fasyankes: "",
     namaBidan: "",
   })
+  const [password, setPassword] = useState("")
+  const [passwordConfirm, setPasswordConfirm] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
   const [errs, setErrs] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
   const [globalErr, setGlobalErr] = useState<string | null>(null)
@@ -75,6 +81,13 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
     if (!form.hpht) tempErrs.hpht = "HPHT wajib"
     if (!form.fasyankes.trim()) tempErrs.fasyankes = "Fasyankes wajib"
     if (!form.namaBidan.trim()) tempErrs.namaBidan = "Nama bidan wajib"
+    if (!resending) {
+      const passwordError = validatePassword(password, passwordConfirm)
+      if (passwordError) {
+        if (password.length < 8) tempErrs.password = passwordError
+        else tempErrs.passwordConfirm = passwordError
+      }
+    }
     if (Object.keys(tempErrs).length) {
       setErrs(tempErrs)
       if (resending) setOtpErr("Periksa kembali data Bunda sebelum meminta kode baru.")
@@ -92,8 +105,17 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
     try {
       const normalizedEmail = form.email.trim().toLowerCase()
       setEmailForOtp(normalizedEmail)
-      const { error } = await supabase.auth.signInWithOtp({ email: normalizedEmail, options: { shouldCreateUser: true } })
-      if (error) throw error
+      if (resending) {
+        const { error } = await supabase.auth.resend({ type: "signup", email: normalizedEmail })
+        if (error) throw error
+      } else {
+        const { data, error } = await supabase.auth.signUp({ email: normalizedEmail, password })
+        if (error) throw error
+        if (data.session) {
+          await supabase.auth.signOut({ scope: "local" })
+          throw new Error("Konfirmasi email belum aktif. Hubungi pengelola SIAGA Bunda.")
+        }
+      }
       setDigits(["", "", "", "", "", ""])
       setStep("otp")
     } catch (e: unknown) {
@@ -102,6 +124,10 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
       if (resending) setOtpErr(message)
       else setGlobalErr(message)
     } finally {
+      if (!resending) {
+        setPassword("")
+        setPasswordConfirm("")
+      }
       setLoading(false)
     }
   }
@@ -119,9 +145,13 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
         const { data, error } = await supabase.auth.verifyOtp({
           email: emailForOtp,
           token: otpValue.trim(),
-          type: "email",
+          type: "signup",
         })
         if (error) throw error
+        if (!hasVerifiedMfaToken(data.session?.access_token)) {
+          await supabase.auth.signOut({ scope: "local" })
+          throw new Error("Verifikasi belum aman. Silakan masuk kembali.")
+        }
         const userId = data.user?.id ?? data.session?.user?.id
         if (!userId) throw new Error("Verifikasi berhasil tapi sesi tidak ditemukan")
         const { data: existingProfile, error: profileError } = await supabase.from("profiles")
@@ -176,7 +206,7 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
           </div>
         </div>
         <div className="mx-auto w-full max-w-[480px] flex-1 px-6 pb-6 -mt-6">
-          <p className="text-center text-[13px] text-[#33443F]">Kode 6 digit dikirim ke {emailForOtp}</p>
+          <p className="text-center text-[13px] text-[#33443F]">Kode 6 digit dikirim ke {maskEmail(emailForOtp)}</p>
           <div className="mt-4 rounded-[24px] bg-[#EAF4F0] p-4 space-y-4">
             <div className="flex items-center justify-center gap-2">
               {digits.map((d, i) => (
@@ -198,7 +228,7 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
                 />
               ))}
             </div>
-            {otpErr && <p className="text-xs text-[#E57373] text-center">{otpErr}</p>}
+            {otpErr && <p role="alert" className="text-xs text-[#E57373] text-center">{otpErr}</p>}
             <p className="text-center text-xs text-[#33443F]">Gunakan kode terbaru sebelum kedaluwarsa</p>
             <Button onClick={handleVerifyOtp} disabled={otpLoading} className="w-full rounded-full bg-[#4A6E54] hover:bg-[#3D5C46] py-3.5 text-sm font-semibold text-white">
               {otpLoading ? "Memeriksa" : "Verifikasi"}
@@ -242,6 +272,29 @@ export default function RegisterScreen({ onBack, onSuccess, onToLogin }: Props) 
             <Label className="text-xs text-[#33443F]">Email</Label>
             <Input type="email" autoComplete="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="nama@email.com" className="rounded-2xl bg-white" />
             {errs.email && <p className="text-xs text-[#E57373]">{errs.email}</p>}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="register-password" className="text-xs text-[#33443F]">Sandi</Label>
+            <div className="relative">
+              <Input id="register-password" type={showPassword ? "text" : "password"} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-12 rounded-2xl bg-white pr-12" />
+              <button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Sembunyikan sandi" : "Tampilkan sandi"} className="absolute inset-y-0 right-0 grid w-12 place-items-center text-[#4A6E54]">
+                {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+              </button>
+            </div>
+            <p className="text-xs text-[#52645D]">Minimal 8 karakter</p>
+            {errs.password && <p role="alert" className="text-xs text-[#E57373]">{errs.password}</p>}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="register-password-confirm" className="text-xs text-[#33443F]">Ulangi sandi</Label>
+            <div className="relative">
+              <Input id="register-password-confirm" type={showPasswordConfirm ? "text" : "password"} autoComplete="new-password" value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)} className="h-12 rounded-2xl bg-white pr-12" />
+              <button type="button" onClick={() => setShowPasswordConfirm((value) => !value)} aria-label={showPasswordConfirm ? "Sembunyikan sandi" : "Tampilkan sandi"} className="absolute inset-y-0 right-0 grid w-12 place-items-center text-[#4A6E54]">
+                {showPasswordConfirm ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+              </button>
+            </div>
+            {errs.passwordConfirm && <p role="alert" className="text-xs text-[#E57373]">{errs.passwordConfirm}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-3">

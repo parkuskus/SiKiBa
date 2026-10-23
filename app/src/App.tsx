@@ -4,6 +4,7 @@ import BottomNav from "@/shared/components/layout/BottomNav"
 import BirthDialog from "@/shared/components/layout/BirthDialog"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { supabase } from "@/data/supabase"
+import { hasVerifiedMfaToken } from "@/features/onboarding/authFlow"
 import { db } from "@/data/db"
 import { getCurrentUserId } from "@/data/currentUser"
 import SyncStatusNotice from "@/features/sync/SyncStatusNotice"
@@ -18,9 +19,10 @@ const ChatbotPage = lazy(() => import("@/features/chatbot/ChatbotPage"))
 const SplashScreen = lazy(() => import("@/features/onboarding/SplashScreen"))
 const RegisterScreen = lazy(() => import("@/features/onboarding/RegisterScreen"))
 const LoginScreen = lazy(() => import("@/features/onboarding/LoginScreen"))
+const PasswordResetScreen = lazy(() => import("@/features/onboarding/PasswordResetScreen"))
 
 type Tab = "beranda" | "skrining" | "edukasi" | "tracker" | "profil"
-type Onboarding = "splash" | "register" | "login" | "app"
+type Onboarding = "splash" | "register" | "login" | "reset-password" | "app"
 
 export default function App() {
   const [tab, setTab] = useState<Tab>(() => new URLSearchParams(window.location.search).get("tab") === "tracker" ? "tracker" : "beranda")
@@ -50,7 +52,21 @@ export default function App() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "INITIAL_SESSION" && session?.user) {
+      if (event === "PASSWORD_RECOVERY") {
+        setOnboarding("reset-password")
+        return
+      }
+      if ((event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") && session?.user) {
+        if (event === "INITIAL_SESSION" && new URLSearchParams(window.location.hash.slice(1)).get("type") === "recovery") {
+          setOnboarding("reset-password")
+          return
+        }
+        if (!hasVerifiedMfaToken(session.access_token)) {
+          try { localStorage.setItem("siaga_logged_out", "true") } catch { /* RLS tetap menolak sesi tanpa MFA. */ }
+          setOnboarding("splash")
+          queueMicrotask(() => { void supabase.auth.signOut({ scope: "local" }) })
+          return
+        }
         try {
           if (localStorage.getItem("siaga_demo_user_id") !== "demo-dummy") {
             localStorage.removeItem("siaga_logged_out")
@@ -106,6 +122,9 @@ export default function App() {
   }
   if (onboarding === "login") {
     return <Suspense fallback={null}><LoginScreen onBack={() => setOnboarding("splash")} onSuccess={enterApp} onToRegister={() => setOnboarding("register")} /></Suspense>
+  }
+  if (onboarding === "reset-password") {
+    return <Suspense fallback={null}><PasswordResetScreen onBack={() => setOnboarding("login")} /></Suspense>
   }
 
   return (

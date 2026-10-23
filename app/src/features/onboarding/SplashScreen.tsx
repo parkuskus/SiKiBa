@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react"
-import { db } from "@/data/db"
 
 type Props = {
   onDaftar: () => void
@@ -31,13 +30,12 @@ export default function SplashScreen({ onDaftar, onMasuk, onAutoMasuk }: Props) 
         return
       }
       try {
-        const count = await db.profiles.count()
-        if (count > 0 && !cancelled) {
+        if (localStorage.getItem("siaga_demo_user_id") === "demo-dummy" && !cancelled) {
           onAutoMasuk()
           return
         }
       } catch {
-        // Dexie gagal, tetap tampilkan aksi
+        // Tanpa penanda demo tepercaya, minta pengguna masuk lagi.
       }
       if (!cancelled) setPhase("action")
     }, 2200)

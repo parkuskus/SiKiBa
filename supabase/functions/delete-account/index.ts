@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.112.4";
+import { hasMfaClaim } from "../_shared/emailMfa.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,6 +31,8 @@ serve(async (request) => {
   const authClient = createClient(url, anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data: { user }, error: authError } = await authClient.auth.getUser(token);
   if (authError || !user) return response(401, { error: "unauthorized" });
+  const { data: { claims }, error: claimsError } = await authClient.auth.getClaims(token);
+  if (claimsError || !hasMfaClaim(claims)) return response(403, { error: "mfa_required" });
 
   const admin = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
   const bucket = admin.storage.from("profile-avatars");

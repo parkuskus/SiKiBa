@@ -6,6 +6,7 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.112.4";
 import { quickChatReply, retrievalTerms, shouldEscalate } from "../_shared/chatPolicy.ts";
+import { hasMfaClaim } from "../_shared/emailMfa.ts";
 
 const LLM_BASE_URL = Deno.env.get("LLM_BASE_URL") ?? "https://api.openai.com/v1";
 const LLM_API_KEY = Deno.env.get("LLM_API_KEY") ?? "";
@@ -132,13 +133,17 @@ serve(async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405, headers: corsHeaders });
   try {
     const requestStarted = performance.now();
+    const accessToken = req.headers.get("Authorization")?.match(/^Bearer\s+([^\s]+)$/i)?.[1];
+    if (!accessToken) return Response.json({ error: "unauthorized" }, { status: 401, headers: corsHeaders });
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: req.headers.get("Authorization")! } } },
+      { auth: { persistSession: false, autoRefreshToken: false } },
     );
-    const { data: { user }, error: authErr } = await supabase.auth.getUser();
+    const { data: { user }, error: authErr } = await supabase.auth.getUser(accessToken);
     if (authErr || !user) return Response.json({ error: "unauthorized" }, { status: 401, headers: corsHeaders });
+    const { data: { claims }, error: claimsErr } = await supabase.auth.getClaims(accessToken);
+    if (claimsErr || !hasMfaClaim(claims)) return Response.json({ error: "mfa_required" }, { status: 403, headers: corsHeaders });
 
     const body = await req.json() as { message: string; history?: unknown };
     const message = body.message;

@@ -2,9 +2,10 @@
 
 Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT.md` dan `SiKiBa_Spesifikasi_Storyboard_Prototype.md`; aturan visual mengacu ke `DESIGN.md`.
 
-## Status saat ini — 2026-10-11
+## Status saat ini — 2026-10-23
 
 ### Sudah diselesaikan
+- [x] Login sandi + OTP email (2026-10-23): password dikelola Supabase Auth; signup/recovery UI, login OTP faktor kedua via Edge Functions, hook klaim sesi, deny-by-default RLS/storage, logout revoke best-effort, dan Dummy lokal dengan sandi/kode demo. Migration 015, test OTP/RLS, Auth password-hash lokal, serta 31 test Node, lint, dan build lulus. `.gitignore` mengabaikan seluruh folder `node_modules` rekursif; tidak ada dependency folder tracked.
 - [x] Tindak lanjut Menengah 1–3 (2026-10-20): status offline/antrean akun aktif dan coba ulang ditambahkan; kegagalan otorisasi tidak menghapus queue; dialog hapus lokal menjelaskan risiko data belum terkirim. Target sentuh/fokus pada Riwayat dan pilihan skrining diperbaiki, gambar edukasi di bawah layar lazy-load, dan hasil yang punya materi langsung relevan membuka KIE yang ada. Batas uji perangkat/pembaca layar dan topik tanpa materi dicatat di evaluasi media.
 - [x] Tindak lanjut Tinggi 1–3 (2026-10-19, parsial aman): riwayat skrining dapat membuka input/indikator yang tersimpan, usia kehamilan historis tidak direkonstruksi dari profil terbaru, dan waktu asli dipertahankan pada sync offline. Logout lokal tak lagi bergantung pada jaringan dan cleanup push best-effort. Hasil sudah memuat alasan, langkah, batasan skrining, berbagi, serta overlay MERAH. Detail dan penghambat pakar/QA dicatat di `docs/EVALUASI_AHLI_MEDIA_DEASY_2026-10-18.md`.
 - [x] Uji cloud pasca-migration cascade (2026-10-19): FK `profiles → auth.users` dan `screening_results → profiles` terverifikasi `ON DELETE CASCADE`; salah satu FK historis screening ternyata `NO ACTION`, lalu diperbaiki oleh migration 014. Fungsi ter-deploy diuji end-to-end dengan akun disposable, profil/skrining/berat/reminder sintetis dan avatar. Auth menjadi `user_not_found`, hitungan SQL seluruh row sintetis menjadi 0, avatar tersisa 0. Akun A/B dipertahankan.
@@ -98,6 +99,7 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 - [x] Panduan rilis Android ke Google Play Store via TWA/Bubblewrap ditambahkan di `docs/DEPLOY_PLAY_STORE.md` (2026-10-06); implementasi paket Android dan submission masih pekerjaan lanjutan.
 
 ### Belum diselesaikan / menunggu QA atau konfirmasi
+- [ ] **Rilis login MFA (preflight 2026-10-23):** project production tertaut aktif (`sepindjvfvzxchesrtct`), migration remote masih sampai 014, Custom Access Token Hook belum aktif, secret Resend/HMAC belum ada, function MFA belum di-deploy, dan URL recovery production belum diketahui (`Site URL` remote masih localhost). Auth email confirmation aktif; SMTP remote saat ini Gmail. Jangan `supabase config push`: ada drift konfigurasi Auth/SMTP/rate limit lain. Minta domain frontend final dan secret/sender dari pemilik, lalu deploy migration/hook/functions/frontend dalam maintenance window dan uji akun sintetis.
 - [ ] S-06: materi P4K sudah tersedia sebagai form di Beranda sesuai revisi layout, bukan tile edukasi. Tinjau kecocokan tanda bahaya yang belum memiliki video relevan pada S-06e; materi nifas dan laktasi diarahkan ke S-04/S-04a.
 - [ ] QA sinkronisasi Birth Plan dari browser/perangkat akun pelapor, khususnya jumlah estimasi dana lokal vs cloud, nol/kosong, antre offline dan retry, konflik perangkat/cloud, pemulihan lintas perangkat, serta mode hamil/nifas. Implementasi antre durable, indikator, retry, dan perlindungan konflik tersedia; uji runtime akun pelapor belum dilakukan.
 - [ ] QA kalender ANC di perangkat: pindahkan tanggal, refresh/offline, pastikan status/catatan tidak hilang, lalu uji push ANC H-2/H-1 memakai tanggal hasil edit.
@@ -117,13 +119,12 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 ## Catatan teknis
 - Dexie adalah penyimpanan lokal/offline; Supabase Postgres adalah sumber data cloud dengan RLS per pengguna.
 - `app/src/data/crypto.ts` masih stub/plaintext; enkripsi data kesehatan yang direncanakan di `ARCHITECTURE.md` belum diterapkan.
-- Belum ada test suite formal. Gerbang verifikasi proyek adalah `cd app && npm run build`; cek kecil tersedia di `scripts/check-profile-reminders.mjs`, `scripts/check-screening-draft.mjs`, `scripts/check-birth-plan.mjs`, `scripts/check-anc-schedule.mjs`, dan `scripts/check-chat-policy.mjs`. Smoke RAG aktual tersedia di `scripts/check-chat-retrieval.py` dan memanggil embedding API.
+- Build adalah gerbang verifikasi frontend (`cd app && npm run build`); tes Node terarah tersedia untuk MFA/onboarding, dan cek domain ada di `scripts/` serta `supabase/tests/`. Smoke RAG aktual tersedia di `scripts/check-chat-retrieval.py` dan memanggil embedding API.
 - Build berhasil tanpa peringatan ukuran chunk atau dynamic import setelah layar utama dipecah menjadi lazy chunks.
 - Data beranda di `app/src/App.tsx` masih memiliki nilai default UK/progress/countdown/HPL; pastikan nilai yang tampil selalu berasal dari profil sebelum rilis.
 - Konten edukasi, validasi klinis, dan persetujuan etik bergantung pada stakeholder/peneliti.
 
 ## Urutan kerja berikutnya
-1. QA sinkronisasi Birth Plan dari aplikasi pada akun uji, termasuk antrean offline, pemulihan cloud, konflik dua versi, PDF, dan mode kehamilan/nifas.
-2. Tinjau kecocokan video tanda bahaya pada S-06e; materi P4K sudah berupa form di Beranda sesuai layout saat ini.
-3. Lanjutkan QA lintas perangkat, validasi klinis, dan proses Ethical Clearance/UAT.
-4. Siapkan deployment produksi dan distribusi yang dipilih.
+1. Siapkan konfigurasi/deploy dan QA production untuk login sandi + OTP email sebelum mengaktifkan frontend baru.
+2. QA sinkronisasi Birth Plan pada akun uji, termasuk antrean offline, pemulihan cloud, konflik dua versi, PDF, dan mode kehamilan/nifas.
+3. Tinjau kecocokan video tanda bahaya pada S-06e; lanjutkan QA lintas perangkat, validasi klinis, Ethical Clearance/UAT, dan distribusi.

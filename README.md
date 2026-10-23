@@ -5,7 +5,7 @@ PWA skrining kesehatan ibu hamil, ibu nifas & bayi baru lahir (PDUPT Poltekkes B
 ```
 app/         Frontend Vite+React+TS (PWA). Jalankan dari sini: npm run dev
 app/src/     Kode aplikasi (features/, clinical-rules/, data/, shared/)
-supabase/    Migrations + Edge Functions (chat RAG)
+supabase/    Migrations + Edge Functions (chat RAG and email MFA)
 scripts/     Util Python (ingest-guideline.py → guideline_chunks)
 docs/        Dokumentasi produk & arsitektur (di-track git)
 assets/      File binary desain/PDF (lokal saja, di-ignore)
@@ -77,9 +77,31 @@ npx supabase functions deploy chat
 
 Deploy ulang function hanya ketika kode di `supabase/functions/chat/` berubah. Perubahan frontend saja tidak memerlukan deploy ulang function atau database.
 
-### 4. Aktifkan OTP email
+### 4. Aktifkan login sandi dan OTP email
 
-Di Supabase Dashboard, aktifkan **Authentication → Sign In / Providers → Email**, **Allow new users to sign up**, dan **Confirm email**. Aktifkan Custom SMTP untuk pengiriman produksi. Pada **Authentication → Emails**, gunakan `{{ .Token }}` pada template **Confirm signup** untuk pengguna baru dan **Magic link or OTP** untuk pengguna yang masuk. Template HTML tersedia di `docs/email-template-confirm-signup.html` dan `docs/email-template-otp.html`. Subject yang disarankan adalah `Kode daftar SIAGA Bunda` dan `Kode masuk SIAGA Bunda`. Aplikasi memverifikasi kode dengan Supabase Auth, membuat profil memakai ID Auth pengguna, dan tidak menimpa profil jika email sudah terdaftar. Pendaftaran akun baru memerlukan koneksi internet agar email OTP dapat dikirim.
+Login akun menggunakan sandi Supabase Auth lalu OTP faktor kedua melalui Resend. Pendaftaran memakai OTP konfirmasi email Supabase. Di Supabase Dashboard aktifkan **Email signups** dan **Confirm email**, lalu atur Custom SMTP/template **Confirm signup** agar memakai `{{ .Token }}`. Recovery password harus diarahkan kembali ke domain aplikasi yang terdaftar pada **Authentication → URL Configuration**.
+
+Sebelum mengaktifkan login di production:
+
+1. Pastikan domain production frontend sudah final. Atur **Authentication → URL Configuration**: `Site URL` ke domain itu dan tambahkan origin production ke **Redirect URLs**. Recovery menggunakan origin aktif browser.
+2. Tinjau migration `015_email_mfa.sql` dan siapkan backup serta maintenance window. Migration ini mengunci sesi lama sampai pengguna login ulang dan memperoleh klaim MFA.
+3. Simpan `RESEND_API_KEY`, `RESEND_FROM_EMAIL` dari sender domain Resend yang terverifikasi, dan `MFA_OTP_HMAC_SECRET` acak minimal 32 karakter sebagai Supabase Edge Function Secrets. Jangan commit file env atau bagikan nilainya.
+4. Deploy function `mfa-start`, `mfa-verify`, `mfa-revoke`, `chat`, dan `delete-account` sebelum migration. Pertahankan verifikasi JWT aktif pada semua function tersebut:
+
+   ```bash
+   npx supabase functions deploy mfa-start
+   npx supabase functions deploy mfa-verify
+   npx supabase functions deploy mfa-revoke
+   npx supabase functions deploy chat
+   npx supabase functions deploy delete-account
+   ```
+
+5. Dalam maintenance window, terapkan migration `015_email_mfa.sql`, lalu segera aktifkan **Authentication → Hooks → Custom Access Token** ke `public.custom_access_token_hook` (URI `pg-functions://postgres/public/custom_access_token_hook`). Jangan aktifkan hook sebelum function database tersedia.
+6. Deploy frontend baru. Uji akun sintetis untuk signup, sandi salah/benar, OTP, refresh, recovery, logout, RLS, dan avatar sebelum membuka akses pengguna.
+
+Jangan jalankan `npx supabase config push` hanya untuk mengaktifkan hook: konfigurasi lokal juga memuat perbedaan project lain yang dapat mengubah pengaturan Auth/SMTP/rate limit yang sudah berjalan. Terapkan hook khusus lewat Dashboard dan tinjau semua drift secara terpisah.
+
+Sandi hanya dikelola Supabase Auth. Klaim MFA dan RLS deny-by-default melindungi tabel pengguna, avatar, chatbot, serta hapus akun. Pemulihan sandi tetap tanpa akses data sampai login sandi + OTP dilakukan kembali. OTP production belum siap sebelum sender, secret, hook, migration, dan pengiriman ke inbox uji terverifikasi.
 
 ### 5. Akun uji
 
@@ -90,6 +112,7 @@ Untuk menguji UI, skrining, tracker, notifikasi di lonceng, foto profil lokal, d
 | Isian      | Nilai                                  |
 | ---------- | -------------------------------------- |
 | Email      | `dummy@siagabunda.test`                |
+| Sandi demo | `SIAGA-Dummy-2026!`                    |
 | Kode demo  | `246810`                               |
 | Nama       | Dummy                                  |
 | Usia       | 26 tahun                               |
@@ -97,7 +120,7 @@ Untuk menguji UI, skrining, tracker, notifikasi di lonceng, foto profil lokal, d
 | Fasyankes  | Puskesmas Uji SIAGA                    |
 | Pendamping | Bidan Dummy                            |
 
-Email ini khusus demo; tidak ada email yang dikirim. Profil lengkap dibuat otomatis pada perangkat, termasuk tanggal lahir, nomor telepon contoh, dan HPHT. Data Dummy terpisah dari akun riil dan tidak dikirim ke Supabase. Foto Dummy disimpan lokal, chatbot memakai FAQ, dan data testing tersimpan di perangkat masing-masing. **Push server dan upload foto cloud diuji memakai akun Supabase terverifikasi**, bukan kode demo. Kode tetap ini hanya berlaku untuk Dummy; OTP akun lainnya tetap diverifikasi Supabase.
+Email ini khusus demo; tidak ada email atau request Auth yang dikirim. Profil lengkap dibuat otomatis pada perangkat, termasuk tanggal lahir, nomor telepon contoh, dan HPHT. Data Dummy terpisah dari akun riil dan tidak dikirim ke Supabase. Foto Dummy disimpan lokal, chatbot memakai FAQ, dan data testing tersimpan di perangkat masing-masing. **Push server dan upload foto cloud diuji memakai akun Supabase terverifikasi**, bukan kode demo. Sandi dan OTP tetap ini hanya untuk Dummy; akun lainnya memakai sandi Supabase Auth dan OTP email.
 
 #### Akun Supabase untuk menguji layanan cloud
 
@@ -105,7 +128,7 @@ Pada proyek Supabase SIAGA Bunda yang tertaut, akun uji sudah dibuat:
 
 - **Email:** `ksmaachmad@gmail.com`
 - **Profil:** `Akun Uji Chatbot` dengan data sintetis, termasuk tanggal lahir dan HPHT `12 Februari 2026` (HPL `19 November 2026`)
-- **Masuk:** pilih Masuk Akun, masukkan email di atas, lalu gunakan OTP yang dikirim ke inbox. Tidak ada password atau kode OTP tetap.
+- **Masuk:** akun ini hanya untuk pengujian. Jika belum memiliki sandi, gunakan **Lupa sandi?** untuk menetapkannya, lalu masuk dengan sandi dan OTP email. Jangan memakai password atau data kesehatan nyata.
 
 Akun ini hanya untuk pengujian. Pastikan SMTP email Supabase dapat mengirim OTP ke alamat tersebut. Jangan masukkan informasi kesehatan nyata ke akun uji.
 
@@ -113,7 +136,7 @@ Akun ini hanya untuk pengujian. Pastikan SMTP email Supabase dapat mengirim OTP 
 
 - **Foto profil:** buka **Saya**, ketuk foto/inisial dengan ikon kamera, pilih JPG/PNG/WebP maksimal 10 MB, lalu atur zoom serta posisi horizontal/vertikal. Foto hasil potongan 512×512 disimpan di bucket privat `profile-avatars`, direferensikan oleh `profiles.avatar_path`, dan di-cache di Dexie agar bisa tampil offline.
 - **Lonceng Beranda:** menampilkan jadwal obat hari ini yang belum dicatat serta pemeriksaan berikutnya. Kartu Pengingat Harian disembunyikan jika tidak ada obat yang dijadwalkan atau semua dosis sudah dicatat.
-- **Push:** buka **Saya → Notifikasi → Aktifkan notifikasi**. Akun email terverifikasi dan akun Dummy didukung; browser harus memberikan izin. Service worker menerima push saat aplikasi tertutup. Pada akun Dummy, jadwal suplemen dan ANC yang diperlukan untuk notifikasi disinkronkan ke akun Supabase anonim khusus Dummy.
+- **Push:** buka **Saya → Notifikasi → Aktifkan notifikasi**. Akun Supabase terverifikasi didukung; browser harus memberikan izin. Service worker menerima push saat aplikasi tertutup. Akun Dummy bersifat lokal dan tidak memakai sesi Supabase atau push server.
 - **Jadwal:** obat dikirim pada jam minum yang disimpan, sesuai periode dan hari pilihan; ANC dikirim **H-2 dan H-1 pukul 09.00**. Zona waktu mengikuti perangkat ketika mengaktifkan push. Dosis yang sudah diminum/terlewat dan ANC yang selesai tidak dikirim lagi.
 - Backend memakai `dispatch-reminders`, `pg_cron` setiap menit, VAPID, dan Vault. Migration `007_avatar_push_reminders.sql` serta `008_schedule_reminder_push.sql` sudah diterapkan ke proyek yang tertaut pada 2026-10-06; Edge Function pengirim juga sudah di-deploy. Frontend terbaru tetap perlu di-deploy ke Cloudflare.
 - Kunci VAPID publik sudah ada di client dan dapat di-override dengan `VITE_VAPID_PUBLIC_KEY`. Kunci privat hanya ada di Supabase Edge Secrets. Jangan menjalankan ulang `scripts/configure-push.mjs` pada proyek ini tanpa rencana rotasi karena langganan browser lama terikat pada kunci tersebut.
@@ -132,7 +155,8 @@ node --experimental-strip-types scripts/check-profile-reminders.mjs
 | -------------------------- | ----------------------------------------------------------- |
 | UI atau logika frontend    | Push ke production branch; Cloudflare Pages deploy otomatis |
 | Kode Edge Function chatbot | `npx supabase functions deploy chat`                        |
+| Kode Edge Function MFA     | Deploy `mfa-start`, `mfa-verify`, dan `mfa-revoke`           |
 | Skema atau policy database | Buat migration, tinjau, lalu `npx supabase db push`         |
-| Secret chatbot             | Perbarui secret di Supabase Dashboard                       |
+| Secret chatbot/MFA         | Perbarui secret di Supabase Dashboard                       |
 
 Setelah deployment, uji URL production, refresh halaman, koneksi database, mode offline, dan chatbot bila diaktifkan. Jangan gunakan data kesehatan sungguhan sampai SMTP, autentikasi email, dan kebijakan RLS diverifikasi. Aturan skrining klinis juga perlu divalidasi pakar sebelum digunakan dalam layanan nyata.
