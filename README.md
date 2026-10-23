@@ -112,7 +112,7 @@ Untuk menguji UI, skrining, tracker, notifikasi di lonceng, foto profil lokal, d
 | Isian      | Nilai                                  |
 | ---------- | -------------------------------------- |
 | Email      | `dummy@siagabunda.test`                |
-| Sandi demo | `SIAGA-Dummy-2026!`                    |
+| Sandi demo | `dummy123`                             |
 | Kode demo  | `246810`                               |
 | Nama       | Dummy                                  |
 | Usia       | 26 tahun                               |

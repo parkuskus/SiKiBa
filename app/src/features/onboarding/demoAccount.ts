@@ -1,7 +1,7 @@
 import { db, type Profile } from "@/data/db"
 
 export const DEMO_EMAIL = "dummy@siagabunda.test"
-export const DEMO_PASSWORD = "SIAGA-Dummy-2026!"
+export const DEMO_PASSWORD = "dummy123"
 export const DEMO_OTP = "246810"
 export const DEMO_USER_ID = "demo-dummy"
 

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react"
-import { ChevronLeft, Eye, EyeOff, LogIn, Mail, ShieldCheck } from "lucide-react"
+import { ChevronLeft, CircleAlert, Eye, EyeOff, LogIn, Mail, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { supabase } from "@/data/supabase"
 import { activateDemoAccount, DEMO_EMAIL, DEMO_OTP, DEMO_PASSWORD } from "@/features/onboarding/demoAccount"
@@ -15,6 +16,7 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+  const [loginWarning, setLoginWarning] = useState<"credentials" | "email" | null>(null)
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState<"form" | "otp" | "recovery">("form")
   const [recoverySent, setRecoverySent] = useState(false)
@@ -56,13 +58,13 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
     const normalizedEmail = (resending ? emailForOtp : email).trim().toLowerCase()
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
       if (resending) setOtpErr("Alamat email tidak valid")
-      else setErr("Alamat email tidak valid")
+      else setLoginWarning("email")
       return
     }
 
     if (!resending && normalizedEmail === DEMO_EMAIL) {
       if (password !== DEMO_PASSWORD) {
-        setErr("Email atau sandi tidak cocok")
+        setLoginWarning("credentials")
         setPassword("")
         return
       }
@@ -99,9 +101,14 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
         setOtp("")
         setStep("otp")
       }
-    } catch {
+    } catch (error) {
       if (!resending) setResendCooldown(0)
-      const message = resending ? "Kode belum dapat dikirim. Tunggu sebentar lalu coba lagi." : "Email atau sandi tidak cocok, atau kode belum dapat dikirim. Coba lagi."
+      if (!resending && error instanceof Error && error.message === "Email atau sandi tidak cocok") {
+        setLoginWarning("credentials")
+        setPassword("")
+        return
+      }
+      const message = resending ? "Kode belum dapat dikirim. Tunggu sebentar lalu coba lagi." : "Kode verifikasi belum dapat dikirim. Coba lagi."
       if (resending) setOtpErr(message)
       else setErr(message)
     } finally {
@@ -284,21 +291,20 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
       <div className="mx-auto w-full max-w-[480px] px-6 pb-6 pt-6">
         <Card className="rounded-[24px] border-0 bg-[#EAF4F0] shadow-none">
           <CardContent className="space-y-2.5 p-3.5">
-            <p className="text-[13px] leading-normal text-[#33443F]">Masukkan email dan sandi akun</p>
+            <p className="text-[13px] leading-normal text-[#33443F]">Email</p>
             <Input type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="nama@email.com" aria-label="Email" className="h-12 rounded-2xl border-[#D9E7E2] bg-white px-3.5 text-sm mt-2" />
 
             <div className="space-y-1.5 pt-1">
-              <label htmlFor="login-password" className="text-xs font-medium text-[#33443F]">Sandi</label>
+              <p className="text-[13px] leading-normal text-[#33443F]">Password</p>
               <div className="relative">
                 <Input id="login-password" type={showPassword ? "text" : "password"} autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} className="h-12 rounded-2xl border-[#D9E7E2] bg-white pr-12 text-sm" />
                 <button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Sembunyikan sandi" : "Tampilkan sandi"} className="absolute inset-y-0 right-0 grid w-12 place-items-center text-[#4A6E54]">
                   {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
                 </button>
               </div>
-              <p className="text-xs text-[#52645D]">Akun demo memakai dummy@siagabunda.test dan sandi SIAGA-Dummy-2026!.</p>
             </div>
 
-            {err && <p role="alert" className="text-xs text-[#E57373] text-center">{err}</p>}
+            {err && <p role="alert" className="text-center text-xs text-[#E57373]">{err}</p>}
 
             <Button onClick={handleRequestOtp} disabled={loading} className="w-full rounded-full bg-[#4A6E54] px-4 py-5 text-base font-bold text-white hover:bg-[#3D5C46]">
                 {loading ? "Memeriksa" : "Masuk"}
@@ -321,6 +327,24 @@ export default function LoginScreen({ onBack, onSuccess, onToRegister }: Props) 
       <div className="relative mx-auto mt-auto w-full max-w-[480px]">
         <img src="/illu/illu-11-florist-2.webp" alt="" aria-hidden className="pointer-events-none w-full select-none object-cover" />
       </div>
+      <Dialog open={loginWarning !== null} onOpenChange={(open) => { if (!open) setLoginWarning(null) }}>
+        <DialogContent showCloseButton={false} className="w-[calc(100%-2rem)] max-w-[360px] gap-0 rounded-[24px] border-0 bg-[#FFFCF6] p-5 text-center ring-1 ring-[#D9E7E2]">
+          <span className="mx-auto grid size-14 place-items-center rounded-full bg-[#FDE7E5] text-[#B5473C]">
+            <CircleAlert className="size-7" aria-hidden="true" />
+          </span>
+          <DialogTitle className="mt-4 text-lg font-bold text-[#1D2B29]">
+            {loginWarning === "email" ? "Email tidak valid" : "Email atau sandi tidak sesuai"}
+          </DialogTitle>
+          <DialogDescription className="mt-2 text-sm leading-relaxed text-[#33443F]">
+            {loginWarning === "email"
+              ? "Masukkan alamat email dengan format yang benar, lalu coba lagi."
+              : "Periksa kembali email dan sandi, lalu coba masuk lagi."}
+          </DialogDescription>
+          <Button onClick={() => setLoginWarning(null)} className="mt-5 min-h-11 w-full rounded-full bg-[#4A6E54] font-bold text-white hover:bg-[#3D5C46]">
+            {loginWarning === "email" ? "Perbaiki email" : "Coba lagi"}
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
