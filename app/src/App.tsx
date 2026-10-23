@@ -145,7 +145,7 @@ export default function App() {
               setShowBottomNav={setShowBottomNav}
             />
           )}
-          {tab === "skrining" && <SkriningPage setTab={setTab} setShowBirth={setShowBirth} isPostpartum={isPostpartum} setShowBottomNav={setShowBottomNav} initialForm={openMentalFromEdu ? "mental" : null} onInitialFormConsumed={consumeMentalDeepLink} onOpenEducationTopic={openEducationTopic} />}
+          {tab === "skrining" && <SkriningPage setTab={setTab} setShowBirth={setShowBirth} isPostpartum={isPostpartum} setShowBottomNav={setShowBottomNav} initialForm={openMentalFromEdu ? "mental" : null} onInitialFormConsumed={consumeMentalDeepLink} onOpenEducationTopic={openEducationTopic} onOpenChat={() => setShowChat(true)} />}
           {tab === "edukasi" && <EdukasiPage isPostpartum={isPostpartum} initialTopic={educationTopic} onTopicConsumed={consumeEducationTopic} onOpenSkriningMental={() => { if (isPostpartum) return; setOpenMentalFromEdu(true); setTab("skrining") }} />}
           {tab === "tracker" && <PengingatPage setShowBottomNav={setShowBottomNav} />}
           {tab === "profil" && <ProfilPage uk={uk} hplLabel={hplLabel} setShowBottomNav={setShowBottomNav} />}

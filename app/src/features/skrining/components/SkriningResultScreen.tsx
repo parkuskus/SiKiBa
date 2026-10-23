@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { BookOpen, Check, TriangleAlert, OctagonAlert, Share2, RotateCcw, Home } from "lucide-react"
+import { BookOpen, Check, TriangleAlert, OctagonAlert, Share2, RotateCcw, Home, MessageCircleHeart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import EmergencyOverlay from "@/shared/components/EmergencyOverlay"
 
@@ -19,6 +19,7 @@ type Props = {
   perluTinjauGizi?: boolean
   mapsQuery?: string
   onOpenEducation?: () => void
+  onOpenChat: () => void
   onUlangi: () => void
   onBeranda: () => void
   onBagikan: () => void
@@ -76,6 +77,7 @@ export default function SkriningResultScreen({
   perluTinjauGizi = false,
   mapsQuery,
   onOpenEducation,
+  onOpenChat,
   onUlangi,
   onBeranda,
   onBagikan,
@@ -150,7 +152,14 @@ export default function SkriningResultScreen({
 
         </section>
 
-        <p className="px-1 text-sm leading-relaxed text-[#33443F]">Hasil ini hanya berdasarkan data yang diisi dan diperiksa pada skrining {tipeLabel.toLowerCase()}. Hasil ini bukan diagnosis dan tidak menilai kondisi lain yang belum diperiksa. Jika muncul keluhan atau tanda bahaya, segera hubungi tenaga kesehatan.</p>
+        <section className="space-y-2 rounded-[20px] bg-[#EAF4F0] p-3.5">
+          <p className="text-xs leading-relaxed text-[#33443F]">Kira dapat memberi informasi awal tentang hasil ini. Hasil skrining bukan diagnosis. Untuk diagnosis yang valid, perlu pemeriksaan langsung oleh tenaga kesehatan.</p>
+          <Button variant="outline" onClick={onOpenChat} className="min-h-11 w-full rounded-full border-[#D9E7E2] bg-white font-bold text-[#33443F]">
+            <MessageCircleHeart className="size-4" aria-hidden="true" /> Tanya Kira tentang hasil ini
+          </Button>
+        </section>
+
+        <p className="px-1 text-sm leading-relaxed text-[#33443F]">Hasil ini hanya berdasarkan data yang diisi dan diperiksa pada skrining {tipeLabel.toLowerCase()}, serta tidak menilai kondisi lain yang belum diperiksa. Jika muncul keluhan atau tanda bahaya, segera hubungi tenaga kesehatan.</p>
 
         <p className="px-1 text-xs text-[#6C757D]">Diperiksa {checkedDate}</p>
         <div className="grid grid-cols-2 gap-2.5">

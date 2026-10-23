@@ -32,6 +32,7 @@ export default function SkriningPage({
   initialForm = null,
   onInitialFormConsumed,
   onOpenEducationTopic,
+  onOpenChat,
 }: {
   setTab: (t: "beranda" | "skrining" | "edukasi" | "tracker" | "profil") => void
   setShowBirth: (v: boolean) => void
@@ -40,6 +41,7 @@ export default function SkriningPage({
   initialForm?: ActiveForm
   onInitialFormConsumed?: () => void
   onOpenEducationTopic: (topic: ResultEducationTopic) => void
+  onOpenChat: () => void
 }) {
   const [skriningTab, setSkriningTab] = useState<SkriningTab>("hamil")
   const [activeForm, setActiveForm] = useState<ActiveForm>(initialForm)
@@ -285,6 +287,7 @@ export default function SkriningPage({
         perluTinjauGizi={activeResult.perluTinjauGizi}
         mapsQuery="Puskesmas atau Praktik Mandiri Bidan (PMB) terdekat"
         onOpenEducation={relatedTopic ? () => onOpenEducationTopic(relatedTopic) : undefined}
+        onOpenChat={onOpenChat}
         onUlangi={() => {
           const k = activeResult.tipeKey as ActiveForm
           setActiveResult(null)
