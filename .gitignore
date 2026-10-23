@@ -1,4 +1,7 @@
 # secrets & local Supabase CLI state
+**/node_modules/
+/.superpowers/
+/docs/superpowers/
 supabase/.env
 supabase/.temp/
 app/supabase/
