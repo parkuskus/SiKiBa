@@ -18,6 +18,9 @@ type Props = {
   waktuISO: string
   perluTinjauGizi?: boolean
   mapsQuery?: string
+  midwifeName?: string
+  facilityName?: string
+  educationTitle?: string
   onOpenEducation?: () => void
   onOpenChat: () => void
   onUlangi: () => void
@@ -76,6 +79,9 @@ export default function SkriningResultScreen({
   waktuISO,
   perluTinjauGizi = false,
   mapsQuery,
+  midwifeName = "",
+  facilityName = "",
+  educationTitle,
   onOpenEducation,
   onOpenChat,
   onUlangi,
@@ -134,7 +140,14 @@ export default function SkriningResultScreen({
             ))}
           </ul>
           {warna !== "HIJAU" && faktorAman.length > 0 && (
-            <p className="mt-2 border-t border-black/5 pt-2 text-xs leading-relaxed text-[#33443F]">{faktorAman.join(", ")}</p>
+            <ul className="mt-2 space-y-1.5">
+              {faktorAman.map((factor) => (
+                <li key={factor} className="flex gap-2 text-xs leading-relaxed text-[#33443F]">
+                  <span className={`mt-[5px] size-2 shrink-0 rounded-full ${cfg.factorDot}`} />
+                  <span className="min-w-0">{factor}</span>
+                </li>
+              ))}
+            </ul>
           )}
         </section>
 
@@ -151,6 +164,29 @@ export default function SkriningResultScreen({
           </ol>
 
         </section>
+
+        <section className="space-y-2 rounded-[20px] bg-white p-3.5 ring-1 ring-[#D9E7E2]">
+          <div>
+            <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Bidan pendamping Anda</h2>
+            <p className="mt-1 text-sm font-semibold text-[#1D2B29]">{midwifeName || "Nama bidan belum diisi"}</p>
+            <p className="text-xs text-[#33443F]">{facilityName || "Tempat layanan belum diisi"}</p>
+            <p className="text-[11px] leading-relaxed text-[#536961]">Nama dan tempat layanan mengikuti data di Profil.</p>
+          </div>
+          {(!midwifeName || !facilityName) && <p className="text-xs leading-relaxed text-[#536961]">Lengkapi data bidan dan tempat layanan di Profil.</p>}
+          <Button onClick={onBagikan} className="min-h-11 w-full rounded-full bg-[#4A6E54] font-bold text-white hover:bg-[#3D5C46]">
+            <Share2 className="size-4" /> Bagikan ringkasan
+          </Button>
+        </section>
+
+        {onOpenEducation && educationTitle && (
+          <section className="space-y-2 rounded-[20px] bg-[#EAF4F0] p-3.5">
+            <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Materi terkait</h2>
+            <p className="text-xs leading-relaxed text-[#33443F]">{educationTitle}</p>
+            <Button variant="outline" onClick={onOpenEducation} className="min-h-11 w-full rounded-full border-[#D9E7E2] bg-white font-bold text-[#33443F]">
+              <BookOpen className="size-4" /> Baca materi
+            </Button>
+          </section>
+        )}
 
         <section className="space-y-2 rounded-[20px] bg-[#EAF4F0] p-3.5">
           <p className="text-xs leading-relaxed text-[#33443F]">Kira dapat memberi informasi awal tentang hasil ini. Hasil skrining bukan diagnosis. Untuk diagnosis yang valid, perlu pemeriksaan langsung oleh tenaga kesehatan.</p>
@@ -170,14 +206,6 @@ export default function SkriningResultScreen({
             <Home className="size-4" /> Beranda
           </Button>
         </div>
-        <Button onClick={onBagikan} className="min-h-11 w-full rounded-full bg-[#FFE2E2] font-bold text-[#9D2553] hover:bg-[#FFCFCF]">
-          <Share2 className="size-4" /> Bagikan ke Bidan
-        </Button>
-        {onOpenEducation && (
-          <Button variant="outline" onClick={onOpenEducation} className="min-h-11 w-full rounded-full border-[#D9E7E2] bg-white font-bold text-[#33443F]">
-            <BookOpen className="size-4" /> Baca materi terkait
-          </Button>
-        )}
       </main>
 
       <div className="relative mx-auto mt-auto w-full max-w-[480px]">

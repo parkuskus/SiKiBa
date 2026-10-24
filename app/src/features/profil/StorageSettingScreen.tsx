@@ -30,7 +30,7 @@ export default function StorageSettingScreen({ onBack }: { onBack: () => void })
   }
 
   const handleClear = async () => {
-    if (!confirm("Hapus semua data lokal di ponsel ini? Data yang belum sinkron ke Supabase akan hilang.")) return
+    if (!confirm("Hapus semua data di perangkat ini? Data yang belum dikirim ke akun akan hilang.")) return
     setClearing(true)
     try {
       await db.delete()
@@ -53,8 +53,8 @@ export default function StorageSettingScreen({ onBack }: { onBack: () => void })
             <ChevronLeft className="size-5" />
           </button>
           <div>
-            <h1 className="!m-0 text-lg font-bold leading-tight">Penyimpanan Lokal</h1>
-            <p className="mt-0.5 text-xs text-white/90">Kelola data di perangkat ini</p>
+            <h1 className="!m-0 text-lg font-bold leading-tight">Data di perangkat</h1>
+            <p className="mt-0.5 text-xs text-white/90">Penyimpanan dan pengiriman data</p>
           </div>
         </div>
       </header>
@@ -64,42 +64,44 @@ export default function StorageSettingScreen({ onBack }: { onBack: () => void })
           <div className="flex items-center gap-3">
             <span className="grid size-11 shrink-0 place-items-center rounded-[15px] bg-white text-[#4A6E54] ring-1 ring-[#D9E7E2]"><Database className="size-5" /></span>
             <div className="min-w-0 flex-1">
-              <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Simpan permanen</h2>
-              <p className="mt-0.5 text-xs text-[#33443F]">Perlindungan data perangkat</p>
+              <h2 className="!m-0 text-sm font-bold text-[#1D2B29]">Perlindungan data</h2>
+              <p className="mt-0.5 text-xs text-[#33443F]">Utamakan penyimpanan di perangkat ini</p>
             </div>
             <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${persisted ? "bg-[#EDF6EF] text-[#2E7D32]" : persisted === false ? "bg-[#FFF8EC] text-[#8A6D00]" : "bg-white text-[#536961]"}`}>
               {persisted === null ? "Memeriksa" : persisted ? "Aktif" : "Belum aktif"}
             </span>
           </div>
 
-          <p className="rounded-[16px] bg-white p-3 text-xs leading-relaxed text-[#33443F]">Browser dapat menghapus data lama jika jarang dibuka. Aktifkan simpan permanen agar data SIAGA Bunda diprioritaskan.</p>
-          {usageMb && (
-            <div className="rounded-[16px] bg-white p-3">
-              <div className="flex items-center justify-between gap-2 text-xs">
-                <span className="font-semibold text-[#1D2B29]">Ruang penyimpanan</span>
-                <span className="text-[#33443F]">{usageMb} MB{quotaMb ? ` dari ${quotaMb} MB` : ""}</span>
+          <div className="space-y-3 rounded-[16px] bg-white p-3">
+            <p className="text-xs leading-relaxed text-[#33443F]">Browser bisa menghapus data lama. Aktifkan perlindungan agar data SIAGA Bunda lebih diprioritaskan.</p>
+            {usageMb && (
+              <div>
+                <div className="flex items-center justify-between gap-2 text-xs">
+                  <span className="font-semibold text-[#1D2B29]">Ruang dipakai</span>
+                  <span className="text-[#33443F]">{usageMb} MB{quotaMb ? ` dari ${quotaMb} MB` : ""}</span>
+                </div>
+                {usagePercent !== null && <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#E2EFEA]"><div className="h-full rounded-full bg-[#4A6E54]" style={{ width: `${usagePercent}%` }} /></div>}
               </div>
-              {usagePercent !== null && <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#E2EFEA]"><div className="h-full rounded-full bg-[#4A6E54]" style={{ width: `${usagePercent}%` }} /></div>}
-            </div>
-          )}
+            )}
+          </div>
           {persisted === false && canPersist && (
             <Button className="min-h-12 w-full rounded-full bg-[#4A6E54] text-sm font-bold text-white hover:bg-[#3D5C46]" onClick={() => void handlePersist()}>
-              Aktifkan simpan permanen
+              Aktifkan perlindungan
             </Button>
           )}
-          {!canPersist && <p className="text-xs text-[#536961]">Browser ini tidak menyediakan fitur simpan permanen.</p>}
+          {!canPersist && <p className="text-xs text-[#536961]">Perlindungan penyimpanan tidak tersedia di browser ini.</p>}
         </section>
 
         <section className="space-y-2.5 rounded-[24px] bg-[#FDECEC] p-3.5">
           <div className="flex items-center gap-2 text-[#8E1F1F]">
             <Trash2 className="size-4" />
-            <h2 className="!m-0 text-sm font-bold">Hapus data lokal</h2>
+            <h2 className="!m-0 text-sm font-bold">Hapus data di perangkat</h2>
           </div>
-      <p className="text-xs leading-relaxed text-[#6D2525]">Semua data SIAGA Bunda pada ponsel ini akan dihapus, termasuk data yang masih menunggu dikirim. Data yang belum tersimpan di akun tidak dapat dipulihkan dari Supabase.</p>
+          <p className="text-xs leading-relaxed text-[#6D2525]">Semua data SIAGA Bunda di perangkat ini akan dihapus, termasuk data yang belum dikirim ke akun. Data yang belum dikirim akan hilang.</p>
           <Button variant="outline" className="min-h-11 w-full rounded-full border-[#E57373] bg-white text-sm font-semibold text-[#C62828] hover:bg-[#FFF8F8]" disabled={clearing} onClick={() => void handleClear()}>
-            <Trash2 className="size-4" /> {clearing ? "Menghapus" : "Hapus data lokal"}
+            <Trash2 className="size-4" /> {clearing ? "Menghapus" : "Hapus data di perangkat"}
           </Button>
-          <p className="text-[11px] leading-relaxed text-[#6D2525]">Data di Supabase tetap ada jika sudah tersinkron.</p>
+          <p className="text-[11px] leading-relaxed text-[#6D2525]">Data yang sudah dikirim ke akun tetap tersimpan.</p>
         </section>
       </div>
     </div>

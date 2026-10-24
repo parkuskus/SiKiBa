@@ -101,7 +101,7 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp, setShowBotto
   }
 
   const handleLogout = async () => {
-    if (!window.confirm("Keluar dari akun? Data lokal tetap tersimpan di ponsel.")) return
+    if (!window.confirm("Keluar dari akun? Data di perangkat tetap tersimpan.")) return
     try {
       void disablePushNotifications().catch(() => undefined)
       try { await supabase.functions.invoke("mfa-revoke", { method: "POST" }) } catch { /* Local logout must proceed if the network is unavailable. */ }
@@ -119,7 +119,7 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp, setShowBotto
   }
 
   const handleDeleteAccount = async () => {
-    if (!window.confirm("Hapus akun? Semua data lokal di ponsel ini akan dihapus permanen dan Anda keluar.")) return
+    if (!window.confirm("Hapus akun? Semua data di perangkat ini akan dihapus permanen dan Anda keluar.")) return
     if (!window.confirm("Yakin? Tindakan ini tidak dapat dibatalkan.")) return
     try {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession()
@@ -133,7 +133,7 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp, setShowBotto
       localStorage.setItem("siaga_logged_out", "true")
       window.location.reload()
     } catch {
-      alert("Akun belum dapat dihapus. Data lokal tetap dipertahankan, coba lagi saat koneksi stabil.")
+      alert("Akun belum dapat dihapus. Data di perangkat tetap tersimpan. Coba lagi saat koneksi stabil.")
     }
   }
 
@@ -204,7 +204,7 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp, setShowBotto
           <h2 className="px-1 text-sm font-bold text-[#1D2B29]">Pengaturan</h2>
           <div className="overflow-hidden rounded-[24px] bg-white ring-1 ring-[#D9E7E2]">
             <MenuRow icon={<Bell className="size-[18px]" />} label="Notifikasi" onClick={() => setShowNotif(true)} />
-            <MenuRow icon={<Database className="size-[18px]" />} label="Penyimpanan lokal" onClick={() => setShowStorage(true)} last />
+            <MenuRow icon={<Database className="size-[18px]" />} label="Data di perangkat" onClick={() => setShowStorage(true)} last />
           </div>
         </section>
 

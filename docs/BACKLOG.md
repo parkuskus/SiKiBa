@@ -2,9 +2,13 @@
 
 Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT.md` dan `SiKiBa_Spesifikasi_Storyboard_Prototype.md`; aturan visual mengacu ke `DESIGN.md`.
 
-## Status saat ini — 2026-10-23
+## Status saat ini — 2026-10-24
 
 ### Sudah diselesaikan
+- [x] Istilah status dan notifikasi pengiriman data disederhanakan menjadi data tersimpan di perangkat/akun atau belum masuk ke akun; layar data di perangkat menggabungkan keterangan dan meter ruang dalam satu kartu.
+- [x] Istilah di pengaturan notifikasi disederhanakan tanpa mengubah izin browser atau pengiriman pengingat.
+- [x] Hasil skrining menampilkan bidan pendamping dan tempat layanan dari profil serta materi edukasi yang sudah tersedia dan sesuai; berbagi tetap melalui ringkasan, tanpa mengarang nomor kontak atau materi klinis baru.
+- [x] Semua faktor tambahan pada hasil skrining tampil sebagai butir bullet terpisah tanpa garis pemisah, dengan warna yang mengikuti status HIJAU, KUNING, atau MERAH.
 - [x] Popup validasi form skrining mengikuti gaya popup peringatan login; teks, daftar isian, penanda error, dan aksi menuju isian pertama tetap sama.
 - [x] Layar hasil semua skrining menyediakan tombol untuk membuka Kira dan menjelaskan bahwa chatbot hanya memberi informasi awal, sedangkan diagnosis memerlukan pemeriksaan langsung oleh tenaga kesehatan.
 - [x] Login sandi + OTP email (2026-10-23): password dikelola Supabase Auth; signup/recovery UI, login OTP faktor kedua via Edge Functions, hook klaim sesi, deny-by-default RLS/storage, logout revoke best-effort, dan Dummy lokal dengan sandi/kode demo. Migration 015, test OTP/RLS, Auth password-hash lokal, serta 31 test Node, lint, dan build lulus. `.gitignore` mengabaikan seluruh folder `node_modules` rekursif; tidak ada dependency folder tracked.

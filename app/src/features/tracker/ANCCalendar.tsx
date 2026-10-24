@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { DateInput } from "@/components/ui/date-input"
 import type { ANCVisit } from "@/data/db"
 import type { SyncOutcome } from "@/data/sync"
+import { savedStatusMessage, type SavedStatus } from "@/features/sync/syncStatusCopy"
 
 const HARI = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"]
 const toISO = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
@@ -67,13 +68,8 @@ export default function ANCCalendar({
       const syncStatus = await onMoveDate(selVisit.id, dateDraft)
       setSelected(dateDraft)
       setEditingDate(false)
-      setDateNotice(syncStatus === "queued"
-        ? "Tanggal tersimpan di perangkat dan menunggu sinkronisasi."
-        : syncStatus === "failed"
-          ? "Tanggal tersimpan di perangkat, tetapi sinkronisasi gagal."
-          : syncStatus === "skipped"
-            ? "Tanggal tersimpan di perangkat."
-            : "Tanggal tersimpan dan tersinkron.")
+      const status: SavedStatus = syncStatus === "skipped" ? "local" : syncStatus
+      setDateNotice(savedStatusMessage(status, "Tanggal"))
     } catch (error) {
       setDateError(error instanceof Error ? error.message : "Tanggal belum dapat diubah. Coba lagi.")
     } finally {

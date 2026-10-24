@@ -5,6 +5,7 @@ import { db } from "@/data/db"
 import { getCurrentUserId } from "@/data/currentUser"
 import { supabase } from "@/data/supabase"
 import { flushSyncQueue } from "@/data/sync"
+import { syncNoticeMessage } from "@/features/sync/syncStatusCopy"
 
 export default function SyncStatusNotice() {
   const [pending, setPending] = useState(0)
@@ -63,11 +64,7 @@ export default function SyncStatusNotice() {
   }
 
   if (online && pending === 0 && !retryFailed) return null
-  const message = retryFailed
-    ? "Belum berhasil dikirim. Data tersimpan di perangkat. Periksa akun atau koneksi, lalu coba lagi."
-    : pending > 0
-      ? `${pending} data menunggu dikirim. Data tersimpan di perangkat${online ? "." : " dan akan dicoba saat terhubung."}`
-      : "Tidak ada koneksi. Data baru tersimpan di perangkat ini."
+  const message = syncNoticeMessage(pending, online, retryFailed)
 
   return (
     <aside className="mb-3 flex items-center gap-3 rounded-2xl bg-[#FFF1E8] px-3.5 py-3 text-[#33443F]" role="status" aria-live="polite">

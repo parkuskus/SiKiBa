@@ -12,10 +12,10 @@ import LaktasiScreen from "@/features/skrining/nifas/LaktasiScreen"
 import IkterusScreen from "@/features/skrining/bbl/IkterusScreen"
 import HipotiroidScreen from "@/features/skrining/bbl/HipotiroidScreen"
 import SkriningResultScreen from "@/features/skrining/components/SkriningResultScreen"
-import { getEducationTopicForResult } from "@/features/edukasi/resultTopics"
+import { getEducationLinkForResult } from "@/features/edukasi/resultTopics"
 import type { ResultEducationTopic } from "@/features/edukasi/resultTopics"
 import { db } from "@/data/db"
-import { getCurrentUserId } from "@/data/currentUser"
+import { getCurrentProfile, getCurrentUserId } from "@/data/currentUser"
 import { shareViaWA } from "@/services/exportService"
 import { needsRepeat } from "@/features/skrining/screeningCompleteness"
 import { needsGiziReview } from "@/features/skrining/giziReview"
@@ -45,6 +45,7 @@ export default function SkriningPage({
 }) {
   const [skriningTab, setSkriningTab] = useState<SkriningTab>("hamil")
   const [activeForm, setActiveForm] = useState<ActiveForm>(initialForm)
+  const [bidanPendamping, setBidanPendamping] = useState<{ nama: string; fasyankes: string }>({ nama: "", fasyankes: "" })
   const [results, setResults] = useState<Record<string, AnyResult & { createdAt?: string }>>({})
   const [activeResult, setActiveResult] = useState<null | {
     tipeKey: string
@@ -100,6 +101,9 @@ export default function SkriningPage({
     void (async () => {
       try {
         const uid = await getCurrentUserId()
+        void getCurrentProfile().then((profile) => {
+          setBidanPendamping({ nama: profile?.nama_bidan ?? "", fasyankes: profile?.fasyankes ?? "" })
+        }).catch(() => {})
         const all = await db.screeningResults.where("userId").equals(uid).toArray()
         const map: Record<string, AnyResult & { createdAt?: string }> = {}
         const tipeToKey: Record<string, string> = {
@@ -271,7 +275,7 @@ export default function SkriningPage({
   }
 
   if (activeResult) {
-    const relatedTopic = getEducationTopicForResult(activeResult.tipeKey)
+    const relatedEducation = getEducationLinkForResult(activeResult.tipeKey)
     return (
       <SkriningResultScreen
         tipeLabel={activeResult.tipeLabel}
@@ -285,8 +289,11 @@ export default function SkriningPage({
         urgensiLabel={activeResult.urgensiLabel}
         waktuISO={activeResult.waktuISO}
         perluTinjauGizi={activeResult.perluTinjauGizi}
+        midwifeName={bidanPendamping.nama}
+        facilityName={bidanPendamping.fasyankes}
+        educationTitle={relatedEducation?.title}
         mapsQuery="Puskesmas atau Praktik Mandiri Bidan (PMB) terdekat"
-        onOpenEducation={relatedTopic ? () => onOpenEducationTopic(relatedTopic) : undefined}
+        onOpenEducation={relatedEducation ? () => onOpenEducationTopic(relatedEducation.topic) : undefined}
         onOpenChat={onOpenChat}
         onUlangi={() => {
           const k = activeResult.tipeKey as ActiveForm

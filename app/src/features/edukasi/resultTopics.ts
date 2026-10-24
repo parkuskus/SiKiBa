@@ -1,11 +1,13 @@
 export type ResultEducationTopic = "bahaya" | "psikologi"
 
-const relatedTopics: Record<string, ResultEducationTopic> = {
-  danger: "bahaya",
-  preeklamsia: "bahaya",
-  mental: "psikologi",
+export type ResultEducationLink = { topic: ResultEducationTopic; title: string }
+
+const relatedTopics: Record<string, ResultEducationLink> = {
+  danger: { topic: "bahaya", title: "Tanda Bahaya Kehamilan" },
+  preeklamsia: { topic: "bahaya", title: "Tanda Bahaya Kehamilan" },
+  mental: { topic: "psikologi", title: "Perubahan Psikologi/Emosi" },
 }
 
-export function getEducationTopicForResult(resultType: string): ResultEducationTopic | null {
+export function getEducationLinkForResult(resultType: string): ResultEducationLink | null {
   return relatedTopics[resultType] ?? null
 }

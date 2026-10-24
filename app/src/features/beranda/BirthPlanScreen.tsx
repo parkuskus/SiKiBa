@@ -5,6 +5,7 @@ import { db } from "@/data/db"
 import { flushSyncQueue, syncBirthPlan } from "@/data/sync"
 import type { BirthPlan } from "@/data/db"
 import { generateBirthPlanPDF, shareBirthPlanPDF } from "@/services/exportService"
+import { savedStatusMessage } from "@/features/sync/syncStatusCopy"
 import { CHECKLIST_PERLENGKAPAN, getBirthPlan, pilihVersiRencana, rencanaKosong, simpanLokalDanSinkronkan, TANDA_PERSALINAN, type BirthPlanSyncStatus } from "./birthPlanService"
 
 type Props = { userId: string; readOnly?: boolean; onClose: () => void }
@@ -122,13 +123,13 @@ export default function BirthPlanScreen({ userId, readOnly = false, onClose }: P
       const status: BirthPlanSyncStatus = outcome === "skipped" ? "local-only" : outcome
       if (revision === revisionRef.current && !dirtyRef.current) {
         updateSyncStatus(status)
-        if (status === "failed") setError("Rencana tersimpan di perangkat, tetapi sinkronisasi gagal. Coba lagi.")
+        if (status === "failed") setError("Rencana tersimpan di perangkat, tetapi belum berhasil dikirim ke akun. Coba lagi.")
       }
       return outcome !== "failed"
     } catch {
       if (revision === revisionRef.current && !dirtyRef.current) {
         updateSyncStatus("failed")
-        setError("Rencana tersimpan di perangkat, tetapi belum tersinkron. Coba lagi.")
+        setError("Rencana tersimpan di perangkat, tetapi belum berhasil dikirim ke akun. Coba lagi.")
       }
       return false
     } finally {
@@ -160,7 +161,7 @@ export default function BirthPlanScreen({ userId, readOnly = false, onClose }: P
         void result.syncStatus.then((status) => {
           if (revision === revisionRef.current) {
             updateSyncStatus(status)
-            if (status === "failed") setError("Rencana tersimpan di perangkat, tetapi sinkronisasi gagal. Coba sinkronkan ulang.")
+            if (status === "failed") setError("Rencana tersimpan di perangkat, tetapi belum berhasil dikirim ke akun. Coba lagi.")
           }
         })
         return true
@@ -289,7 +290,7 @@ export default function BirthPlanScreen({ userId, readOnly = false, onClose }: P
       void result.syncStatus.then((status) => {
         if (revisionRef.current === revision) {
           updateSyncStatus(status)
-          if (status === "failed") setError("Versi dipilih dan tersimpan di perangkat, tetapi belum tersinkron. Coba sinkronkan ulang.")
+          if (status === "failed") setError("Pilihan tersimpan di perangkat, tetapi belum berhasil dikirim ke akun. Coba lagi.")
         }
       })
     } catch {
@@ -353,10 +354,10 @@ export default function BirthPlanScreen({ userId, readOnly = false, onClose }: P
               {readOnly && <p className="mt-3 rounded-[14px] bg-[#EAF4F0] px-3 py-2 text-xs font-medium text-[#315D40]">Tampilan ini hanya untuk melihat. Ubah rencana melalui kartu di Beranda saat mode kehamilan.</p>}
               {!readOnly && (menyimpan || syncStatus !== "idle") && (
                 <p role="status" className={`mt-3 text-xs font-medium ${syncStatus === "failed" ? "text-[#922D2A]" : "text-[#315D40]"}`}>
-                  {menyimpan ? "Menyimpan rencana…" : syncStatus === "synced" ? "Tersimpan di perangkat dan tersinkron ke akun" : syncStatus === "queued" ? "Tersimpan di perangkat, menunggu sinkronisasi" : syncStatus === "failed" ? "Tersimpan di perangkat, tetapi sinkronisasi gagal" : "Tersimpan di perangkat"}
+                  {menyimpan ? "Menyimpan rencana…" : syncStatus === "idle" ? "" : savedStatusMessage(syncStatus === "local-only" ? "local" : syncStatus, "Rencana")}
                 </p>
               )}
-              {!readOnly && syncStatus === "failed" && <button type="button" disabled={menyimpan || Boolean(conflict)} onClick={() => void retrySync()} className="mt-2 min-h-11 text-xs font-bold text-[#922D2A] underline underline-offset-2 disabled:opacity-50">Coba sinkronkan ulang</button>}
+                {!readOnly && syncStatus === "failed" && <button type="button" disabled={menyimpan || Boolean(conflict)} onClick={() => void retrySync()} className="mt-2 min-h-11 text-xs font-bold text-[#922D2A] underline underline-offset-2 disabled:opacity-50">Coba kirim lagi</button>}
             </section>
 
             {conflict && !readOnly && (
@@ -365,11 +366,11 @@ export default function BirthPlanScreen({ userId, readOnly = false, onClose }: P
                 <p className="mt-1 text-sm leading-relaxed text-[#704500]">Pilih data perangkat ini atau data yang tersimpan online. Pilihan lain akan digantikan.</p>
                 <div className="mt-3 grid grid-cols-1 gap-2 text-xs min-[400px]:grid-cols-2">
                   <p className="rounded-[12px] bg-white/70 p-2.5">Perangkat · Estimasi dana {moneyLabel(conflict.device.estimasiDana)}</p>
-                  <p className="rounded-[12px] bg-white/70 p-2.5">Online · Estimasi dana {moneyLabel(conflict.cloud.estimasiDana)}</p>
+                  <p className="rounded-[12px] bg-white/70 p-2.5">Data di akun · Estimasi dana {moneyLabel(conflict.cloud.estimasiDana)}</p>
                 </div>
                 <div className="mt-3 grid grid-cols-1 gap-2 min-[400px]:grid-cols-2">
                   <button type="button" disabled={menyimpan} onClick={() => void pilihKonflik("device")} className="min-h-11 rounded-full bg-white px-3 text-xs font-bold text-[#704500] ring-1 ring-[#E6B45E] disabled:opacity-60">Gunakan versi perangkat</button>
-                  <button type="button" disabled={menyimpan} onClick={() => void pilihKonflik("cloud")} className="min-h-11 rounded-full bg-[#4A6E54] px-3 text-xs font-bold text-white disabled:opacity-60">Gunakan versi online</button>
+                  <button type="button" disabled={menyimpan} onClick={() => void pilihKonflik("cloud")} className="min-h-11 rounded-full bg-[#4A6E54] px-3 text-xs font-bold text-white disabled:opacity-60">Gunakan data di akun</button>
                 </div>
               </section>
             )}
