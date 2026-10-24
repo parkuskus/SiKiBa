@@ -5,6 +5,7 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 ## Status saat ini — 2026-10-23
 
 ### Sudah diselesaikan
+- [x] Popup validasi form skrining mengikuti gaya popup peringatan login; teks, daftar isian, penanda error, dan aksi menuju isian pertama tetap sama.
 - [x] Layar hasil semua skrining menyediakan tombol untuk membuka Kira dan menjelaskan bahwa chatbot hanya memberi informasi awal, sedangkan diagnosis memerlukan pemeriksaan langsung oleh tenaga kesehatan.
 - [x] Login sandi + OTP email (2026-10-23): password dikelola Supabase Auth; signup/recovery UI, login OTP faktor kedua via Edge Functions, hook klaim sesi, deny-by-default RLS/storage, logout revoke best-effort, dan Dummy lokal dengan sandi/kode demo. Migration 015, test OTP/RLS, Auth password-hash lokal, serta 31 test Node, lint, dan build lulus. `.gitignore` mengabaikan seluruh folder `node_modules` rekursif; tidak ada dependency folder tracked.
 - [x] Tindak lanjut Menengah 1–3 (2026-10-20): status offline/antrean akun aktif dan coba ulang ditambahkan; kegagalan otorisasi tidak menghapus queue; dialog hapus lokal menjelaskan risiko data belum terkirim. Target sentuh/fokus pada Riwayat dan pilihan skrining diperbaiki, gambar edukasi di bawah layar lazy-load, dan hasil yang punya materi langsung relevan membuka KIE yang ada. Batas uji perangkat/pembaca layar dan topik tanpa materi dicatat di evaluasi media.
