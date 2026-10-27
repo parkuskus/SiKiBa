@@ -34,37 +34,36 @@ SIAGA Bunda adalah PWA untuk skrining ibu dan bayi, tracker, edukasi, ekspor, da
 
 ## Should fix
 
-### 3. Tabel public baru dapat terekspos API jika migration lupa mengaktifkan RLS
+### 3. [Migration diterapkan] Tabel public baru dapat terekspos API jika migration lupa mengaktifkan RLS
 
-- **Lokasi:** `supabase/config.toml:11-23`, khususnya `schemas = ["public", "graphql_public"]` dan komentar `auto_expose_new_tables` yang menyatakan default true bila tidak disetel; contoh pembuatan tabel di `supabase/migrations/001_init_siaga_bunda.sql`.
-- **Apa ini:** konfigurasi menyatakan tabel baru pada schema yang diekspos dapat dijangkau role Data API tanpa grant eksplisit, sesuai default cloud. Tabel yang sudah ada umumnya mengaktifkan RLS, tetapi exposure API dan RLS adalah dua kontrol yang berbeda.
-- **Masalah dan prinsip:** jika migration berikutnya menambah tabel sensitif di `public` lalu lupa mengaktifkan RLS/policy, Data API dapat menyediakan akses dengan grant default. Ini risiko konkret untuk tabel kesehatan baru; audit ini tidak menemukan tabel pengguna saat ini yang diketahui sengaja dibiarkan tanpa RLS.
-- **Perbaikan:** gunakan konfigurasi fail-closed untuk tabel baru pada lingkungan yang didukung; di hosted project verifikasi/restrict default grants melalui mekanisme Supabase yang berlaku. Wajibkan tiap migration tabel sensitif memasang RLS dan policy owner sebelum data dimasukkan, serta tambahkan pemeriksaan schema yang menggagalkan build/release bila tabel publik tanpa RLS ditemukan. Jangan mendorong seluruh `config.toml` ke production tanpa meninjau drift.
-- **Jika dibiarkan:** developer dapat menambah tabel sensitif yang tampak bekerja di frontend tetapi tidak memiliki pembatas per pengguna.
+- **Lokasi:** `supabase/config.toml:19-23`, `supabase/migrations/017_fail_closed_default_privileges.sql`, dan `supabase/tests/017_fail_closed_default_privileges.sql`.
+- **Temuan runtime:** `pg_default_acl` proyek tertaut memperlihatkan default privileges pada schema `public` memberi hak ke `anon`, `authenticated`, dan `service_role` untuk tabel baru. Karena itu config lokal saja tidak cukup.
+- **Perbaikan source:** config lokal menetapkan `auto_expose_new_tables = false`; migration 017 mencabut default privilege tabel/view, sequence, dan function bagi API roles sampai ada grant eksplisit. SQL test membuat objek sintetis dalam transaksi lalu memeriksa tidak ada hak API role.
+- **Status/verifikasi:** migration 017 diterapkan ke proyek tertaut SIAGA-Bunda. Query `pg_default_acl` pasca-migration mengonfirmasi ACL schema `public` untuk tabel, sequence, dan function tidak lagi memberi default privilege kepada `anon`, `authenticated`, atau `service_role`.
+- **Operasional:** migration fitur baru tetap harus memasang RLS/policy dan grant yang dibutuhkan secara eksplisit.
 
-### 4. Skrip uji RLS A/B belum mengikuti MFA dan tidak menguji semua operasi silang
+### 4. [Harness diperbarui, belum dijalankan live] Skrip uji RLS A/B belum mengikuti MFA dan tidak menguji semua operasi silang
 
-- **Lokasi:** `app/scripts/check-rls-ab.mjs:15-21,55-65,89-100,102-145`; policy MFA `supabase/migrations/015_email_mfa.sql:234`; test SQL MFA `supabase/tests/015_email_mfa_rls.sql:146-184`.
-- **Apa ini:** skrip A/B login dengan sandi saja, tetapi policy saat ini mewajibkan klaim `app_mfa_verified`. Skrip juga hanya membaca migration 001, 002, 007, dan 009, sehingga tidak memeriksa policy MFA migration 015.
-- **Masalah dan prinsip:** ketika dijalankan terhadap deployment saat ini, sesi baru dari `signInWithPassword` tidak punya klaim MFA; bahkan operasi akun A sendiri akan ditolak. Selain itu, operasi baca/ubah/hapus silang hanya diuji pada lima tabel.
-- **Perbaikan:** update harness agar membuat sesi uji yang telah menyelesaikan MFA atau memakai JWT terkontrol pada Postgres lokal; masukkan migration 015 ke pemeriksaan sumber, lalu uji operasi yang di-grant pada seluruh tabel. Pertahankan verifikasi anon dan akun tanpa MFA harus ditolak.
-- **Jika dibiarkan:** test A/B tidak lagi menjadi bukti bahwa pemilik sah bisa mengakses data, dan beberapa regresi policy silang tidak terdeteksi.
+- **Lokasi:** `app/scripts/check-rls-ab.mjs`, `app/scripts/check-rls-hardening.mjs`, dan `supabase/migrations/015_email_mfa.sql:213-238`.
+- **Perbaikan:** harness kini membaca semua migration, memastikan ke-12 tabel terdaftar dalam MFA owner-policy, login dengan sandi lalu meminta dan memverifikasi OTP email, me-refresh sesi, serta menguji klaim MFA server. Ia menguji baca/ubah silang untuk seluruh tabel ber-owner, hapus untuk tabel yang memang memberi grant delete, insert palsu, penyimpanan avatar, akun tanpa MFA, dan anon. Birth plan yang sudah ada dipulihkan saat cleanup.
+- **Cara menjalankan:** dari `app/`, jalankan `node --experimental-strip-types scripts/check-rls-ab.mjs`; siapkan dua akun uji dan kredensial di `supabase/.env` seperti sebelumnya, lalu masukkan OTP yang dikirim untuk tiap akun saat diminta.
+- **Status/batas:** belum dijalankan terhadap akun live karena mengirim OTP dan menulis data sintetis. Static check `app/scripts/check-rls-hardening.mjs` memeriksa coverage serta konfigurasi tanpa mengubah data.
 
-### 5. Clinical rules tidak memiliki unit test otomatis yang ditemukan
+### 5. [Ditambahkan test otomatis] Clinical rules tidak memiliki unit test otomatis yang ditemukan
 
 - **Lokasi:** `app/src/clinical-rules/meows.ts:13-24`, `epds.ts:4-12`, `poedjiRochjati.ts:16-35`, `mapCalculator.ts:3-16`, `imtLila.ts:3-35`, `kramerZone.ts:9-15`; strategi test yang dijanjikan di `docs/ARCHITECTURE.md:153-159`; `app/package.json:6-10` tidak menyediakan test script.
 - **Apa ini:** fungsi tersebut mengubah input klinis dan ambang menjadi skor/kategori traffic-light, namun tidak ditemukan file test unit untuk modul-modul tersebut.
 - **Masalah dan prinsip:** perubahan kecil di batas ambang dapat mengubah hasil HIJAU/KUNING/MERAH tanpa kegagalan build. Contohnya, perubahan operator pada batas EPDS total 14 atau nilai MAP 99 dapat mengubah kategori tanpa tertangkap TypeScript. Ambang dan kebenaran klinis tetap perlu validasi pakar; test hanya menjaga implementasi sesuai aturan yang disetujui.
-- **Perbaikan:** tambahkan test tabel untuk batas tepat di bawah, sama dengan, dan di atas ambang serta input invalid untuk tiap aturan, dengan expected values yang disetujui pakar. Jalankan sebagai gate CI.
-- **Jika dibiarkan:** regresi kategori klinis dapat lolos build dan tampil sebagai hasil skrining yang salah.
+- **Perbaikan:** `app/scripts/clinical-rules.test.mjs` dan `npm test` mengunci batas/kategori untuk seluruh tujuh modul, termasuk `evaluasiGizi`. Ambang dan fungsi produksi tidak diubah.
+- **Verifikasi dan batas:** test lulus. Ini hanya mencegah perubahan perilaku tak sengaja dari implementasi saat ini; bukan validasi pakar. Perhatian yang perlu diputuskan pakar: cabang MEOWS merah `<90/<60` membuat cabang kuning 80–89/50–59 tak terjangkau; nilai tepat sistolik 160 dan diastolik 110 saat ini HIJAU.
 
-### 6. Penghapusan akun dapat menghapus avatar tetapi gagal menghapus akun
+### 6. [Kompensasi diperkuat dan dideploy] Penghapusan akun dapat menghapus avatar tetapi gagal menghapus akun
 
 - **Lokasi:** `supabase/functions/delete-account/index.ts:54-65`; UI mempertahankan data lokal ketika function gagal di `app/src/features/profil/ProfilPage.tsx:121-137`.
 - **Apa ini:** function menghapus semua objek avatar, lalu baru menghapus pengguna Auth.
 - **Masalah dan prinsip:** jika penghapusan objek berhasil tetapi `admin.auth.admin.deleteUser` gagal karena gangguan sementara, function mengembalikan 502. Pengguna tetap ada, tetapi avatarnya sudah hilang; aplikasi juga memberi tahu bahwa penghapusan belum berhasil. Ini partial failure lintas Storage/Auth yang tidak atomik.
-- **Perbaikan:** buat cleanup dapat dipulihkan dan diulang. Simpan/pertahankan daftar path dan status cleanup, atau gunakan alur staging/kompensasi agar kegagalan Auth dapat memulihkan avatar. Jangan sekadar memindahkan urutan sebelum memastikan constraint Storage saat penghapusan Auth.
-- **Jika dibiarkan:** percobaan hapus akun yang gagal sebagian dapat merusak data akun yang masih aktif.
+- **Perbaikan:** helper `supabase/functions/_shared/deleteAccount.ts` memindahkan avatar ke staging path unik sebelum menghapus Auth, memulihkan path pada kegagalan termasuk respons `move` yang ambigu, dan mencoba ulang cleanup sekali. Cleanup yang tetap gagal dicatat dengan UID dan folder staging untuk tindak lanjut; account delete tidak salah dilaporkan gagal setelah Auth sudah dihapus.
+- **Verifikasi dan batas:** regression test mencakup kegagalan Auth, staging parsial, respons `move` hilang, retry cleanup, dan cleanup yang tetap pending. Edge Function versi 3 sudah dideploy. Belum diuji dengan akun/Auth/Storage live; jika kedua percobaan cleanup gagal, berkas masih perlu dibersihkan dari folder staging.
 
 ## Penilaian RBAC dan modularity
 
@@ -77,11 +76,11 @@ SIAGA Bunda adalah PWA untuk skrining ibu dan bayi, tracker, edukasi, ekspor, da
 
 ## Verifikasi dan batas audit
 
-- Tidak ada `npm test` atau unit test clinical-rules dalam konfigurasi/package dan pencarian test yang ditinjau. Build TypeScript tidak menguji akurasi klinis atau policy runtime.
-- RLS A/B dan SQL test tersedia, tetapi skrip A/B perlu diselaraskan dengan MFA migration 015 sebelum bisa menjadi verifikasi deployment saat ini. Tidak dijalankan pada proyek live karena menulis data sintetis dan butuh kredensial; hasil historis backlog bukan verifikasi konfigurasi sekarang.
-- Tidak menjalankan `npm run build` untuk audit ulang ini; perubahan laporan tidak mengubah kode. Sebelumnya build setelah pembaruan dokumen/model enkripsi berhasil, tetapi itu bukan bukti RLS atau production configuration.
+- `npm test` lulus (12 test); `npm run lint`, `npm run build`, `node scripts/check-rls-hardening.mjs`, dan `git diff --check` lulus. SQL regression test default privileges sempat gagal sebelum migration 018, kemudian lulus sesudah diterapkan.
+- Harness RLS A/B yang sudah diselaraskan MFA belum dijalankan; kredensial akun tersedia, tetapi `SIAGA_TEST_OTP_A/B` tidak ada sehingga pengujian memerlukan OTP email interaktif dan menulis data sintetis.
+- Build aplikasi tidak mengompilasi Edge Function. Deploy Supabase berhasil; `deno check` tidak tersedia. Test helper delete-account memakai Node, bukan test live Storage/Auth.
 - Tidak membaca setiap komponen UI, setiap helper form, seluruh konfigurasi Dashboard, log/retensi vendor LLM, atau melakukan penetration test. Audit berfokus pada jalur berisiko tinggi yang disebut di cakupan.
 
-**Verdict:** migration rate-limit sudah diterapkan ke Supabase tertaut, tetapi dua Must fix chatbot belum aktif sepenuhnya sampai Edge Function baru dideploy. Policy owner/MFA yang ditinjau tampak mencegah akses silang; skrip A/B perlu diperbarui agar sesuai MFA. Temuan Should fix lainnya masih terbuka.
+**Verdict:** migration 016–018 sudah diterapkan; SQL regression test fail-closed kini lulus. Clinical test coverage dan kompensasi avatar ditingkatkan; Edge Function delete-account versi 3 aktif. Uji A/B MFA masih menunggu OTP interaktif. Keputusan pakar tetap diperlukan untuk menilai batas klinis, terutama MEOWS.
 
 **Not checked:** grants/policies aktual proyek Supabase, SSL enforcement, backup dan akses organisasi, konfigurasi rate limit gateway, kontrak/retensi LLM, audit log, dan uji perangkat produksi.

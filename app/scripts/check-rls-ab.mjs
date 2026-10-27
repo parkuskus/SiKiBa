@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
-import { readFile } from 'node:fs/promises'
+import { readFile, readdir } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
+import { createInterface } from 'node:readline/promises'
+import { stdin, stdout } from 'node:process'
 import { createClient } from '@supabase/supabase-js'
 
 function parseEnv(text) {
@@ -12,30 +14,28 @@ function parseEnv(text) {
 
 const serverEnv = parseEnv(await readFile('../supabase/.env', 'utf8'))
 const appEnv = parseEnv(await readFile('.env', 'utf8'))
-const migrationPaths = [
-  '../supabase/migrations/001_init_siaga_bunda.sql',
-  '../supabase/migrations/002_chat_rag.sql',
-  '../supabase/migrations/007_avatar_push_reminders.sql',
-  '../supabase/migrations/009_birth_plans.sql',
-]
-const migrations = (await Promise.all(migrationPaths.map((path) => readFile(path, 'utf8')))).join('\n')
+const migrationPaths = (await readdir('../supabase/migrations')).filter((path) => path.endsWith('.sql')).sort()
+const migrations = (await Promise.all(migrationPaths.map((path) => readFile(`../supabase/migrations/${path}`, 'utf8')))).join('\n')
+const mfaMigration = await readFile('../supabase/migrations/015_email_mfa.sql', 'utf8')
 const policies = [
-  ['profiles', 'id', 'own_profiles'],
-  ['screening_results', 'user_id', 'own_screening'],
-  ['weight_entries', 'user_id', 'own_weight'],
-  ['supplement_reminders', 'user_id', 'own_supplement'],
-  ['anc_visits', 'user_id', 'own_anc'],
-  ['diary_entries', 'user_id', 'own_diary'],
-  ['nifas_screenings', 'user_id', 'own_nifas'],
-  ['bbl_profiles', 'user_id', 'own_bbl'],
-  ['chat_messages', 'user_id', 'own_chat'],
-  ['push_subscriptions', 'user_id', 'own_push_subscriptions'],
-  ['dose_logs', 'user_id', 'own_dose_logs'],
-  ['birth_plans', 'user_id', 'own_birth_plans'],
+  { table: 'profiles', ownerColumn: 'id', policy: 'own_profiles' },
+  { table: 'screening_results', ownerColumn: 'user_id', policy: 'own_screening' },
+  { table: 'weight_entries', ownerColumn: 'user_id', policy: 'own_weight' },
+  { table: 'supplement_reminders', ownerColumn: 'user_id', policy: 'own_supplement' },
+  { table: 'anc_visits', ownerColumn: 'user_id', policy: 'own_anc' },
+  { table: 'diary_entries', ownerColumn: 'user_id', policy: 'own_diary' },
+  { table: 'nifas_screenings', ownerColumn: 'user_id', policy: 'own_nifas' },
+  { table: 'bbl_profiles', ownerColumn: 'user_id', policy: 'own_bbl' },
+  { table: 'chat_messages', ownerColumn: 'user_id', policy: 'own_chat' },
+  { table: 'push_subscriptions', ownerColumn: 'user_id', policy: 'own_push_subscriptions' },
+  { table: 'dose_logs', ownerColumn: 'user_id', policy: 'own_dose_logs' },
+  { table: 'birth_plans', ownerColumn: 'user_id', policy: 'own_birth_plans' },
 ]
-for (const [table, ownerColumn, policy] of policies) {
+assert.match(mfaMigration, /auth\.jwt\(\)\s*->>\s*''app_mfa_verified''\s*=\s*''true''\s+and\s+auth\.uid\(\)\s*=\s*%I/i, 'MFA owner policy must be generated from the server-verified claim')
+for (const { table, ownerColumn, policy } of policies) {
   assert.ok(new RegExp(`create\\s+policy\\s+"${policy}"\\s+on\\s+(public\\.)?${table}\\s+for\\s+all`, 'i').test(migrations), `${table} owner policy exists`)
   assert.ok(new RegExp(`using\\s*\\(\\s*auth\\.uid\\(\\)\\s*=\\s*${ownerColumn}\\s*\\)\\s+with\\s+check\\s*\\(\\s*auth\\.uid\\(\\)\\s*=\\s*${ownerColumn}\\s*\\)`, 'i').test(migrations), `${table} uses owner-bound USING and WITH CHECK`)
+  assert.ok(mfaMigration.includes(`('${table}', '${policy}', '${ownerColumn}')`), `${table} MFA policy is registered`)
 }
 
 const projectRef = new URL(serverEnv.SUPABASE_URL).hostname.split('.')[0]
@@ -51,18 +51,57 @@ assert.ok(a.id && a.email && a.password && b.id && b.email && b.password, 'both 
 assert.notEqual(a.id, b.id, 'A and B must be different users')
 assert.notEqual(a.email, 'dummy@siagabunda.test')
 assert.notEqual(b.email, 'dummy@siagabunda.test')
+assert.ok(serverEnv.SUPABASE_SERVICE_ROLE_KEY, 'service role is required only to clean up synthetic rows without user DELETE grants')
+const cleanupClient = createClient(serverEnv.SUPABASE_URL, serverEnv.SUPABASE_SERVICE_ROLE_KEY, {
+  auth: { autoRefreshToken: false, persistSession: false },
+})
 
-const clientFor = async ({ email, password }) => {
+const claimFrom = (accessToken) => {
+  const payload = accessToken?.split('.')[1]
+  return payload ? JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) : {}
+}
+
+const otpFor = async (letter, email) => {
+  const configured = serverEnv[`SIAGA_TEST_OTP_${letter}`]
+  if (configured) return configured
+  const prompt = createInterface({ input: stdin, output: stdout })
+  try { return (await prompt.question(`Masukkan kode MFA untuk ${email}: `)).trim() }
+  finally { prompt.close() }
+}
+
+const clientFor = async ({ id, email, password }, letter) => {
   const client = createClient(serverEnv.SUPABASE_URL, appEnv.VITE_SUPABASE_ANON_KEY, {
     auth: { autoRefreshToken: false, persistSession: false },
   })
   const { data, error } = await client.auth.signInWithPassword({ email, password })
   assert.ifError(error)
   assert.ok(data.session, 'fresh authenticated session exists')
+  assert.equal(data.session.user.id, id, `${letter} login matches its configured test account`)
+
+  const unauthenticatedProfile = await client.from('profiles').select('id').eq('id', data.session.user.id)
+  assert.ifError(unauthenticatedProfile.error)
+  assert.equal(unauthenticatedProfile.data.length, 0, 'password-only session cannot read its profile')
+  assert.notEqual(claimFrom(data.session.access_token).app_mfa_verified, true, 'password login must not assert MFA')
+
+  const started = await client.functions.invoke('mfa-start', { method: 'POST' })
+  assert.ifError(started.error)
+  const code = await otpFor(letter, email)
+  assert.match(code, /^\d{6}$/, 'a six-digit email code is required')
+  const verified = await client.functions.invoke('mfa-verify', { body: { code } })
+  assert.ifError(verified.error)
+  assert.equal(verified.data?.verified, true, 'MFA code is accepted')
+  const refreshed = await client.auth.refreshSession()
+  assert.ifError(refreshed.error)
+  assert.equal(claimFrom(refreshed.data.session?.access_token).app_mfa_verified, true, 'refreshed session carries server MFA claim')
   return client
 }
-const clientA = await clientFor(a)
-const clientB = await clientFor(b)
+const clientA = await clientFor(a, 'A')
+const clientB = await clientFor(b, 'B')
+const anonymousClient = createClient(serverEnv.SUPABASE_URL, appEnv.VITE_SUPABASE_ANON_KEY, {
+  auth: { autoRefreshToken: false, persistSession: false },
+})
+const anonymousProfile = await anonymousClient.from('profiles').select('id').eq('id', a.id)
+assert.ok(anonymousProfile.error || anonymousProfile.data.length === 0, 'anon cannot read an account profile')
 const marker = `kritis3-${randomUUID()}`
 const today = new Date().toISOString().slice(0, 10)
 const cleanup = []
@@ -100,23 +139,50 @@ try {
   await rejectForgedInsert('birth_plans', { user_id: a.id, penolong: marker })
 
   const cases = [
-    { table: 'dose_logs', row: { user_id: a.id, suplemen_id: `${marker}-dose`, tanggal: today, waktu: '23:58', status: 'none' }, filters: [['user_id', a.id], ['suplemen_id', `${marker}-dose`]], update: { status: 'taken' } },
-    { table: 'supplement_reminders', row: { user_id: a.id, nama_suplemen: `${marker}-supp`, waktu: '23:58' }, filters: [['user_id', a.id], ['nama_suplemen', `${marker}-supp`]], update: { waktu: '00:01' } },
-    { table: 'anc_visits', row: { user_id: a.id, tanggal_terjadwal: today, catatan: marker }, filters: null, update: { catatan: `${marker}-changed` } },
-    { table: 'push_subscriptions', row: { user_id: a.id, endpoint: `https://example.invalid/${marker}/push`, p256dh: 'synthetic', auth: 'synthetic' }, filters: null, update: { user_agent: marker } },
-    { table: 'birth_plans', row: { user_id: a.id, penolong: marker }, filters: [['user_id', a.id]], update: { penolong: `${marker}-changed` } },
+    { table: 'screening_results', row: { user_id: a.id, tipe: marker, skor: 0, kategori: 'HIJAU', detail: { marker } }, filters: [['user_id', a.id], ['tipe', marker]], update: { detail: { marker: `${marker}-changed` } } },
+    { table: 'weight_entries', row: { user_id: a.id, tanggal: today, berat_kg: 42 }, filters: [['user_id', a.id], ['tanggal', today]], update: { berat_kg: 42.1 } },
+    { table: 'supplement_reminders', row: { user_id: a.id, nama_suplemen: `${marker}-supp`, waktu: '23:58' }, filters: [['user_id', a.id], ['nama_suplemen', `${marker}-supp`]], update: { waktu: '00:01' }, canDelete: true },
+    { table: 'anc_visits', row: { user_id: a.id, tanggal_terjadwal: today, catatan: marker }, filters: [['user_id', a.id], ['catatan', marker]], update: { catatan: `${marker}-changed` }, canDelete: true },
+    { table: 'diary_entries', row: { user_id: a.id, tanggal: today, teks: marker, mood: 3 }, filters: [['user_id', a.id], ['teks', marker]], update: { teks: `${marker}-changed` } },
+    { table: 'nifas_screenings', row: { user_id: a.id, hari_ke: 0, parameter_vital: { marker }, status: 'HIJAU' }, filters: [['user_id', a.id], ['hari_ke', 0], ['status', 'HIJAU']], update: { status: 'KUNING' } },
+    { table: 'bbl_profiles', row: { user_id: a.id, data_lahir: today, apgar: 8, usia_gestasi: 39 }, filters: [['user_id', a.id], ['data_lahir', today]], update: { apgar: 9 } },
+    { table: 'chat_messages', row: { user_id: a.id, role: 'user', content: marker }, filters: [['user_id', a.id], ['content', marker]], update: { content: `${marker}-changed` } },
+    { table: 'push_subscriptions', row: { user_id: a.id, endpoint: `https://example.invalid/${marker}/push`, p256dh: 'synthetic', auth: 'synthetic' }, filters: [['user_id', a.id], ['endpoint', `https://example.invalid/${marker}/push`]], update: { user_agent: marker }, canDelete: true },
+    { table: 'dose_logs', row: { user_id: a.id, suplemen_id: `${marker}-dose`, tanggal: today, waktu: '23:58', status: 'none' }, filters: [['user_id', a.id], ['suplemen_id', `${marker}-dose`], ['tanggal', today], ['waktu', '23:58']], update: { status: 'taken' }, canDelete: true },
+    { table: 'birth_plans', row: { user_id: a.id, penolong: marker }, filters: [['user_id', a.id]], update: { penolong: `${marker}-changed` }, canDelete: true, existingByUser: true },
   ]
 
   for (const test of cases) {
-    const inserted = await clientA.from(test.table).insert(test.row).select('*').single()
-    assert.ifError(inserted.error)
-    const filters = test.filters ?? [['id', inserted.data.id]]
-    cleanup.push({ name: test.table, run: async () => {
-      let query = clientA.from(test.table).delete()
-      for (const [field, value] of filters) query = query.eq(field, value)
-      const result = await query.select(['dose_logs', 'birth_plans'].includes(test.table) ? 'user_id' : 'id')
-      if (result.error) throw new Error(result.error.code ?? 'unknown')
-    } })
+    let filters = test.filters
+    if (test.existingByUser) {
+      const existing = await clientA.from(test.table).select('*').eq('user_id', a.id).maybeSingle()
+      assert.ifError(existing.error)
+      if (existing.data) {
+        const { user_id, ...original } = existing.data
+        cleanup.push({ name: test.table, run: async () => {
+          const result = await clientA.from(test.table).update(original).eq('user_id', user_id)
+          if (result.error) throw new Error(result.error.code ?? 'unknown')
+        } })
+      } else {
+        const inserted = await clientA.from(test.table).insert(test.row).select('*').single()
+        assert.ifError(inserted.error)
+        filters = [['user_id', a.id]]
+        cleanup.push({ name: test.table, run: async () => {
+          const result = await cleanupClient.from(test.table).delete().eq('user_id', a.id)
+          if (result.error) throw new Error(result.error.code ?? 'unknown')
+        } })
+      }
+    } else {
+      const inserted = await clientA.from(test.table).insert(test.row).select('*').single()
+      assert.ifError(inserted.error)
+      filters = [['id', inserted.data.id]]
+      cleanup.push({ name: test.table, run: async () => {
+        let query = cleanupClient.from(test.table).delete()
+        for (const [field, value] of filters) query = query.eq(field, value)
+        const result = await query.select('*')
+        if (result.error) throw new Error(result.error.code ?? 'unknown')
+      } })
+    }
 
     let readB = clientB.from(test.table).select('*')
     for (const [field, value] of filters) readB = readB.eq(field, value)
@@ -130,18 +196,26 @@ try {
     assert.ifError(updateResult.error)
     assert.equal(updateResult.data.length, 0, `${test.table}: B cannot update A row`)
 
-    let deleteB = clientB.from(test.table).delete().select('*')
-    for (const [field, value] of filters) deleteB = deleteB.eq(field, value)
-    const deleteResult = await deleteB
-    assert.ifError(deleteResult.error)
-    assert.equal(deleteResult.data.length, 0, `${test.table}: B cannot delete A row`)
+    if (test.canDelete) {
+      let deleteB = clientB.from(test.table).delete().select('*')
+      for (const [field, value] of filters) deleteB = deleteB.eq(field, value)
+      const deleteResult = await deleteB
+      assert.ifError(deleteResult.error)
+      assert.equal(deleteResult.data.length, 0, `${test.table}: B cannot delete A row`)
+    }
+
+    let updateA = clientA.from(test.table).update(test.update).select('*')
+    for (const [field, value] of filters) updateA = updateA.eq(field, value)
+    const ownerUpdate = await updateA
+    assert.ifError(ownerUpdate.error)
+    assert.equal(ownerUpdate.data.length, 1, `${test.table}: A can update its own row`)
 
     let ownerRead = clientA.from(test.table).select('*')
     for (const [field, value] of filters) ownerRead = ownerRead.eq(field, value)
     const ownerResult = await ownerRead
     assert.ifError(ownerResult.error)
     assert.equal(ownerResult.data.length, 1, `${test.table}: A still owns the row`)
-    outcomes.push(`${test.table}: cross-account read/update/delete denied`)
+    outcomes.push(`${test.table}: owner read/update allowed; B cross-account read/update denied${test.canDelete ? '/delete' : ''}`)
   }
 
   const storagePath = `${a.id}/kritis3-${marker}.png`

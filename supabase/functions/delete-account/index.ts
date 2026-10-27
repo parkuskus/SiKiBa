@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.112.4";
 import { hasMfaClaim } from "../_shared/emailMfa.ts";
+import { deleteAccountWithAvatarRollback } from "../_shared/deleteAccount.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -53,15 +54,26 @@ serve(async (request) => {
 
   try {
     await collect(user.id);
-    for (let offset = 0; offset < paths.length; offset += 100) {
-      const { error } = await bucket.remove(paths.slice(offset, offset + 100));
-      if (error) return response(502, { error: "avatar_cleanup_failed" });
-    }
   } catch {
     return response(502, { error: "avatar_cleanup_failed" });
   }
 
-  const { error: deleteError } = await admin.auth.admin.deleteUser(user.id);
-  if (deleteError) return response(502, { error: "account_delete_failed" });
+  const operationId = crypto.randomUUID();
+  const result = await deleteAccountWithAvatarRollback({
+    userId: user.id,
+    paths,
+    operationId,
+    bucket,
+    deleteUser: () => admin.auth.admin.deleteUser(user.id),
+  });
+  if (!result.deleted) {
+    return response(502, { error: result.avatarRestoreFailed ? "avatar_restore_failed" : "account_delete_failed" });
+  }
+  if (result.avatarCleanupPending) {
+    console.error("Avatar cleanup pending after account deletion", {
+      userId: user.id,
+      stagedFolder: `${user.id}/.delete-${operationId}`,
+    });
+  }
   return response(200, { deleted: "true" });
 });
