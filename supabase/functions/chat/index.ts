@@ -7,6 +7,7 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.112.4";
 import { quickChatReply, retrievalTerms, shouldEscalate } from "../_shared/chatPolicy.ts";
 import { buildExternalLlmMessages } from "../_shared/chatContext.ts";
+import { ChatRequestError, minimizeExternalText, parseChatPayload, readBoundedJson, requireExternalConsent } from "../_shared/chatRequest.ts";
 import { hasMfaClaim } from "../_shared/emailMfa.ts";
 
 const LLM_BASE_URL = Deno.env.get("LLM_BASE_URL") ?? "https://api.openai.com/v1";
@@ -75,7 +76,7 @@ async function embed(text: string): Promise<number[]> {
   const res = await fetch(`${LLM_BASE_URL}/embeddings`, {
     method: "POST",
     headers: llmHeaders(),
-    body: JSON.stringify({ model: EMBEDDING_MODEL, input: text.slice(0, 2000) }),
+    body: JSON.stringify({ model: EMBEDDING_MODEL, input: text }),
   });
   if (!res.ok) throw new Error(`embed gagal: ${res.status}`);
   const json = await res.json();
@@ -89,9 +90,11 @@ serve(async (req) => {
     const requestStarted = performance.now();
     const accessToken = req.headers.get("Authorization")?.match(/^Bearer\s+([^\s]+)$/i)?.[1];
     if (!accessToken) return Response.json({ error: "unauthorized" }, { status: 401, headers: corsHeaders });
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
+      supabaseUrl,
+      anonKey,
       { auth: { persistSession: false, autoRefreshToken: false } },
     );
     const { data: { user }, error: authErr } = await supabase.auth.getUser(accessToken);
@@ -99,29 +102,44 @@ serve(async (req) => {
     const { data: { claims }, error: claimsErr } = await supabase.auth.getClaims(accessToken);
     if (claimsErr || !hasMfaClaim(claims)) return Response.json({ error: "mfa_required" }, { status: 403, headers: corsHeaders });
 
-    const body = await req.json() as { message?: unknown; history?: unknown; hasRedResult?: unknown };
-    const message = body.message;
-    if (typeof message !== "string" || !message.trim()) return Response.json({ error: "message kosong" }, { status: 400, headers: corsHeaders });
+    let body: ReturnType<typeof parseChatPayload>;
+    try {
+      body = parseChatPayload(await readBoundedJson(req));
+    } catch (error) {
+      if (error instanceof ChatRequestError) return Response.json({ error: error.message }, { status: error.status, headers: corsHeaders });
+      throw error;
+    }
+    const { message, history } = body;
     const quick = quickChatReply(message);
     if (quick) return Response.json({ ...quick, sources: [], hasRedResult: false }, { headers: corsHeaders });
-    const history = Array.isArray(body.history)
-      ? body.history.slice(-6).flatMap((turn) => {
-        if (!turn || typeof turn !== "object") return [];
-        const item = turn as { role?: unknown; content?: unknown };
-        if ((item.role !== "user" && item.role !== "assistant") || typeof item.content !== "string" || !item.content.trim()) return [];
-        return [{ role: item.role, content: item.content.trim().slice(0, 1000) }];
-      })
-      : [];
+    try {
+      requireExternalConsent(body.externalConsent);
+    } catch (error) {
+      if (error instanceof ChatRequestError) return Response.json({ error: error.message }, { status: error.status, headers: corsHeaders });
+      throw error;
+    }
+
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!serviceKey) return Response.json({ error: "chat rate limit unavailable" }, { status: 503, headers: corsHeaders });
+    const rateLimitClient = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
+    const { data: allowed, error: rateLimitError } = await rateLimitClient.rpc("consume_chat_rate_limit", { p_user_id: user.id });
+    if (rateLimitError) {
+      console.error("[chat] rate limit check failed");
+      return Response.json({ error: "chat rate limit unavailable" }, { status: 503, headers: corsHeaders });
+    }
+    if (allowed !== true) return Response.json({ error: "batas penggunaan chat tercapai, coba lagi nanti" }, { status: 429, headers: { ...corsHeaders, "Retry-After": "600" } });
 
     // Only the opted-in message/history and retrieved public guideline content are sent to the LLM.
-    const embeddingPromise = embed(message).catch(() => {
+    const externalMessage = minimizeExternalText(message);
+    const externalHistory = history.map((turn) => ({ ...turn, content: minimizeExternalText(turn.content) }));
+    const embeddingPromise = embed(externalMessage).catch(() => {
       console.warn("[chat] embedding unavailable");
       return null;
     });
     const embeddingStarted = performance.now();
     const queryEmbedding = await embeddingPromise;
     const embeddingMs = Math.round(performance.now() - embeddingStarted);
-    const adaMerah = body.hasRedResult === true;
+    const adaMerah = body.hasRedResult;
 
     // Hybrid retrieval uses exact vector ranking for this small corpus plus lexical terms.
     let guideline = "";
@@ -154,7 +172,7 @@ serve(async (req) => {
       headers: llmHeaders(),
       body: JSON.stringify({
         model: LLM_MODEL, temperature: 0.2, max_tokens: 480, stream: true,
-        messages: buildExternalLlmMessages(SYSTEM_PROMPT, history, message, guideline),
+        messages: buildExternalLlmMessages(SYSTEM_PROMPT, externalHistory, externalMessage, guideline),
       }),
     });
     if (!llmRes.ok) throw new Error(`LLM gagal: ${llmRes.status}`);

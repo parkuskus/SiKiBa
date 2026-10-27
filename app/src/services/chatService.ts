@@ -59,7 +59,7 @@ async function invokeChatStream(message: string, history: ChatTurn[], hasRedResu
       "Content-Type": "application/json",
       Accept: "text/event-stream, application/json",
     },
-    body: JSON.stringify({ message, history, hasRedResult }),
+    body: JSON.stringify({ message, history, hasRedResult, externalConsent: true }),
   })
   if (!response.ok) throw new Error(`Chat gagal (${response.status})`)
   if (!response.headers.get("content-type")?.includes("text/event-stream")) return await response.json() as ChatResponse

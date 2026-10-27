@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react"
 import { ArrowUp, Plus, X, ShieldCheck } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import { tanyaChatbot } from "@/services/chatService"
+import { MAX_CHAT_MESSAGE_CHARS } from "../../../../supabase/functions/_shared/chatRequest"
 import { getCurrentUserId } from "@/data/currentUser"
 import { shareViaWA } from "@/services/exportService"
 import { AVATAR, GELAR, NAMA, PLACEHOLDER, TYPING, sapaAcak } from "@/features/chatbot/personality"
@@ -192,6 +193,7 @@ export default function ChatbotPage({ onClose }: { onClose: () => void }) {
           ref={composer}
           rows={1}
           wrap="soft"
+          maxLength={MAX_CHAT_MESSAGE_CHARS}
           value={input}
           onChange={(event) => {
             setInput(event.target.value)
@@ -212,7 +214,7 @@ export default function ChatbotPage({ onClose }: { onClose: () => void }) {
       {pendingExternal && (
         <section className="border-t border-[#D9E7E2] bg-[#FFF8EC] px-4 py-3" aria-labelledby="kira-consent-title">
           <h2 id="kira-consent-title" className="text-sm font-bold text-[#1D2B29]">Izin AI online</h2>
-          <p className="mt-1 text-xs leading-relaxed text-[#33443F]">Jika setuju, pesan dan riwayat obrolan ini dikirim ke layanan AI eksternal dan disimpan di akun SIAGA Bunda. Profil dan hasil skrining tidak ikut dikirim. Izin berlaku sampai obrolan baru dimulai.</p>
+          <p className="mt-1 text-xs leading-relaxed text-[#33443F]">Jika setuju, pesan dan riwayat obrolan ini dikirim ke layanan AI eksternal dan disimpan di akun SIAGA Bunda. Profil dan hasil skrining tidak ikut dikirim. Email dan nomor telepon umum disamarkan otomatis. Hindari menulis nama lengkap atau alamat. Izin berlaku sampai obrolan baru dimulai.</p>
           <div className="mt-3 flex gap-2">
             <button type="button" onClick={() => { setExternalConsent(true); void kirim(pendingExternal, true) }} className="min-h-11 flex-1 rounded-full bg-[#4A6E54] px-3 text-xs font-semibold text-white">Setuju dan kirim</button>
             <button type="button" onClick={() => setPendingExternal(null)} className="min-h-11 rounded-full bg-white px-4 text-xs font-semibold text-[#33443F] ring-1 ring-[#D9E7E2]">Batal</button>

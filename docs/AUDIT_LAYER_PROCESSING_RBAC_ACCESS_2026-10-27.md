@@ -12,24 +12,25 @@ SIAGA Bunda adalah PWA untuk skrining ibu dan bayi, tracker, edukasi, ekspor, da
 
 - **Tidak ditemukan bukti kebocoran lintas-akun melalui jalur anon/authenticated** pada policy dan fungsi yang dibaca. Migrations memberi policy owner dan klaim MFA untuk tabel pengguna; service-role hanya berada di server pada jalur yang ditinjau.
 - **Belum dapat menyatakan keamanan produksi terverifikasi:** konfigurasi, grants, deployment migration, dan akses operator pada proyek Supabase live tidak diperiksa.
-- Prioritas perbaikan: kendalikan data yang keluar ke penyedia chatbot, pasang batas pemakaian chatbot, dan tutup jalur default-exposure untuk tabel public baru.
+- Tindak lanjut: dua Must fix chatbot sudah ditangani di source; Should fix terkait default-exposure tabel public, pengujian RLS/clinical rules, dan partial failure hapus akun masih terbuka.
 
 ## Must fix
 
 ### 1. [Ditangani di kode, menunggu deploy] Chatbot meneruskan data kesehatan dan teks bebas ke penyedia LLM eksternal
 
-- **Lokasi:** alur saat ini `app/src/features/chatbot/ChatbotPage.tsx:64-86,212-219`, `app/src/services/chatService.ts:47-66,69-103`, `supabase/functions/chat/index.ts:102-159,224-230`, dan `supabase/functions/_shared/chatContext.ts`.
+- **Lokasi:** alur saat ini `app/src/features/chatbot/ChatbotPage.tsx:64-86,212-219`, `app/src/services/chatService.ts:47-66,69-103`, `supabase/functions/chat/index.ts:102-180,224-230`, `supabase/functions/_shared/chatRequest.ts`, dan `supabase/functions/_shared/chatContext.ts`.
 - **Sebelumnya:** endpoint mengirim pesan dan riwayat ke embedding/LLM, serta membaca profil, skrining, nifas, dan bayi untuk konteks prompt. RLS mengisolasi akun, tetapi bukan aliran keluar ke vendor.
-- **Perbaikan kode:** UI meminta persetujuan eksplisit sebelum request online pertama; izin hanya berlaku sampai obrolan baru. Tanpa izin, jawaban cepat/FAQ/offline tetap lokal. Edge Function tidak lagi membaca data klinis tersimpan; ke LLM hanya dikirim system prompt, riwayat yang dikirim pengguna, pertanyaan, dan potongan panduan relevan. Indikator hasil MERAH dipakai hanya untuk keputusan eskalasi, bukan prompt. UI mengungkap bahwa chat yang disetujui dikirim ke layanan AI dan disimpan di SIAGA Bunda.
-- **Sisa risiko:** teks bebas dan riwayat tetap dapat memuat pengenal jika pengguna mengetikkannya; minimisasi otomatis belum dilakukan. Retensi vendor perlu diverifikasi dari konfigurasi/kontrak. Perubahan Edge Function belum dideploy dan persetujuan adalah kontrol UI, bukan bukti consent yang diverifikasi server.
+- **Perbaikan kode:** UI meminta persetujuan eksplisit sebelum request online pertama; izin hanya berlaku sampai obrolan baru. Tanpa izin, jawaban cepat/FAQ/offline tetap lokal. Edge Function menolak request AI tanpa flag persetujuan dan tidak membaca data klinis tersimpan. Email dan nomor telepon yang cocok dengan pola umum disamarkan pada pesan/riwayat sebelum embedding dan prompt; indikator MERAH hanya dipakai untuk eskalasi. UI menjelaskan pemrosesan dan penyimpanan chat.
+- **Sisa risiko:** masking hanya mencakup pola email/nomor telepon umum, bukan nama, alamat, atau semua kemungkinan pengenal; UI menyarankan pengguna tidak mengetikkannya. Flag consent dapat dipalsukan oleh klien nonresmi dan bukan bukti persetujuan yang disimpan server. Retensi vendor harus diverifikasi. Perubahan Edge Function belum dideploy.
 
-### 2. Chat tidak membatasi ukuran pesan maupun frekuensi pemanggilan pada lapisan aplikasi
+### 2. [Migration diterapkan, menunggu Edge Function deploy] Chat tidak membatasi ukuran pesan maupun frekuensi pemanggilan
 
-- **Lokasi:** `supabase/functions/chat/index.ts:131-160,218-229`; klien mengirim isi pesan di `app/src/services/chatService.ts:46-65`.
-- **Apa ini:** handler hanya memeriksa pesan kosong. Riwayat dibatasi enam giliran dan seribu karakter per giliran, tetapi `message` sendiri tidak punya batas; embedding memotong pesan ke 2.000 karakter, sementara prompt completion memakai pesan utuh.
-- **Masalah dan prinsip:** satu akun atau skrip dapat mengirim body besar sampai batas gateway, atau mengulang request yang masing-masing dapat memicu biaya embedding dan completion. Batas `max_tokens` hanya membatasi jawaban, bukan ukuran input atau jumlah request.
-- **Perbaikan:** tolak body yang melebihi batas byte sebelum parsing, validasi panjang pesan dan riwayat server-side, dan pasang rate limit/kuota per pengguna pada gateway atau server. Gunakan batas input yang sama untuk embedding dan completion serta uji batas dan payload malformed.
-- **Jika dibiarkan:** biaya, latensi, dan kapasitas chatbot dapat terganggu oleh satu akun atau klien yang salah konfigurasi.
+- **Lokasi:** `supabase/functions/_shared/chatRequest.ts`, `supabase/functions/chat/index.ts`, `supabase/migrations/016_chat_rate_limit.sql`, dan `app/src/features/chatbot/ChatbotPage.tsx`.
+- **Sebelumnya:** pesan bebas dikirim penuh ke completion; embedding memotongnya pada 2.000 karakter. Riwayat dipotong diam-diam, body diparse tanpa batas ukuran, dan tidak ada kuota.
+- **Perbaikan kode:** stream body ditolak saat melampaui 32 KiB; pesan dibatasi 2.000 karakter dan tiap maksimal 6 giliran riwayat 1.000 karakter. Oversize ditolak sebelum embedding atau completion. Nilai pesan tervalidasi yang sama digunakan pada keduanya; textarea juga membatasi input.
+- **Rate limit:** migration menambah limiter atomik per pengguna, maksimal 20 request AI per jendela 10 menit. Hanya Edge Function service-role yang dapat memanggil RPC; jika limiter gagal, request AI ditolak (fail closed). Permintaan cepat/FAQ yang dijawab lokal tidak memakai kuota vendor.
+- **Verifikasi/sisa:** migration `016` diterapkan ke proyek tertaut `SIAGA-Bunda`; `supabase migration list --linked` mengonfirmasi versi lokal dan remote sama-sama `016`. Ada pemeriksaan batas input di `app/scripts/check-chat-privacy.mjs` dan SQL regression test `supabase/tests/016_chat_rate_limit.sql`, tetapi SQL test belum dijalankan. Edge Function belum dideploy, jadi endpoint live belum memakai validasi atau limiter baru.
+- **Tindak lanjut:** deploy Edge Function `chat` setelah review/pengecekan Deno; limiter aktif untuk endpoint hanya setelah deploy itu.
 
 ## Should fix
 
@@ -81,6 +82,6 @@ SIAGA Bunda adalah PWA untuk skrining ibu dan bayi, tracker, edukasi, ekspor, da
 - Tidak menjalankan `npm run build` untuk audit ulang ini; perubahan laporan tidak mengubah kode. Sebelumnya build setelah pembaruan dokumen/model enkripsi berhasil, tetapi itu bukan bukti RLS atau production configuration.
 - Tidak membaca setiap komponen UI, setiap helper form, seluruh konfigurasi Dashboard, log/retensi vendor LLM, atau melakukan penetration test. Audit berfokus pada jalur berisiko tinggi yang disebut di cakupan.
 
-**Verdict:** policy owner/MFA yang ada tampak mencegah akses silang pada jalur cloud yang ditinjau, tetapi verifikasi live belum ada dan skrip A/B perlu diperbarui agar sesuai MFA. Perbaiki minimisasi data chatbot, pembatasan request, fail-closed untuk tabel baru, serta gap uji RLS dan clinical rules.
+**Verdict:** migration rate-limit sudah diterapkan ke Supabase tertaut, tetapi dua Must fix chatbot belum aktif sepenuhnya sampai Edge Function baru dideploy. Policy owner/MFA yang ditinjau tampak mencegah akses silang; skrip A/B perlu diperbarui agar sesuai MFA. Temuan Should fix lainnya masih terbuka.
 
 **Not checked:** grants/policies aktual proyek Supabase, SSL enforcement, backup dan akses organisasi, konfigurasi rate limit gateway, kontrak/retensi LLM, audit log, dan uji perangkat produksi.
