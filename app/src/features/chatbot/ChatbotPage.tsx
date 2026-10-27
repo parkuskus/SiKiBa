@@ -40,6 +40,8 @@ export default function ChatbotPage({ onClose }: { onClose: () => void }) {
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
   const [online, setOnline] = useState(() => typeof navigator === "undefined" || navigator.onLine)
+  const [externalConsent, setExternalConsent] = useState(false)
+  const [pendingExternal, setPendingExternal] = useState<string | null>(null)
   const [emergency, setEmergency] = useState(false)
   const [shareError, setShareError] = useState(false)
   const messagesEnd = useRef<HTMLDivElement>(null)
@@ -59,23 +61,29 @@ export default function ChatbotPage({ onClose }: { onClose: () => void }) {
     messagesEnd.current?.scrollIntoView({ behavior: loading ? "auto" : "smooth", block: "end" })
   }, [msgs, loading])
 
-  async function kirim(text = input) {
+  async function kirim(text = input, allowExternalProcessing = externalConsent) {
     const pesan = text.trim()
     if (!pesan || loading) return
     const history = msgs.slice(1).slice(-6)
       .map((message) => ({ role: message.dari === "ibu" ? "user" as const : "assistant" as const, content: message.teks }))
-    setInput("")
-    if (composer.current) composer.current.style.height = "48px"
-    setMsgs((current) => [...current, { dari: "ibu", teks: pesan }])
     setLoading(true)
     try {
-      const reply = await tanyaChatbot(pesan, history, (delta) => {
+      const localReply = allowExternalProcessing ? null : await tanyaChatbot(pesan, history)
+      if (localReply?.consentRequired) {
+        setPendingExternal(pesan)
+        return
+      }
+      setPendingExternal(null)
+      setInput("")
+      if (composer.current) composer.current.style.height = "48px"
+      setMsgs((current) => [...current, { dari: "ibu", teks: pesan }])
+      const reply = localReply ?? await tanyaChatbot(pesan, history, (delta) => {
         setMsgs((current) => {
           const last = current[current.length - 1]
           if (last?.dari === "kira") return [...current.slice(0, -1), { ...last, teks: last.teks + delta }]
           return [...current, { dari: "kira", teks: delta }]
         })
-      })
+      }, true)
       setMsgs((current) => {
         const last = current[current.length - 1]
         const answer = { dari: "kira" as const, teks: reply.answer, verified: reply.verified, sources: reply.sources }
@@ -99,6 +107,8 @@ export default function ChatbotPage({ onClose }: { onClose: () => void }) {
     if (loading) return
     setMsgs([{ dari: "kira", teks: sapaAcak() }])
     setInput("")
+    setExternalConsent(false)
+    setPendingExternal(null)
     setEmergency(false)
     setShareError(false)
   }
@@ -185,6 +195,7 @@ export default function ChatbotPage({ onClose }: { onClose: () => void }) {
           value={input}
           onChange={(event) => {
             setInput(event.target.value)
+            setPendingExternal(null)
             event.currentTarget.style.height = "auto"
             event.currentTarget.style.height = `${Math.min(event.currentTarget.scrollHeight, 128)}px`
           }}
@@ -197,6 +208,17 @@ export default function ChatbotPage({ onClose }: { onClose: () => void }) {
           <ArrowUp className="size-5" />
         </button>
       </form>
+
+      {pendingExternal && (
+        <section className="border-t border-[#D9E7E2] bg-[#FFF8EC] px-4 py-3" aria-labelledby="kira-consent-title">
+          <h2 id="kira-consent-title" className="text-sm font-bold text-[#1D2B29]">Izin AI online</h2>
+          <p className="mt-1 text-xs leading-relaxed text-[#33443F]">Jika setuju, pesan dan riwayat obrolan ini dikirim ke layanan AI eksternal dan disimpan di akun SIAGA Bunda. Profil dan hasil skrining tidak ikut dikirim. Izin berlaku sampai obrolan baru dimulai.</p>
+          <div className="mt-3 flex gap-2">
+            <button type="button" onClick={() => { setExternalConsent(true); void kirim(pendingExternal, true) }} className="min-h-11 flex-1 rounded-full bg-[#4A6E54] px-3 text-xs font-semibold text-white">Setuju dan kirim</button>
+            <button type="button" onClick={() => setPendingExternal(null)} className="min-h-11 rounded-full bg-white px-4 text-xs font-semibold text-[#33443F] ring-1 ring-[#D9E7E2]">Batal</button>
+          </div>
+        </section>
+      )}
 
       {emergency && (
         <EmergencyOverlay

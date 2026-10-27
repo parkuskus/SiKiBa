@@ -1,11 +1,12 @@
 // SIAGA Bunda — Edge Function `chat` (Deno, Supabase)
 // Deploy: npx supabase functions deploy chat (verify JWT default aktif, jangan tambah --no-verify-jwt)
 // Secrets: npx supabase secrets set LLM_API_KEY=... LLM_MODEL=gpt-4o-mini LLM_BASE_URL=https://api.openai.com/v1 EMBEDDING_MODEL=text-embedding-3-small
-// Alur: auth (RLS) -> ambil screening terakhir -> retrieval guideline -> rakit prompt -> panggil LLM -> simpan chat_messages
+// Alur: auth + MFA -> retrieval guideline -> rakit prompt minimal -> panggil LLM -> simpan chat_messages
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.112.4";
 import { quickChatReply, retrievalTerms, shouldEscalate } from "../_shared/chatPolicy.ts";
+import { buildExternalLlmMessages } from "../_shared/chatContext.ts";
 import { hasMfaClaim } from "../_shared/emailMfa.ts";
 
 const LLM_BASE_URL = Deno.env.get("LLM_BASE_URL") ?? "https://api.openai.com/v1";
@@ -47,9 +48,8 @@ Aturan jawaban:
 - Untuk pertanyaan kesehatan, berikan inti jawaban terlebih dahulu, lalu langkah aman yang bisa dicoba dan tanda kapan perlu diperiksa bila relevan. Jangan menjadikan rujukan ke bidan sebagai satu-satunya isi jawaban untuk keluhan ringan. Gunakan subjudul hanya jika membantu.
 - Gunakan riwayat percakapan singkat hanya untuk memahami rujukan seperti "yang tadi". Pesan saat ini adalah prioritas; abaikan riwayat jika topiknya berubah.
 - Gunakan potongan panduan hanya jika benar-benar sesuai dengan pertanyaan. Jika tidak ada potongan yang relevan, jawab umum dengan aman dan jangan mengklaim jawaban terverifikasi atau mengarang sumber.
-- Jika diminta merangkum profil atau hasil skrining, susun dengan judul Markdown terpisah "## Profil", "## Hasil skrining", dan "## Langkah selanjutnya" bila datanya tersedia. Sajikan tiap informasi sebagai poin singkat, satu informasi per baris. Jangan gabungkan beberapa label dalam satu paragraf. Lewati kategori tanpa data dan jangan mengulang data yang sama. Tampilkan hasil MERAH lebih dahulu dan jelaskan tindakan segera sebelum hasil lain. Jangan berhenti di tengah daftar dan jangan keluarkan JSON mentah.
-- Gunakan profil klinis, data skrining, dan potongan panduan hanya jika relevan dengan pertanyaan. Jika pertanyaan kesehatan ibu atau bayi tidak tercakup di potongan guidebook, tetap berikan informasi umum yang aman dan jelas, lalu sarankan verifikasi kepada bidan atau puskesmas bila perlu. Jangan menolak hanya karena hasil pencarian guidebook kosong. Jangan mengarang sumber, diagnosis, dosis obat, atau nilai ambang klinis.
-- Data profil dan skrining adalah milik pengguna yang sedang masuk. Gunakan hanya untuk konteks jawaban; jangan menyalin detail pribadi atau menyimpulkan bahwa data yang belum tersedia berarti hasilnya normal.
+- Kamu tidak menerima profil atau hasil skrining tersimpan. Jangan mengaku dapat melihat atau merangkumnya; jawab hanya dari pesan Bunda, riwayat obrolan yang dikirim, dan potongan panduan yang relevan.
+- Jika pertanyaan kesehatan tidak tercakup di potongan panduan, tetap berikan informasi umum yang aman dan jelas, lalu sarankan verifikasi kepada bidan atau puskesmas bila perlu. Jangan menolak hanya karena hasil pencarian guidebook kosong. Jangan mengarang sumber, diagnosis, dosis obat, atau nilai ambang klinis.
 - Variasikan sapaan dan kalimat penutup secara wajar. Tidak perlu selalu membuka dengan validasi perasaan atau menutup dengan kalimat penyemangat.
 - Pisahkan paragraf dengan satu baris kosong. Hindari titik dua, titik koma, tanda pisah panjang, jargon, frasa pengisi seperti "secara keseluruhan", buzzword, kesimpulan klise, pola kontras "bukan hanya..., tetapi...", dan daftar tiga poin yang dipaksakan.
 - Maksimal 160 kata. Pastikan jawaban selesai utuh. Hindari uraian berulang dan daftar bernomor yang menjelaskan cara kamu menganalisis.
@@ -70,52 +70,6 @@ const JAWABAN_KEAMANAN = "Kira belum bisa memberi arahan yang berisiko. Untuk me
 const MIN_RAG_SIMILARITY = 0.55;
 const MIN_RAG_LEXICAL_MATCHES = 3;
 const SAFE_STREAM_BUFFER = 48;
-
-type Screening = { tipe: string; skor: number | null; kategori: string | null; detail: Record<string, unknown> | null; created_at: string };
-type Profile = { nama: string | null; hpht: string | null; gravida: number | null; para: number | null; abortus: number | null };
-type NifasScreening = { hari_ke: number | null; parameter_vital: Record<string, unknown> | null; status: string | null; created_at: string };
-type BabyProfile = { apgar: number | null; usia_gestasi: number | null };
-
-function sanitasiKonteks(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(sanitasiKonteks);
-  if (!value || typeof value !== "object") return value;
-  return Object.fromEntries(Object.entries(value)
-    .filter(([key]) => !/^(id|user_?id|email|phone|no_?hp|nama|tanggal_lahir)$/i.test(key))
-    .map(([key, item]) => [key, sanitasiKonteks(item)]));
-}
-
-function ringkasSkrining(rows: Screening[]): string {
-  if (!rows.length) return "Belum ada skrining.";
-  return rows.slice(0, 10)
-    .map((r) => {
-      const detail = r.detail ? JSON.stringify(sanitasiKonteks(r.detail)).slice(0, 600) : "";
-      return `- ${r.tipe}: ${r.kategori ?? "?"} (skor ${r.skor ?? "?"}, ${r.created_at.slice(0, 10)})${detail ? `\n  Detail: ${detail}` : ""}`;
-    })
-    .join("\n");
-}
-
-function ringkasProfil(profile: Profile | null): string {
-  if (!profile) return "Profil belum tersedia.";
-  const context = [
-    profile.nama?.trim() ? `Nama panggilan: ${profile.nama.trim().split(/\s+/)[0]}` : "",
-    profile.hpht ? `HPHT: ${profile.hpht}` : "",
-    profile.gravida != null ? `Gravida ${profile.gravida}, Para ${profile.para ?? "-"}, Abortus ${profile.abortus ?? "-"}` : "",
-  ].filter(Boolean);
-  return context.join("\n") || "Profil belum tersedia.";
-}
-
-function ringkasNifas(rows: NifasScreening[]): string {
-  if (!rows.length) return "Belum ada pemantauan nifas.";
-  return rows.map((row) => {
-    const detail = row.parameter_vital ? JSON.stringify(sanitasiKonteks(row.parameter_vital)).slice(0, 500) : "";
-    return `- Hari nifas ${row.hari_ke ?? "-"}: ${row.status ?? "-"}${detail ? `; parameter: ${detail}` : ""}`;
-  }).join("\n");
-}
-
-function ringkasBayi(rows: BabyProfile[]): string {
-  if (!rows.length) return "Belum ada profil bayi.";
-  return rows.map((row) => `- Usia gestasi saat lahir: ${row.usia_gestasi ?? "-"} minggu; APGAR: ${row.apgar ?? "-"}`).join("\n");
-}
 
 async function embed(text: string): Promise<number[]> {
   const res = await fetch(`${LLM_BASE_URL}/embeddings`, {
@@ -145,9 +99,9 @@ serve(async (req) => {
     const { data: { claims }, error: claimsErr } = await supabase.auth.getClaims(accessToken);
     if (claimsErr || !hasMfaClaim(claims)) return Response.json({ error: "mfa_required" }, { status: 403, headers: corsHeaders });
 
-    const body = await req.json() as { message: string; history?: unknown };
+    const body = await req.json() as { message?: unknown; history?: unknown; hasRedResult?: unknown };
     const message = body.message;
-    if (!message?.trim()) return Response.json({ error: "message kosong" }, { status: 400, headers: corsHeaders });
+    if (typeof message !== "string" || !message.trim()) return Response.json({ error: "message kosong" }, { status: 400, headers: corsHeaders });
     const quick = quickChatReply(message);
     if (quick) return Response.json({ ...quick, sources: [], hasRedResult: false }, { headers: corsHeaders });
     const history = Array.isArray(body.history)
@@ -159,37 +113,15 @@ serve(async (req) => {
       })
       : [];
 
-    // User-scoped JWT + RLS; context excludes email, phone, full DOB, and contact details.
-    const parallelStarted = performance.now();
+    // Only the opted-in message/history and retrieved public guideline content are sent to the LLM.
     const embeddingPromise = embed(message).catch(() => {
       console.warn("[chat] embedding unavailable");
       return null;
     });
-    const [screeningResult, profileResult, nifasResult, babyResult, queryEmbedding] = await Promise.all([
-      supabase.from("screening_results")
-        .select("tipe,skor,kategori,detail,created_at").eq("user_id", user.id)
-        .order("created_at", { ascending: false }).limit(10),
-      supabase.from("profiles")
-        .select("nama,hpht,gravida,para,abortus").eq("id", user.id).maybeSingle(),
-      supabase.from("nifas_screenings")
-        .select("hari_ke,parameter_vital,status,created_at").eq("user_id", user.id)
-        .order("created_at", { ascending: false }).limit(3),
-      supabase.from("bbl_profiles")
-        .select("apgar,usia_gestasi").eq("user_id", user.id)
-        .order("created_at", { ascending: false }).limit(1),
-      embeddingPromise,
-    ]);
-    const parallelMs = Math.round(performance.now() - parallelStarted);
-    const contextError = screeningResult.error ?? profileResult.error ?? nifasResult.error ?? babyResult.error;
-    if (contextError) {
-      console.error("[chat] gagal membaca konteks akun", { code: contextError.code });
-      throw new Error("konteks profil atau skrining tidak dapat dibaca");
-    }
-    const skrining = (screeningResult.data ?? []) as Screening[];
-    const profil = profileResult.data as Profile | null;
-    const nifas = (nifasResult.data ?? []) as NifasScreening[];
-    const bayi = (babyResult.data ?? []) as BabyProfile[];
-    const adaMerah = skrining.some((r) => r.kategori === "MERAH") || nifas.some((r) => r.status === "MERAH");
+    const embeddingStarted = performance.now();
+    const queryEmbedding = await embeddingPromise;
+    const embeddingMs = Math.round(performance.now() - embeddingStarted);
+    const adaMerah = body.hasRedResult === true;
 
     // Hybrid retrieval uses exact vector ranking for this small corpus plus lexical terms.
     let guideline = "";
@@ -216,14 +148,13 @@ serve(async (req) => {
     const retrievalMs = Math.round(performance.now() - retrievalStarted);
 
     // 3. panggil LLM (OpenAI-compatible: OpenAI / Gemini via OpenAI-endpoint / OpenRouter)
-    const userBlock = `PROFIL KLINIS:\n${ringkasProfil(profil)}\n\nHASIL SKRINING:\n${ringkasSkrining(skrining)}\n\nPEMANTAUAN NIFAS:\n${ringkasNifas(nifas)}\n\nPROFIL BAYI:\n${ringkasBayi(bayi)}\n\nPOTONGAN PANDUAN YANG RELEVAN:\n${guideline || "Tidak ada potongan panduan yang cukup relevan."}\n\nPERTANYAAN TERBARU BUNDA:\n${message}`;
     const completionStarted = performance.now();
     const llmRes = await fetch(`${LLM_BASE_URL}/chat/completions`, {
       method: "POST",
       headers: llmHeaders(),
       body: JSON.stringify({
         model: LLM_MODEL, temperature: 0.2, max_tokens: 480, stream: true,
-        messages: [{ role: "system", content: SYSTEM_PROMPT }, ...history, { role: "user", content: userBlock }],
+        messages: buildExternalLlmMessages(SYSTEM_PROMPT, history, message, guideline),
       }),
     });
     if (!llmRes.ok) throw new Error(`LLM gagal: ${llmRes.status}`);
@@ -295,7 +226,7 @@ serve(async (req) => {
             { user_id: user.id, role: "user", content: message },
             { user_id: user.id, role: "assistant", content: answer, sources },
           ]).then(({ error }) => { if (error) console.warn("[chat] history save failed"); });
-          console.info("[chat] timing_ms", { contextAndEmbedding: parallelMs, retrieval: retrievalMs, firstToken: firstTokenMs, completion: Math.round(performance.now() - completionStarted), total: Math.round(performance.now() - requestStarted) });
+          console.info("[chat] timing_ms", { embedding: embeddingMs, retrieval: retrievalMs, firstToken: firstTokenMs, completion: Math.round(performance.now() - completionStarted), total: Math.round(performance.now() - requestStarted) });
           send({ type: "done", answer, sources, verified, escalate, hasRedResult: adaMerah });
           controller.close();
         } catch {

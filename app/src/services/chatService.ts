@@ -3,11 +3,12 @@ import { FAQ, JAWABAN_BINGUNG, JAWABAN_KEAMANAN, JAWABAN_OFFLINE } from "@/featu
 import { consumeChatStream, type StreamChatPayload } from "@/services/chatStream"
 import { db } from "@/data/db"
 import { getCurrentUserId } from "@/data/currentUser"
+import { requiresExternalChatConsent } from "@/services/chatPrivacy"
 import { quickChatReply, shouldEscalate } from "../../../supabase/functions/_shared/chatPolicy"
 
 // ponytail: client tipis — online -> Edge Function `chat`, offline -> FAQ hangat lokal. API key tidak pernah di sini.
 
-export type ChatReply = { answer: string; sources: string[]; escalate: boolean; offline: boolean; verified: boolean }
+export type ChatReply = { answer: string; sources: string[]; escalate: boolean; offline: boolean; verified: boolean; consentRequired?: boolean }
 export type ChatTurn = { role: "user" | "assistant"; content: string }
 type ChatResponse = StreamChatPayload
 
@@ -43,7 +44,7 @@ function jawabFAQ(pesan: string) {
 const berisiProsesInternal = /(?:^|\n)\s*(?:here['’]s a thinking process|let me think step by step|thinking process:|chain[- ]of[- ]thought|analyze user input:|identify the core question(?:\/intent)?:|check rules?\s*&\s*constraints:|(?:step|langkah)\s*\d+[.)]\s*(?:analyze|identify|check|analisis|periksa)|<think>|<analysis>)/i
 const berisiLabelKeamanan = /^\s*(?:user safety\s*:|safety categories\s*:)/im
 
-async function invokeChatStream(message: string, history: ChatTurn[], onDelta: (text: string) => void): Promise<ChatResponse> {
+async function invokeChatStream(message: string, history: ChatTurn[], hasRedResult: boolean, onDelta: (text: string) => void): Promise<ChatResponse> {
   const url = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.replace(/\/$/, "")
   const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
   if (!url || !anonKey) throw new Error("Konfigurasi chatbot belum tersedia")
@@ -58,14 +59,14 @@ async function invokeChatStream(message: string, history: ChatTurn[], onDelta: (
       "Content-Type": "application/json",
       Accept: "text/event-stream, application/json",
     },
-    body: JSON.stringify({ message, history }),
+    body: JSON.stringify({ message, history, hasRedResult }),
   })
   if (!response.ok) throw new Error(`Chat gagal (${response.status})`)
   if (!response.headers.get("content-type")?.includes("text/event-stream")) return await response.json() as ChatResponse
   return await consumeChatStream(response, onDelta)
 }
 
-export async function tanyaChatbot(pesan: string, history: ChatTurn[] = [], onDelta: (text: string) => void = () => {}): Promise<ChatReply> {
+export async function tanyaChatbot(pesan: string, history: ChatTurn[] = [], onDelta: (text: string) => void = () => {}, allowExternalProcessing = false): Promise<ChatReply> {
   const teks = pesan.trim()
   if (!teks) throw new Error("pesan kosong")
   const offline = typeof navigator !== "undefined" && !navigator.onLine
@@ -81,9 +82,13 @@ export async function tanyaChatbot(pesan: string, history: ChatTurn[] = [], onDe
     const hasRedResult = await adaHasilMerahLokal()
     return { answer: local.answer, sources: [], escalate: shouldEscalate(teks, hasRedResult), offline: true, verified: local.verified }
   }
+  if (requiresExternalChatConsent(!offline, allowExternalProcessing)) {
+    return { answer: "", sources: [], escalate: false, offline: false, verified: false, consentRequired: true }
+  }
   try {
     const recentHistory = history.slice(-6).map((turn) => ({ role: turn.role, content: turn.content.slice(0, 1000) }))
-    const data = await invokeChatStream(teks, recentHistory, onDelta)
+    const hasRedResult = await adaHasilMerahLokal()
+    const data = await invokeChatStream(teks, recentHistory, hasRedResult, onDelta)
     const answer = typeof data?.answer === "string" ? data.answer.trim() : ""
     if (!answer || berisiProsesInternal.test(answer)) throw new Error("respons chatbot tidak layak ditampilkan")
     if (berisiLabelKeamanan.test(answer)) return { answer: JAWABAN_KEAMANAN, sources: [], escalate: shouldEscalate(teks, data.hasRedResult === true), offline: false, verified: false }
