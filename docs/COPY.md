@@ -59,5 +59,5 @@ Kondisi aman · Perlu perhatian · Kondisi umum baik · Pantau kondisi harian
 dan catat keluhan jika muncul · Cek kecukupan ASI dan masalah menyusui ·
 Kenaikan kurang dari target — konsultasi gizi · Hamil minggu ke 28 ·
 Perkiraan lahir 26 Agu 2026 · Terhitung otomatis dan akurat ·
-Data tersimpan aman di HP dan cloud · Pastikan nomor aktif untuk hasil
+Data tersimpan di perangkat dan akun SIAGA Bunda · Pastikan nomor aktif untuk hasil
 skrining akurat · Kode demo untuk percobaan · Gunakan kode ini tanpa SMS.

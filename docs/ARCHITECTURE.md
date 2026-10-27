@@ -24,7 +24,7 @@ Kedua area ini dicatat di sini supaya jadi bagian dari rencana kerja (bukan dite
 | PWA & Service Worker                   | Workbox via `vite-plugin-pwa`                                                 | Standar industri untuk generate service worker, caching strategy, dan manifest                                                                       |
 | Penyimpanan lokal                      | IndexedDB, dibungkus **Dexie.js** (cache offline)                             | Dexie untuk offline-first; sinkronisasi ke Supabase saat online (lihat Bagian 9)                                                                     |
 | Database utama (cloud)                 | **Supabase Postgres** via `supabase-js`                                       | Sumber kebenaran untuk semua data: `profiles`, `screening_results`, `weight_entries`, dll — lihat Bagian 5 & 9                                      |
-| Enkripsi data                          | **Web Crypto API** (lapisan custom, dienkripsi sebelum tulis ke Dexie & Supabase) | Browser tidak punya enkripsi storage bawaan setara SQLCipher — komponen harus dibangun sendiri                                                        |
+| Enkripsi data                          | Data lokal dienkripsi oleh Web Crypto API sebelum ditulis ke Dexie; data cloud memakai enkripsi at-rest dan in-transit yang dikelola Supabase | Payload aplikasi di Supabase tetap dapat dibaca oleh role database/service-role yang berwenang; RLS membatasi akses pengguna berdasarkan pemilik |
 | Autentikasi                            | **Supabase Auth** — Phone/Email OTP untuk MVP                                 | Menggantikan Firebase Auth; WhatsApp Business API dipertimbangkan di fase lanjutan (lihat Bagian 8)                                                 |
 | Notifikasi darurat lintas-perangkat    | Web Push API + Supabase Realtime / Edge Functions                             | Untuk notifikasi ke bidan saat hasil MERAH; di iOS baru aktif setelah PWA di-install ke home screen dan izin diberikan                               |
 | Reminder rutin (suplemen, ANC)         | Notification API + strategi hybrid (lihat Bagian 7)                           | Titik risiko utama, dirinci terpisah                                                                                                                 |
@@ -68,7 +68,7 @@ app/src/
 ├── data/
 │   ├── db.ts                 # Setup Dexie + skema tabel (mirror Supabase)
 │   ├── supabase.ts           # Supabase client + type
-│   ├── crypto.ts              # Lapisan enkripsi Web Crypto sebelum tulis Dexie/Supabase
+│   ├── crypto.ts              # Enkripsi data lokal Dexie dengan Web Crypto
 │   └── repositories/         # Tiap repo: read Dexie dulu, sync ke Supabase saat online
 ├── features/
 │   ├── onboarding/
@@ -104,7 +104,9 @@ app/src/
 | `nifas_screenings`       | id, user_id, hari_ke, parameter_vital (JSONB), status                                      | S-04                       |
 | `bbl_profiles`           | id, user_id, data_lahir, APGAR, usia_gestasi                                               | S-05                       |
 
-Dexie menyimpan mirror lokal dengan skema identik untuk offline-first. Seluruh field kesehatan personal dienkripsi lewat `data/crypto.ts` sebelum tulis ke Dexie maupun Supabase. RLS Supabase: user hanya bisa akses `user_id = auth.uid()`.
+Dexie menyimpan mirror lokal untuk offline-first; field sensitif dienkripsi dengan `data/crypto.ts` sebelum ditulis ke IndexedDB. Sinkronisasi ke Supabase mengirim payload dalam bentuk plaintext pada lapisan aplikasi (melalui HTTPS/TLS); Supabase menyediakan enkripsi at-rest dan in-transit pada platform. Ini bukan enkripsi ujung-ke-ujung: role database/service-role yang berwenang dapat membaca isi. RLS membatasi akses pengguna ke baris miliknya (`user_id = auth.uid()`, atau `id = auth.uid()` untuk profil). Verifikasi konfigurasi proyek, hak istimewa, backup, dan kebijakan organisasi sebelum penggunaan data kesehatan nyata.
+
+Rujukan: [Supabase Shared Responsibility Model](https://supabase.com/docs/guides/deployment/shared-responsibility-model) dan [TLS for Project APIs](https://supabase.com/docs/guides/security/tls). Sifat enkripsi platform tidak menggantikan konfigurasi akses dan kepatuhan yang menjadi tanggung jawab pemilik proyek.
 
 ## 6. Retensi Data Lokal — Risiko & Mitigasi
 
@@ -130,7 +132,7 @@ Strategi ini perlu diuji langsung di device Android dan iOS asli sebagai bagian 
 
 - **MVP:** Supabase Auth dengan OTP (SMS/Email) — setara Firebase Phone Auth, terintegrasi langsung dengan RLS Postgres.
 - **Fase lanjutan:** WhatsApp OTP via WhatsApp Business Platform, jika dibutuhkan.
-- **Enkripsi:** data kesehatan dienkripsi lewat Web Crypto API sebelum disimpan ke Dexie maupun Supabase (lapisan `data/crypto.ts`); kunci enkripsi diturunkan dari kredensial pengguna, tidak disimpan dalam kode aplikasi. RLS Supabase membatasi akses per `auth.uid()`.
+- **Perlindungan data:** data lokal sensitif dienkripsi dengan Web Crypto sebelum disimpan ke Dexie. Data yang disinkronkan ke Supabase tidak dienkripsi pada lapisan aplikasi; perlindungan at-rest dan in-transit disediakan oleh platform Supabase, sedangkan RLS membatasi akses pengguna per `auth.uid()`. Ini bukan E2E: database/service-role yang berwenang dapat membaca plaintext. Tinjau konfigurasi proyek, keanggotaan dan hak akses operator, backup, serta persyaratan privasi/kepatuhan sebelum penggunaan data kesehatan nyata.
 - **HTTPS wajib** — persyaratan teknis PWA sekaligus praktik keamanan dasar untuk data kesehatan.
 
 ## 9. Sinkronisasi & Backup — Supabase sebagai Sumber Kebenaran

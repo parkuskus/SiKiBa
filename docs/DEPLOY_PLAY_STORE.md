@@ -119,7 +119,7 @@ Selesaikan sebelum meminta production review:
 
 - Buat kebijakan privasi yang menjelaskan data identitas/kesehatan, tujuan, pemrosesan Supabase, penyimpanan lokal, retensi, berbagi, keamanan, serta permintaan penghapusan.
 - Selesaikan penghapusan akun dan data cloud dari aplikasi. UI saat ini perlu diperiksa karena alur hapus yang ada belum menghapus akun Auth/data cloud secara menyeluruh.
-- Enkripsi data kesehatan yang direncanakan dalam arsitektur masih stub di `app/src/data/crypto.ts`; selesaikan desain dan implementasinya sebelum penggunaan publik.
+- `app/src/data/crypto.ts` mengenkripsi data lokal di Dexie, bukan payload cloud. Cloud memakai enkripsi at-rest/in-transit terkelola Supabase dan RLS, bukan E2E; sebelum penggunaan data kesehatan nyata, verifikasi konfigurasi proyek, kebijakan akses/backup, persyaratan etik dan privasi, serta persyaratan hukum/kontrak yang berlaku.
 - Isi **Data safety** sesuai perilaku aktual aplikasi dan seluruh SDK/backend. Data kesehatan, identitas, email, chat, serta sinkronisasi cloud perlu dievaluasi satu per satu.
 - Isi **Health apps declaration** dan deklarasi lain yang diminta Play Console. Klaim klinis harus memiliki sumber/metodologi yang dapat dijelaskan; jangan menyebut hasil skrining sebagai diagnosis. Selesaikan validasi pakar dan Ethical Clearance untuk penelitian sebelum uji coba yang terkait.
 - Sediakan kontak dukungan dan instruksi login reviewer/akun demo dengan backend tetap aktif selama proses review.

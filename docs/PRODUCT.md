@@ -77,7 +77,7 @@ Detail IPO tiap layar: lihat Bagian II–VI di dokumen spesifikasi storyboard.
 | Aspek | Requirement | Catatan implementasi PWA |
 |---|---|---|
 | Offline-first | Semua fitur skrining & edukasi berfungsi penuh tanpa internet setelah install pertama | Dicapai lewat Service Worker + IndexedDB; perlu strategi cache & fallback offline yang matang |
-| Keamanan data | Data kesehatan terenkripsi di penyimpanan lokal & cloud; kunci enkripsi tidak boleh disimpan dalam kode aplikasi | Diimplementasikan custom via Web Crypto API + RLS Supabase (`auth.uid()`) |
+| Keamanan data | Data lokal sensitif dienkripsi; data cloud dilindungi enkripsi platform dan akses per pemilik, bukan E2E | Dexie memakai Web Crypto lokal. Supabase menyediakan enkripsi at-rest dan in-transit; payload cloud tetap plaintext pada lapisan aplikasi dan dapat dibaca role database/service-role berwenang. RLS membatasi akses pengguna berdasarkan `auth.uid()`. Verifikasi konfigurasi dan kebijakan sebelum data kesehatan nyata digunakan. |
 | Aksesibilitas | Font minimal 14sp (setara ~14px web), contrast ratio ≥4,5:1, tap target ≥44dp (setara ~44px) | Standar sama, diterapkan lewat desain sistem Tailwind |
 | Bahasa | Bahasa Indonesia (utama); Bahasa Sunda opsional untuk fase berikutnya | |
 | Platform | Web app installable (PWA) — Android via Chrome/TWA ke Play Store, iOS via Safari Add to Home Screen | Kapabilitas berbeda signifikan antar platform, lihat ARCHITECTURE.md Bagian 1 & 12 |

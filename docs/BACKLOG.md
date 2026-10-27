@@ -5,6 +5,7 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 ## Status saat ini — 2026-10-24
 
 ### Sudah diselesaikan
+- [x] Penyelarasan klaim enkripsi cloud (2026-10-27): dokumentasi membedakan AES-GCM lokal di Dexie dari enkripsi at-rest/in-transit terkelola Supabase. Sync tidak memakai E2E; payload dapat dibaca role database/service-role berwenang. Tidak ada perubahan skema atau perilaku aplikasi.
 - [x] Istilah status dan notifikasi pengiriman data disederhanakan menjadi data tersimpan di perangkat/akun atau belum masuk ke akun; layar data di perangkat menggabungkan keterangan dan meter ruang dalam satu kartu.
 - [x] Istilah di pengaturan notifikasi disederhanakan tanpa mengubah izin browser atau pengiriman pengingat.
 - [x] Hasil skrining menampilkan bidan pendamping dan tempat layanan dari profil serta materi edukasi yang sudah tersedia dan sesuai; berbagi tetap melalui ringkasan, tanpa mengarang nomor kontak atau materi klinis baru.
@@ -118,13 +119,13 @@ Catatan status implementasi. Spesifikasi produk dan ID layar mengacu ke `PRODUCT
 - [ ] Siapkan distribusi Google Play melalui TWA setelah PWA production, keamanan data, validasi klinis, dan persyaratan akun/testing siap.
 - [ ] **Prasyarat Play Store:** deploy manifest/ikon PWA terbaru; siapkan package name permanen, akun Play Console institusi, Bubblewrap, Android SDK, dan signing key.
 - [ ] Sajikan `/.well-known/assetlinks.json` sebagai JSON valid di production memakai SHA-256 App Signing certificate dari Play Console.
-- [ ] **Keamanan dan kebijakan:** implementasikan enkripsi data kesehatan; lengkapi penghapusan akun dan data cloud; siapkan kebijakan privasi, Data safety, serta Health apps declaration.
+- [ ] **Keamanan dan kebijakan:** verifikasi konfigurasi dan cakupan enkripsi terkelola Supabase, TLS/SSL, RLS/grant, hak akses operator, serta backup; lengkapi penghapusan akun/data cloud, kebijakan privasi, Data safety, dan Health apps declaration.
 - [ ] Uji AAB lewat internal/closed testing pada perangkat Android; siapkan store listing, screenshot, dan akses reviewer. Penuhi closed test tambahan jika diwajibkan tipe/umur akun Play Console.
 - [ ] Validasi klinis, review pakar dan Ethical Clearance harus selesai sebelum penggunaan penelitian/publik yang relevan.
 
 ## Catatan teknis
 - Dexie adalah penyimpanan lokal/offline; Supabase Postgres adalah sumber data cloud dengan RLS per pengguna.
-- `app/src/data/crypto.ts` masih stub/plaintext; enkripsi data kesehatan yang direncanakan di `ARCHITECTURE.md` belum diterapkan.
+- `app/src/data/crypto.ts` mengenkripsi field sensitif di Dexie lokal. Payload cloud tidak dienkripsi di lapisan aplikasi; enkripsi at-rest/in-transit bergantung pada platform Supabase. Periksa proyek produksi dan jangan menyebutnya E2E.
 - Build adalah gerbang verifikasi frontend (`cd app && npm run build`); tes Node terarah tersedia untuk MFA/onboarding, dan cek domain ada di `scripts/` serta `supabase/tests/`. Smoke RAG aktual tersedia di `scripts/check-chat-retrieval.py` dan memanggil embedding API.
 - Build berhasil tanpa peringatan ukuran chunk atau dynamic import setelah layar utama dipecah menjadi lazy chunks.
 - Data beranda di `app/src/App.tsx` masih memiliki nilai default UK/progress/countdown/HPL; pastikan nilai yang tampil selalu berasal dari profil sebelum rilis.

@@ -1,7 +1,7 @@
 import Dexie, { type DBCore, type DBCoreCursor, type DBCoreTable, type DBCoreTransaction, type Table } from 'dexie'
 import { decryptJson, encryptJson, getOrCreateDeviceKey, loadDeviceKey, type EncryptedJson } from './crypto.ts'
 
-// ponytail: local mirror Supabase Postgres (ARCHITECTURE.md:91) — sync ke Supabase nanti, sekarang Dexie-only
+// Local Dexie mirror is encrypted on-device; sync.ts sends cloud payloads over Supabase HTTPS.
 
 export interface Profile {
   id: string // auth uid (uuid)
@@ -27,7 +27,7 @@ export interface ScreeningResult {
   tipe: string // poedji_rochjati | preeklamsia | imt_lila | danger_sign | dmg | epds | ...
   skor: number
   kategori: 'HIJAU' | 'KUNING' | 'MERAH'
-  detail: Record<string, unknown> // JSONB, dienkripsi via crypto.ts sebelum simpan
+  detail: Record<string, unknown> // JSONB; encrypted in Dexie, not at the application layer in Supabase
   createdAt: string
 }
 

@@ -225,7 +225,7 @@ export default function ProfilPage({ uk: ukProp, hplLabel: hplProp, setShowBotto
         <button onClick={() => void handleLogout()} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#FDECEC] text-sm font-bold text-[#C62828] transition-colors hover:bg-[#FADDDD] active:scale-[0.99]">
           <LogOut className="size-4" /> Keluar
         </button>
-        <p className="text-center text-xs text-[#6C757D]">Versi 0.1.0 · Data tersimpan aman di ponsel</p>
+        <p className="text-center text-xs text-[#6C757D]">Versi 0.1.0 · Data tersimpan di perangkat</p>
       </div>
     </div>
   )
